@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Frontend Engineering Workflow
-- Check for API contract docs or OpenAPI specs before building against backend endpoints.
-- If the API isn't ready, stub with mock data and note the dependency in your task comment.
-- Use shadcn-ui components as the base — customize with Tailwind, don't build from scratch.
-- Test responsive layouts (mobile + desktop) before completing any UI task.
-- Run Vitest and lint before marking work done.
-- Use Playwright for visual testing of critical flows (browse → cart → checkout).
+- Check if API contracts/OpenAPI specs exist before building data-dependent components.
+- Use shadcn-ui components as the base — customize with Tailwind, don't reinvent.
+- Test responsive layouts at mobile (375px), tablet (768px), and desktop (1280px) breakpoints.
+- For 3D model viewer integration: test with sample .glb/.gltf files before connecting to the real pipeline.
+- Run `npm run lint` and `npm run test` before pushing changes.
+- Comment on issues with screenshots or component descriptions when completing UI tasks.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

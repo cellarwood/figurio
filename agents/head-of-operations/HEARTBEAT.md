@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Operations Workflow
-- Check order fulfillment pipeline: any orders pending MCAE submission, in production, or awaiting shipment.
-- Monitor shipping status for outstanding deliveries.
-- If MCAE turnaround times are slipping, escalate to CEO.
-- When sourcing new models: verify commercial license terms, test printability specs, document in the model library.
-- Track all operational costs (print costs, shipping costs, packaging) and keep the cost sheet current.
-- Report weekly cost summary to CEO.
+- Check for new orders that need fulfillment coordination.
+- Track MCAE production status for in-progress orders.
+- Monitor shipping partner performance and delivery times.
+- Update cost tracking sheets when pricing changes.
+- If a production defect is reported: document it, arrange replacement, and track MCAE's response.
+- Maintain the fulfillment SOP — update it whenever a process changes.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

@@ -1,162 +1,35 @@
-schema: paperclip/v1
+schema: agentcompanies/v1
+company: figurio
+
+adapter:
+  model: sonnet
+  maxTurns: 50
+
 agents:
   ceo:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-opus-4-6
-    budget:
-      monthly: 10000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 10000
   cto:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-opus-4-6
-    budget:
-      monthly: 15000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 15000
   backend-engineer:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 15000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 20000
   frontend-engineer:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 15000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 20000
   devops-engineer:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 10000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 15000
   cmo:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 10000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 10000
   content-creator:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 8000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 10000
   head-of-operations:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthly: 8000
-    inputs:
-      env:
-        ANTHROPIC_API_KEY:
-          kind: secret
-          requirement: optional
-          default: ""
-        GH_TOKEN:
-          kind: secret
-          requirement: optional
-        CLAUDE_BIN:
-          kind: plain
-          requirement: optional
-          default: claude
+    budget: 10000
+
+env:
+  - GITHUB_TOKEN
+  - DOCKER_HUB_USERNAME
+  - DOCKER_HUB_TOKEN
+  - STRIPE_SECRET_KEY
+  - STRIPE_PUBLISHABLE_KEY
+  - STRIPE_WEBHOOK_SECRET
+  - MCAE_API_ENDPOINT
+  - TEXT_TO_3D_API_KEY
+  - SLACK_BOT_TOKEN

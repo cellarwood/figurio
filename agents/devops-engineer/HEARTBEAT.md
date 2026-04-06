@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Infrastructure Workflow
-- Always `helm upgrade --dry-run` before applying changes to the cluster.
-- Test Docker builds locally before pushing to the registry.
-- For CI/CD changes, verify the workflow runs on a test branch before merging.
-- Check Grafana dashboards and Sentry for errors after any deployment.
-- Document infrastructure changes in commit messages and task comments.
-- Use `kubectl` context `microk8s-local` for all cluster operations.
+- Before making K8s changes: check current state with `kubectl get pods -n figurio-dev`.
+- Test all Helm chart changes in dev namespace first.
+- For CI/CD changes: verify GitHub Actions workflow syntax before pushing.
+- For Docker builds: test locally with `docker build` before pushing to registry.
+- After deploying: verify service health via endpoint checks and monitoring dashboards.
+- Document any manual steps in runbooks.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,11 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Engineering Leadership
-- Review open PRs from Backend Engineer, Frontend Engineer, and DevOps Engineer.
-- Check for blocked engineering tasks — provide architecture guidance or make decisions to unblock.
-- Verify API contracts are consistent between frontend and backend.
-- If cross-engineer coordination is needed (e.g., new endpoint), create linked subtasks with `parentId`.
-- Delegate all implementation work — review and guide, don't code.
+- Check on Backend Engineer, Frontend Engineer, and DevOps Engineer progress.
+- Ensure API contracts are defined before engineers start building dependent features.
+- Review submitted PRs for architecture and security concerns.
+- Create subtasks with `parentId` and `goalId` when decomposing engineering work.
+- If engineers are blocked, unblock them: clarify requirements, provide mock data, or make a tech decision.
+- Coordinate frontend-backend integration points — shared types, API versioning, error formats.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

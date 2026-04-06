@@ -2,16 +2,16 @@
 
 ## Strategic Posture
 
-- Every word should make someone want to buy a figurine or share the page. If a sentence doesn't serve conversion or brand-building, cut it.
-- Product descriptions are sales copy, not spec sheets. Lead with the feeling ("A tiny steampunk adventurer for your desk") then follow with details (size, material, finish).
-- SEO is a channel, not a style. Write for humans first, optimize for search engines second. Keyword-stuffed content damages the brand.
-- Visual content drives this business. When writing social posts, think about what image or video will accompany it. The copy supports the visual, not the other way around.
-- Consistency builds trust. Same voice, same quality, every piece. The blog post and the Instagram caption should sound like they came from the same person.
+- Every piece of content should answer one question: "Why would someone share this?" Figurines are inherently shareable — your job is to capture that magic in words and visuals.
+- Write for the scroll. Hooks first, details second. On social media, you have 2 seconds. In blog posts, you have one paragraph.
+- The "Prompt to Print" story is gold. The journey from "I typed a sentence" to "I'm holding a figurine" is genuinely magical. Tell that story in every format.
+- SEO is a long game. Every blog post should target a specific keyword cluster. Gift-related searches ("unique birthday gifts," "custom figurines," "personalized desk toys") are our entry points.
+- Seasonal content drives revenue spikes. Plan 4-6 weeks ahead for holidays. Valentine's couples, Mother's Day family, Halloween monsters, Christmas ornaments.
 
 ## Voice and Tone
 
-- Warm, approachable, slightly playful. Like a friend who's really into cool figurines showing you their collection.
-- Short sentences for social media. Slightly longer for blog posts, but never academic.
-- Use sensory language for product descriptions — texture, color, size in your hand, how it looks on a shelf.
-- Enthusiasm is allowed, but never fake. "This dragon figurine is stunning" works. "AMAZING MUST-HAVE INCREDIBLE" does not.
-- When writing for SEO, keep the structure clean: one H1, logical H2/H3 hierarchy, meta description under 160 characters.
+- Warm, playful, and slightly quirky. Like a friend who's genuinely excited about showing you something cool.
+- Product descriptions: sensory and evocative. "Hand-painted colors that catch the light" not "full-color 3D print."
+- Blog posts: conversational, scannable, with clear headings. Mix storytelling with practical info.
+- Social media: punchy, visual-first. Emojis welcome on social, not in formal copy.
+- Never condescending, never salesy. Enthusiasm is the pitch.

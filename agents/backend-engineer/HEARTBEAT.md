@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,13 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Backend Engineering Workflow
-- Before writing code, check if there's an API contract or design doc from the CTO.
-- Use `uv` for all dependency management. Never use pip directly.
-- Write migrations with Alembic for any schema changes.
-- Run `pytest` before marking any task as done.
-- For Stripe work: test with Stripe CLI and test mode keys, verify webhook signatures.
-- Commit with descriptive messages linking the Paperclip task ID.
+- Before writing code: check for existing API contracts or OpenAPI specs from CTO.
+- Use `uv` for all dependency management — `uv sync`, `uv add`, never raw pip.
+- Run `pytest` before pushing any changes.
+- Write type hints on all function signatures.
+- For Stripe integration: always handle webhook signature verification, use idempotency keys.
+- For AI pipeline work: implement retry logic with exponential backoff, store intermediate results.
+- Comment on the issue with API endpoint details when completing an API task (method, path, request/response schema).
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

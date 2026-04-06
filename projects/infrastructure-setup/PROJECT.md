@@ -1,30 +1,27 @@
 ---
 name: Infrastructure Setup
-description: Set up the monorepo, Docker builds, Kubernetes deployment, CI/CD pipeline, and monitoring for Figurio
+description: Production-ready infrastructure with Docker, Kubernetes, CI/CD, and monitoring for the Figurio platform
 slug: infrastructure-setup
 owner: cto
 ---
 
 ## Scope
 
-Establish the complete development and deployment infrastructure:
+Set up the complete deployment and operations infrastructure:
 
-- GitHub monorepo with apps/web, services/api, infra/helm structure
-- Docker multi-stage builds for API and web services
-- Kubernetes deployment on microk8s-local with Helm charts
-- Traefik ingress routing figurio.cellarwood.org to the web frontend
-- GitHub Actions CI/CD: test on PR, build+deploy on merge
-- Monitoring with Prometheus, Grafana, and Sentry
+1. **Monorepo structure** with Docker multi-stage builds for frontend and backend services
+2. **Kubernetes deployment** on microk8s with Helm charts, namespaces (dev/staging/prod), and Traefik ingress
+3. **CI/CD pipeline** via GitHub Actions — test on PR, build+push+deploy on merge
+4. **Monitoring** — Prometheus metrics, Grafana dashboards, Sentry error tracking
 
 ## Success Criteria
 
-- Monorepo structure in place with working docker-compose for local dev
-- API and web services deployable to microk8s-local via Helm
-- figurio.cellarwood.org resolves and serves the storefront
-- CI pipeline runs tests on every PR
-- Deploy pipeline builds, pushes, and deploys on merge to main
-- Grafana dashboard showing API response times and error rates
+- All services running on Kubernetes with Helm charts
+- CI/CD pipeline deploying automatically on merge to main
+- Monitoring dashboards showing API latency, error rates, and order pipeline health
+- Local dev environment working via docker-compose
+- Docker images pushed to Docker Hub (lukekelle00)
 
 ## Workspace
 
-This project targets the Figurio monorepo at `github.com/cellarwood/figurio`.
+This project targets the main application repository at `github.com/cellarwood/figurio`.

@@ -1,35 +1,38 @@
 ---
-name: Set up monitoring
+name: Set up monitoring stack
 assignee: devops-engineer
 project: infrastructure-setup
 ---
 
-Deploy monitoring and observability stack for the Figurio services.
+Deploy monitoring and observability tools for the Figurio platform.
 
-## Requirements
+## Components
 
 ### Prometheus
-- Deploy to the monitoring namespace
-- Scrape metrics from FastAPI (using `prometheus-fastapi-instrumentator` or similar)
-- Scrape Kubernetes pod metrics
-- Configure alerting rules: high error rate (>5% 5xx), high latency (>2s p95), pod restarts
+- Deploy via Helm chart (kube-prometheus-stack)
+- Scrape metrics from FastAPI backend (using prometheus-fastapi-instrumentator or similar)
+- Scrape Kubernetes node and pod metrics
 
 ### Grafana
-- Deploy with Prometheus data source pre-configured
-- Create dashboard: API request rate, response time (p50/p95/p99), error rate, active orders
-- Create dashboard: Kubernetes pod status, CPU/memory usage
+- Deploy via kube-prometheus-stack Helm chart
+- Dashboards:
+  - API latency and request rate (p50, p95, p99)
+  - Order pipeline: orders created, payments captured, AI jobs started/completed/failed
+  - Infrastructure: CPU, memory, disk per pod
+  - Stripe webhook processing latency and error rate
 
 ### Sentry
-- Integrate Sentry SDK in FastAPI backend (error tracking, performance monitoring)
-- Integrate Sentry SDK in React frontend (error boundary, performance)
-- Configure source maps upload for frontend
+- Frontend: `@sentry/react` for React error boundary and performance tracing
+- Backend: `sentry-sdk[fastapi]` for exception tracking and performance
+- Environment-specific DSNs (dev, staging, prod)
 
 ### Loki (optional, lower priority)
 - Log aggregation from all pods
-- Grafana data source for log queries
+- Grafana data source for log querying
 
-## Technical Notes
+## Acceptance Criteria
 
-- Use Helm charts for Prometheus and Grafana deployment
-- Sentry requires a project and DSN — document the setup steps
-- Alert notifications via Slack #alerts channel (when Slack is set up)
+- Prometheus scraping backend metrics
+- Grafana accessible with at least 2 dashboards (API performance, infrastructure)
+- Sentry capturing errors from both frontend and backend in dev environment
+- Alert rules for: API error rate > 5%, order processing failures

@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,11 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Marketing Leadership
-- Review Content Creator's recent output — provide feedback on brand consistency and SEO quality.
-- Check if seasonal campaigns need planning (look 4-6 weeks ahead).
-- Ensure content calendar is populated for the next 2 weeks.
-- Delegate content creation with clear briefs — topic, keywords, tone, deadline.
-- Track marketing metrics if analytics are available.
+- Check Content Creator progress on current briefs and posts.
+- Ensure content calendar has at least 2 weeks of planned content ahead.
+- Create content briefs as subtasks with `parentId` and `goalId` for the Content Creator.
+- Review and approve content before it goes live.
+- Track campaign metrics and adjust strategy based on what's working.
+- Coordinate with CEO on brand positioning decisions and budget allocation.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

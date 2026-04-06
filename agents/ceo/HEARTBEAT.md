@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up (if applicable)
+## 3. Approval Follow-Up
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -24,12 +24,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Strategic Oversight
-- Review all team leads' recent activity (CTO, CMO, Head of Operations).
-- Check for blocked or stale tasks across the company — unblock or reassign.
-- If a goal milestone is approaching, verify the critical path is on track.
-- Create subtasks for any new strategic decisions, always setting `parentId` and `goalId`.
-- Delegate execution — do not pick up IC work yourself.
+## 6. Strategic Leadership
+- Review company goals and assess progress across all teams.
+- Check for cross-team blockers — if CTO needs something from Operations or vice versa, intervene.
+- Delegate new work by creating issues with `parentId` and `goalId` set correctly.
+- When creating subtasks, always set `goalId` to trace work back to company goals.
+- Review any pending hiring proposals or budget requests.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.
