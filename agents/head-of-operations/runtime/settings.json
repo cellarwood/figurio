@@ -1,12 +1,12 @@
 {
   "enabledPlugins": {
     "office-plugin@claude-my-marketplace": true,
-    "media-plugin@claude-my-marketplace": true
+    "company-plugin@claude-my-marketplace": true
   },
   "permissions": {
     "allow": [
-      "mcp__plugin_media-plugin_mermaid",
-      "mcp__plugin_media-plugin_media-playwright"
+      "mcp__plugin_company-plugin_dhl-api-assistant",
+      "mcp__plugin_company-plugin_stripe"
     ]
   }
 }

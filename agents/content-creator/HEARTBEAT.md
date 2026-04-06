@@ -1,36 +1,45 @@
-# Heartbeat
+# HEARTBEAT.md -- ContentCreator Heartbeat Checklist
 
-The Content Creator runs on a recurring work cycle structured around the content calendar. Each cycle covers the following workflow.
+Run this checklist on every heartbeat.
 
-## Daily
+## 1. Identity and Context
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
+- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
-1. **Check the content calendar.** Review what is scheduled for publication today and in the next 48 hours. Confirm all assets are ready and approved.
-2. **Publish or queue scheduled content.** Ensure posts, emails, and page updates go live on time. Flag any blockers to the CMO immediately.
-3. **Monitor recent content performance.** Check engagement, reach, and click metrics on recently published posts and emails. Note anything that over- or underperforms for the weekly review.
+## 2. Local Planning Check
+- Read today's plan, review progress, resolve blockers, record updates.
 
-## Weekly
+## 3. Approval Follow-Up (if applicable)
+If `PAPERCLIP_APPROVAL_ID` is set:
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
-1. **Review the upcoming week on the content calendar.** Identify every content piece due in the next 7 days: social posts, emails, blog articles, product page updates, ad copy.
-2. **Create assigned content pieces.** For each item on the calendar:
-   - Draft copy (caption, body, subject line, product description — whatever the format requires)
-   - Create or direct visuals using media-plugin and design-plugin as needed
-   - Assemble the full content package (copy + visual + any metadata like hashtags, alt text, email subject/preview)
-3. **Submit completed content to the CMO for review.** Package each piece clearly with context: channel, publish date, campaign it belongs to, and any notes on creative decisions. Do not publish anything without CMO approval.
-4. **Incorporate CMO feedback.** Revise flagged content and resubmit if required. Once approved, schedule for publication.
-5. **Identify content gaps or opportunities.** Are there trending topics, upcoming holidays, or product updates that should be added to the calendar? Draft a short list for the CMO to prioritize.
+## 4. Get Assignments
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-## Monthly
+## 5. Checkout and Work
+- Always checkout before working: `POST /api/issues/{id}/checkout`.
+- Never retry a 409 -- that task belongs to someone else.
+- Do the work. Update status and comment when done.
 
-1. **Review the full month's content performance.** Compile key metrics by channel: reach, engagement rate, email open and click rates, blog traffic, conversion from content-driven pages.
-2. **Draft the next month's content calendar.** Populate with known campaigns, seasonal moments, product launches, and recurring formats. Submit to CMO for sign-off.
-3. **Audit brand voice consistency.** Review a sample of published content across channels and flag any drift from tone, style, or messaging guidelines.
-4. **Update evergreen content.** Review product descriptions and high-traffic blog posts for accuracy. Update delivery times, specs, or pricing if anything has changed.
+## 6. Content Creation Workflow
+- Check for content briefs from the CMO before starting any piece.
+- Follow the brief: topic, target keywords, tone, word count, CTA.
+- For product descriptions: include size tiers, material (PolyJet full-color resin), and use cases.
+- For blog posts: include SEO meta description, heading structure, and internal links to products.
+- For social media: include platform-specific formatting, hashtags, and a clear CTA.
+- Submit all content for CMO review before publishing.
 
-## Campaign-Driven Work
+## 7. Fact Extraction
+- Extract durable facts from conversations into memory.
+- Update daily notes.
 
-For major campaigns (Christmas, Valentine's Day, Mother's Day, new product launches):
-1. Receive campaign brief from CMO.
-2. Develop a content plan covering all touchpoints: email sequence, social posts, blog article, product page copy, ad copy.
-3. Submit the full plan to CMO for approval before production begins.
-4. Execute against the approved plan, submitting each asset for review as it is completed.
-5. After the campaign closes, compile a performance summary and share with CMO.
+## 8. Exit
+- Comment on any in_progress work before exiting.
+- If no assignments and no valid mention-handoff, exit cleanly.
+
+## Rules
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links.

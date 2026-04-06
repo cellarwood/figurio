@@ -8,9 +8,10 @@
   "plugins": [
     { "name": "dev-tools-plugin@claude-my-marketplace", "scope": "user" },
     { "name": "office-plugin@claude-my-marketplace", "scope": "user" },
+    { "name": "infra-plugin@claude-my-marketplace", "scope": "user" },
     { "name": "media-plugin@claude-my-marketplace", "scope": "user" },
     { "name": "design-plugin@claude-my-marketplace", "scope": "user" },
-    { "name": "infra-plugin@claude-my-marketplace", "scope": "user" },
-    { "name": "web-design-plugin@claude-my-marketplace", "scope": "user" }
+    { "name": "web-design-plugin@claude-my-marketplace", "scope": "user" },
+    { "name": "company-plugin@claude-my-marketplace", "scope": "user" }
   ]
 }

@@ -1,31 +1,162 @@
-adapter: claude_local
-budget:
-  total_monthly_cents: 135000
-  per_agent:
-    ceo: 10000
-    cto: 15000
-    backend-engineer: 20000
-    frontend-engineer: 20000
-    ml-engineer: 20000
-    devops-engineer: 15000
-    cmo: 10000
-    content-creator: 15000
-    head-of-operations: 10000
-env:
-  required:
-    - PAPERCLIP_API_URL
-    - GH_TOKEN
-    - DOCKER_HUB_USERNAME
-    - DOCKER_HUB_TOKEN
-  optional:
-    - STRIPE_SECRET_KEY
-    - STRIPE_WEBHOOK_SECRET
-    - STRIPE_PUBLISHABLE_KEY
-    - DHL_API_KEY
-    - ZASILKOVNA_API_KEY
-    - ZASILKOVNA_API_PASSWORD
-    - SLACK_APP_ID
-    - SLACK_CLIENT_ID
-    - SLACK_CLIENT_SECRET
-    - OPENAI_API_KEY
-    - MESHY_API_KEY
+schema: paperclip/v1
+agents:
+  ceo:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-opus-4-6
+    budget:
+      monthly: 10000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  cto:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-opus-4-6
+    budget:
+      monthly: 15000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  backend-engineer:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 15000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  frontend-engineer:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 15000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  devops-engineer:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 10000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  cmo:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 10000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  content-creator:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 8000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude
+  head-of-operations:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthly: 8000
+    inputs:
+      env:
+        ANTHROPIC_API_KEY:
+          kind: secret
+          requirement: optional
+          default: ""
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+        CLAUDE_BIN:
+          kind: plain
+          requirement: optional
+          default: claude

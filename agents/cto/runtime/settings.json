@@ -2,13 +2,6 @@
   "enabledPlugins": {
     "dev-tools-plugin@claude-my-marketplace": true,
     "office-plugin@claude-my-marketplace": true,
-    "media-plugin@claude-my-marketplace": true,
     "infra-plugin@claude-my-marketplace": true
-  },
-  "permissions": {
-    "allow": [
-      "mcp__plugin_media-plugin_mermaid",
-      "mcp__plugin_media-plugin_media-playwright"
-    ]
   }
 }

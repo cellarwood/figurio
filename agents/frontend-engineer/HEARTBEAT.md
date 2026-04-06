@@ -1,38 +1,45 @@
-# Heartbeat
+# HEARTBEAT.md -- FrontendEngineer Heartbeat Checklist
 
-## On Every Task
+Run this checklist on every heartbeat.
 
-1. Read the task fully before writing any code.
-2. Identify what already exists — search the codebase before creating anything new.
-3. Identify the acceptance criteria. If they are missing, ask before starting.
-4. Implement the task. Prefer editing existing files over creating new ones.
-5. Verify the implementation builds and tests pass (`npm run build`, `npm test`).
-6. Report back: what was done, what files changed, any open questions or follow-up items.
+## 1. Identity and Context
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
+- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
-## Daily Rhythm
+## 2. Local Planning Check
+- Read today's plan, review progress, resolve blockers, record updates.
 
-- Check for new tasks or comments from the CTO.
-- Triage any open bugs against the storefront by severity (P0 = checkout broken, P1 = core flow degraded, P2 = polish).
-- Work through the current sprint tasks in priority order.
-- If blocked, surface the blocker immediately rather than waiting.
+## 3. Approval Follow-Up (if applicable)
+If `PAPERCLIP_APPROVAL_ID` is set:
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
-## Before Marking a Task Done
+## 4. Get Assignments
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-- [ ] Feature works on mobile (375px) and desktop (1280px).
-- [ ] No TypeScript errors (`tsc --noEmit` clean).
-- [ ] No ESLint errors or warnings.
-- [ ] Relevant unit tests written and passing.
-- [ ] Lighthouse CI score not regressed (LCP, CLS, INP within budget).
-- [ ] Accessibility: keyboard navigation works, ARIA roles correct, contrast passes.
-- [ ] No `console.log` or debug code left in.
-- [ ] GSAP animations respect `prefers-reduced-motion`.
-- [ ] No new `dangerouslySetInnerHTML` without explicit sanitization.
+## 5. Checkout and Work
+- Always checkout before working: `POST /api/issues/{id}/checkout`.
+- Never retry a 409 -- that task belongs to someone else.
+- Do the work. Update status and comment when done.
 
-## Escalation
+## 6. Frontend Engineering Workflow
+- Check for API contract docs or OpenAPI specs before building against backend endpoints.
+- If the API isn't ready, stub with mock data and note the dependency in your task comment.
+- Use shadcn-ui components as the base — customize with Tailwind, don't build from scratch.
+- Test responsive layouts (mobile + desktop) before completing any UI task.
+- Run Vitest and lint before marking work done.
+- Use Playwright for visual testing of critical flows (browse → cart → checkout).
 
-Escalate to the CTO when:
-- A task requires backend API changes that aren't yet implemented.
-- A performance budget cannot be met without architectural changes.
-- A Stripe API change introduces breaking behavior in the checkout flow.
-- A security concern is identified (XSS vector, data leakage, etc.) — escalate immediately.
-- The scope of a task expands significantly beyond the original estimate.
+## 7. Fact Extraction
+- Extract durable facts from conversations into memory.
+- Update daily notes.
+
+## 8. Exit
+- Comment on any in_progress work before exiting.
+- If no assignments and no valid mention-handoff, exit cleanly.
+
+## Rules
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links.

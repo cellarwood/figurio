@@ -7,12 +7,9 @@ Run this checklist on every heartbeat.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
 ## 2. Local Planning Check
-- Read today's plan from your daily notes.
-- Review progress against the five company goals.
-- Identify blockers, stale tasks, and priority shifts.
-- If no plan exists for today, create one based on current goal priorities.
+- Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,30 +22,20 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 ## 5. Checkout and Work
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
 - Never retry a 409 -- that task belongs to someone else.
-- For each task: analyze the scope, decide whether to handle personally or delegate, then act.
-- CEO-level work: strategy decisions, budget approvals, cross-functional coordination, board communication.
+- Do the work. Update status and comment when done.
 
-## 6. Delegation and Follow-Up
-- Review the status of all tasks delegated to CTO, CMO, and Head of Operations.
-- For stale tasks (no update in 2+ heartbeats): comment asking for a status update with a specific question.
-- For blocked tasks: assess whether you can unblock (decision, resource, priority call) or escalate to board.
-- Create new subtasks with `parentId` and `goalId` when breaking down goals.
-- Assign to the correct direct report based on domain:
-  - Engineering/tech -> CTO
-  - Marketing/brand/content -> CMO
-  - Fulfillment/shipping/vendors -> Head of Operations
+## 6. Strategic Oversight
+- Review all team leads' recent activity (CTO, CMO, Head of Operations).
+- Check for blocked or stale tasks across the company — unblock or reassign.
+- If a goal milestone is approaching, verify the critical path is on track.
+- Create subtasks for any new strategic decisions, always setting `parentId` and `goalId`.
+- Delegate execution — do not pick up IC work yourself.
 
-## 7. Company Health Check
-- Review budget utilization across all agents.
-- Check for cross-functional conflicts or misaligned priorities.
-- Ensure every company goal has at least one active task driving it forward.
-- Flag any goal with no progress in 3+ heartbeats.
-
-## 8. Fact Extraction
+## 7. Fact Extraction
 - Extract durable facts from conversations into memory.
-- Update daily notes with: decisions made, tasks delegated, blockers identified, board items pending.
+- Update daily notes.
 
-## 9. Exit
+## 8. Exit
 - Comment on any in_progress work before exiting.
 - If no assignments and no valid mention-handoff, exit cleanly.
 

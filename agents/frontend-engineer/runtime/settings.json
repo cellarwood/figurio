@@ -1,6 +1,7 @@
 {
   "enabledPlugins": {
     "dev-tools-plugin@claude-my-marketplace": true,
+    "media-plugin@claude-my-marketplace": true,
     "design-plugin@claude-my-marketplace": true,
     "web-design-plugin@claude-my-marketplace": true
   },
