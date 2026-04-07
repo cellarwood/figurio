@@ -1,6 +1,6 @@
 ---
-name: vendor-evaluation
-description: Vendor assessment criteria for Figurio's production and logistics partners
+name: Vendor Evaluation
+description: Framework for evaluating printing partners, packaging suppliers, and shipping providers for Figurio
 ---
 
 # Vendor Evaluation
@@ -9,54 +9,50 @@ description: Vendor assessment criteria for Figurio's production and logistics p
 
 Score each vendor 1-5 on these dimensions:
 
-| Criterion | Weight | What to Assess |
-|-----------|--------|----------------|
-| **Quality** | 30% | Print quality, color accuracy, surface finish, defect rate |
-| **Cost** | 25% | Per-unit pricing, volume discounts, hidden fees |
-| **Reliability** | 20% | On-time delivery rate, consistency, communication responsiveness |
-| **Capacity** | 15% | Monthly throughput, ability to scale with our growth |
-| **Flexibility** | 10% | Custom packaging support, drop-ship capability, rush order handling |
+| Criterion | Weight | Description |
+|-----------|--------|-------------|
+| Quality | 5x | Print quality, consistency, defect rate |
+| Price | 4x | Per-unit cost, volume discounts, hidden fees |
+| Reliability | 4x | On-time delivery rate, communication responsiveness |
+| Capacity | 3x | Can they handle our volume at 10x current? |
+| Location | 2x | Proximity for shipping speed and cost (Czech Republic preferred) |
+| Flexibility | 2x | Custom requests, rush orders, packaging options |
 
-## MCAE-Specific Evaluation
-
-MCAE (mcae.cz) is our primary printing partner. Evaluate specifically:
-
-### Pricing Negotiation Checklist
-- [ ] Per-unit price for Small (~8cm)
-- [ ] Per-unit price for Medium (~15cm)
-- [ ] Per-unit price for Large (~25cm)
-- [ ] Volume discount tiers (10, 50, 100, 500 units/month)
-- [ ] Setup fees or minimum order quantities
-- [ ] Material cost breakdown (PolyJet resin types)
-- [ ] Price for alternative print methods (FDM, SLA) as lower-cost tier option
-
-### SLA Checklist
-- [ ] Turnaround time per size tier (business days)
-- [ ] Maximum defect rate guarantee
-- [ ] Replacement policy for defective prints
-- [ ] Communication protocol (email, portal, phone)
-- [ ] File format requirements (.stl, .obj, .3mf, color format)
-- [ ] Monthly capacity commitment
-
-## Shipping Partner Evaluation
-
-| Partner | Region | Evaluate |
-|---------|--------|----------|
-| Zásilkovna (Packeta) | Czech Republic | Pickup point network, home delivery, pricing, tracking API |
-| DHL | EU-wide | Parcel pricing, delivery times, tracking, returns handling |
-| DPD | EU-wide | Alternative to DHL, pricing comparison |
-| GLS | EU-wide | Budget option, reliability |
+**Weighted score = sum of (score x weight). Minimum threshold: 60/100.**
 
 ## Vendor Comparison Template
 
 ```markdown
-| Criterion | Vendor A | Vendor B | Vendor C |
-|-----------|----------|----------|----------|
-| Quality (1-5) | | | |
-| Cost (1-5) | | | |
-| Reliability (1-5) | | | |
-| Capacity (1-5) | | | |
-| Flexibility (1-5) | | | |
-| **Weighted Score** | | | |
-| **Recommendation** | | | |
+| Factor | Vendor A | Vendor B | Vendor C |
+|--------|----------|----------|----------|
+| Name | | | |
+| Location | | | |
+| Technology | | | |
+| Small (~8cm) price | | | |
+| Medium (~15cm) price | | | |
+| Large (~25cm) price | | | |
+| Volume discount | | | |
+| Lead time | | | |
+| Min order qty | | | |
+| Rush capability | | | |
+| Quality score (1-5) | | | |
+| Weighted total | | | |
 ```
+
+## MCAE-Specific Evaluation
+
+MCAE is the primary partner. Track these metrics ongoing:
+
+- Per-unit cost vs. quoted price (any surprise charges?)
+- Actual lead time vs. SLA
+- Defect rate (rejected prints / total prints)
+- Communication response time
+- Willingness to negotiate as volume grows
+
+## Red Flags
+
+- No written pricing (everything verbal)
+- No quality guarantee or replacement policy
+- Lead time > 10 business days for standard orders
+- Unable to provide sample prints for evaluation
+- No capacity for rush orders at any price

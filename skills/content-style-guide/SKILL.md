@@ -1,40 +1,46 @@
 ---
-name: content-style-guide
-description: Writing style and content production guidelines for Figurio
+name: Content Style Guide
+description: Writing style, formatting conventions, and content standards for Figurio's marketing content
 ---
 
 # Content Style Guide
 
 ## Writing Principles
 
-1. **Hook first.** Every piece of content — blog post, social caption, product description — starts with something that stops the scroll or grabs attention.
-2. **Show, don't tell.** "A steampunk cat riding a bicycle" is better than "a creative and unique figurine."
-3. **Scannable.** Use headings, bullet points, and short paragraphs. Most readers skim.
-4. **One CTA per piece.** Every content piece has one clear action: buy, browse, share, sign up.
+1. **Show the figurine first.** Every piece of content should include or reference a visual. The product sells itself when seen.
+2. **Write for scanners.** Short paragraphs (2-3 sentences), bullet points, subheadings every 200 words.
+3. **Be specific.** "8cm tall, fits in your palm" beats "small and portable."
+4. **Tell stories, not specs.** "Imagine this on your desk next to your coffee" beats "made with PolyJet technology."
 
-## Content Formats
-
-### Product Descriptions (catalog)
-- **Length:** 50-150 words
-- **Structure:** Emotional hook → visual description → size and material → use case
-- **Example:** "This forest guardian stands watch with mossy armor and a gentle gaze. Printed in vivid full color at 15cm, every detail — from the bark-textured shield to the tiny mushrooms at its feet — is captured in smooth resin. Perfect for your desk, shelf, or as a gift for the nature lover in your life."
+## Formatting
 
 ### Blog Posts
-- **Length:** 800-1500 words
-- **Structure:** Hook paragraph → scannable sections with H2/H3 → CTA
-- **SEO:** Target 1-2 primary keywords per post, use naturally in title, H1, first paragraph, and throughout
-- **Internal links:** Link to product pages, other blog posts, and the AI-custom flow page
+- **Title:** 50-70 characters, includes primary keyword
+- **Meta description:** 150-160 characters, includes CTA
+- **Length:** 800-1,500 words
+- **Structure:** H1 (title) → intro paragraph → H2 sections → conclusion with CTA
+- **Images:** At least 1 per 300 words, always with alt text
+- **Internal links:** Link to product pages and other blog posts naturally
+- **CTA:** Every post ends with a call to action (browse catalog, try custom, share)
 
-### Social Media Captions
-- **Instagram:** 1-3 sentences + relevant hashtags (10-15). Lead with the hook.
-- **TikTok:** Caption is secondary to video — keep it short, add trending hashtags
+### Product Descriptions
+- **Length:** 100-200 words
+- **Structure:** One-line hook → 2-3 sentence description → size/material details → occasion suggestions
+- **Example:**
+  > Meet the Steampunk Explorer — a tiny adventurer with goggles, gears, and a sense of wonder. Hand-finished in full color with smooth detail you can feel. Perfect for your desk, bookshelf, or as a gift for the tinkerer in your life. Available in Small (8cm), Medium (15cm), and Large (25cm).
 
-### Email Copy
-- **Subject line:** Under 50 characters, curiosity or benefit-driven
-- **Body:** Short paragraphs, one CTA button, mobile-friendly
+### Social Media
+- **Instagram:** 1-3 sentences + 5-10 hashtags. Lead with the visual, caption is secondary.
+- **TikTok:** Hook in first 3 seconds. Show the figurine or the AI generation process.
+- **Tone:** Casual, enthusiastic, first-person plural ("we made this" / "look what just came off the printer")
 
-## IP Rules
+## Words to Use / Avoid
 
-- NEVER reference copyrighted characters by name (Disney, Marvel, Nintendo, anime, etc.)
-- Use generic descriptions: "a dragon warrior" not "a character that looks like Charizard"
-- When in doubt, don't publish. Ask CMO.
+| Use | Avoid |
+|-----|-------|
+| figurine, miniature | statue, toy, action figure |
+| custom, personalized | bespoke, tailor-made |
+| full-color, smooth, detailed | high-resolution, ultra-HD |
+| 3D printed | manufactured, produced |
+| gift, surprise, treat | purchase, buy, acquire |
+| your, you | our customers, one |

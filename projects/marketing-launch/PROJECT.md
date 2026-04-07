@@ -1,27 +1,27 @@
 ---
 name: Marketing Launch
-description: Establish Figurio brand identity, create launch content, and build the social media engine for Instagram and TikTok
+description: Build Figurio's brand identity, content pipeline, social media presence, and SEO foundation before and through product launch
 slug: marketing-launch
 owner: cmo
 ---
 
 ## Scope
 
-Build the marketing foundation for Figurio's launch:
+Establish the marketing foundation for Figurio's launch:
 
-1. **Brand identity** — logo concept, color palette, typography, brand voice guidelines
-2. **Product visuals** — photography direction, lifestyle images, product renders for catalog items
-3. **Social media engine** — content calendar, first 4 weeks of posts for Instagram and TikTok
-4. **Launch content** — blog posts explaining the product, the AI-custom process, and the brand story
+- Brand identity guidelines and visual language
+- SEO content strategy with seed blog posts
+- Social media profiles and content calendar (Instagram, TikTok)
+- Product photography pipeline for catalog figurines
 
 ## Success Criteria
 
-- Brand style guide document completed and shared with all teams
-- At least 4 weeks of social media content planned and drafted
-- 2+ launch blog posts written and SEO-optimized
-- Product visual direction established for catalog items
-- Content calendar maintained and followed
+- Brand identity document completed and approved by CEO
+- 5 SEO-optimized blog posts published
+- Instagram and TikTok profiles live with at least 2 weeks of scheduled content
+- Product photography guidelines documented with example shots
+- Content calendar maintained with rolling 2-week pipeline
 
 ## Workspace
 
-Content and marketing assets live in the main repository under `content/` and `marketing/`.
+This project targets the main application repository at github.com/cellarwood/figurio.

@@ -1,46 +1,44 @@
 ---
-name: strategy-review
-description: Framework for evaluating strategic proposals and making go-to-market decisions at Figurio
+name: Strategy Review
+description: Framework for evaluating strategic proposals and business decisions at Figurio
 ---
 
 # Strategy Review
 
-## When to Use
-When evaluating a strategic proposal, making a market positioning decision, or reviewing a go-to-market plan.
+Use this framework when evaluating any strategic proposal, business decision, or initiative.
 
-## Evaluation Framework
+## Decision Filter
 
-### 1. Does it align with our phase?
-- **Phase 1:** Catalog + AI-custom figurines, outsourced production, CZ/EU market
-- Reject proposals that require Phase 2 (scan-to-print) or Phase 3 (in-house printing) capabilities
+Every proposal passes through three gates:
 
-### 2. Unit Economics Check
-- What is the COGS per unit at each size tier?
-- What margin does this achieve at the proposed price point?
-- Does the customer acquisition cost make sense at this price?
-- Rule: minimum 50% gross margin on catalog items, 60% on AI-custom (due to pipeline costs)
+1. **Revenue proximity** — Does this get us closer to first revenue or increase existing revenue? If not, defer it.
+2. **Capital efficiency** — Does this keep capital requirements low? Figurio's advantage is the outsourced, prepaid model. Proposals that require significant upfront capital need 3x the justification.
+3. **Risk reduction** — Does this reduce a known risk (IP, quality, margin, customer acquisition)? If it creates new risk, quantify it.
 
-### 3. IP Risk Assessment
-- Does this involve any copyrighted characters, brands, or likenesses?
-- If yes: STOP. Consult IP attorney. Do not proceed without written legal clearance.
-- Original designs and generic archetypes only.
+A proposal must pass at least 2 of 3 gates to proceed.
 
-### 4. Reversibility
-- Can we change this decision in 3-6 months without major cost?
-- High reversibility: pricing, marketing channels, content strategy
-- Low reversibility: printing partner contracts, technology stack, legal entity structure
+## Evaluation Checklist
 
-### 5. Customer Impact
-- Does this make figurines more desirable, more accessible, or more shareable?
-- If it doesn't clearly help the customer, deprioritize it.
+- [ ] What specific goal does this advance? (Must map to one of the 5 company goals)
+- [ ] What is the expected outcome in measurable terms?
+- [ ] What does this cost (time, money, opportunity cost)?
+- [ ] What happens if we don't do this? (Urgency check)
+- [ ] Who owns execution and what's their current workload?
+- [ ] What's the reversibility? (Easy to undo = lower bar, hard to undo = higher bar)
 
-## Decision Template
+## Market Positioning Framework
 
-```
-## Decision: [title]
-**Recommendation:** [approve/reject/defer]
-**Rationale:** [2-3 sentences]
-**Risks:** [key risks]
-**Reversibility:** [high/medium/low]
-**Next steps:** [action items with owners]
-```
+Figurio sits at the intersection of:
+- **Personalization** (AI custom figurines) — high differentiation, higher cost
+- **Curation** (trend-driven catalog) — lower differentiation, faster revenue
+- **Quality** (PolyJet printing) — premium positioning, higher margins
+
+Strategy decisions should strengthen all three, not sacrifice one for another.
+
+## Competitive Response
+
+When evaluating competitive threats:
+1. Is it a direct competitor (same product, same market)?
+2. Is it a substitute (different product, same need — e.g., custom phone cases)?
+3. Can we differentiate on quality, customization, or speed?
+4. Should we respond (change strategy) or ignore (stay the course)?

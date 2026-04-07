@@ -1,66 +1,64 @@
 ---
-name: campaign-planning
-description: Marketing campaign planning framework for Figurio
+name: Campaign Planning
+description: Marketing campaign planning framework for Figurio's seasonal and product launch campaigns
 ---
 
 # Campaign Planning
 
+## Campaign Types
+
+| Type | Lead Time | Duration | Example |
+|------|-----------|----------|---------|
+| Seasonal | 6 weeks | 2-4 weeks | Christmas figurines, Valentine's couples |
+| Product launch | 4 weeks | 1-2 weeks | Storefront launch, new catalog drop |
+| Trending/reactive | 1-3 days | 3-7 days | Meme figurine, viral moment |
+| Evergreen | Ongoing | Continuous | Gift guides, "how it works" content |
+
 ## Campaign Brief Template
 
 ```markdown
-## Campaign: [name]
-**Goal:** [which company goal this serves]
-**Objective:** [specific, measurable outcome — e.g., "500 website visits from Instagram in 2 weeks"]
-**Audience:** [target segment]
-**Channels:** [Instagram, TikTok, Blog, Email, etc.]
-**Duration:** [start - end date]
-**Budget:** [if paid ads involved]
+# Campaign: {Name}
 
-### Key Messages
-1. [Primary message]
-2. [Supporting message]
+**Goal:** {Which company goal does this serve?}
+**Dates:** {Start} — {End}
+**Budget:** {If any paid spend}
+**Owner:** CMO
+**Executor:** Content Creator
 
-### Content Needed
-- [ ] [content piece] — assignee: [agent] — due: [date]
+## Audience
+{Who is this for? Be specific: "EU men 25-40 who buy gifts online" not "everyone"}
 
-### Success Metrics
-- [metric 1]: target [number]
-- [metric 2]: target [number]
+## Key Message
+{One sentence the audience should take away}
 
-### Post-Campaign Review
-- What worked:
-- What didn't:
-- Learnings for next time:
+## Channels
+- Instagram: {post types, frequency}
+- TikTok: {video types, frequency}
+- Blog: {articles planned}
+- Email: {sends planned}
+
+## Content Needed
+- [ ] {List every asset: posts, videos, blog articles, emails}
+
+## Success Metrics
+- {Metric 1: e.g., Instagram reach > 10K}
+- {Metric 2: e.g., website visits from social > 500}
+- {Metric 3: e.g., orders during campaign > 20}
+
+## Post-Campaign Review
+{Fill in after campaign ends: what worked, what didn't, what to repeat}
 ```
 
-## Campaign Types for Figurio
+## Seasonal Calendar
 
-### Seasonal Campaigns
-- **Valentine's Day:** couples figurines, "gift your person" messaging
-- **Mother's/Father's Day:** family figurine sets
-- **Halloween:** monster and costume figurines
-- **Christmas:** ornament figurines, gift bundles, "12 days of figurines"
-
-### Product Launch Campaigns
-- New catalog collection drops
-- AI-custom feature launch
-- Size tier introduction
-
-### Viral/Trend-Chasing Campaigns
-- React to internet trends within 48 hours with relevant figurine concepts
-- Meme figurine drops tied to cultural moments
-- "This week's viral figurine" social series
-
-### Evergreen Campaigns
-- "How it works" educational content
-- Customer spotlight / UGC reposts
-- Gift guide (always relevant)
-
-## Channel Strategy
-
-| Channel | Content Type | Frequency | Goal |
-|---------|-------------|-----------|------|
-| Instagram | Product photos, carousels, Reels | 4x/week | Brand awareness, visual showcase |
-| TikTok | Process videos, unboxings, trends | 3x/week | Viral reach, younger audience |
-| Blog | SEO articles, guides, behind-the-scenes | 2x/month | Organic search traffic |
-| Email | Order updates, seasonal promos, new drops | 1-2x/month | Retention, repeat purchases |
+| Month | Opportunity | Figurine Angle |
+|-------|------------|----------------|
+| January | New Year | Resolution/motivation figurines |
+| February | Valentine's Day | Couples, heart themes, "figurine of your partner" |
+| March | International Women's Day | Strong women figurines |
+| April | Easter | Spring/animal figurines |
+| May | Mother's Day | Family portrait figurines |
+| June | Father's Day, graduation | Achievement figurines |
+| October | Halloween | Spooky/monster figurines |
+| November | Black Friday | Bundle deals, limited editions |
+| December | Christmas | Gift sets, ornaments, nativity scenes |

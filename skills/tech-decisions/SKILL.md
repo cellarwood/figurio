@@ -1,41 +1,43 @@
 ---
-name: tech-decisions
-description: Build-vs-buy evaluation criteria and technology decision framework for Figurio
+name: Tech Decisions
+description: Build-vs-buy evaluation criteria and technology selection framework for Figurio
 ---
 
 # Tech Decisions
 
 ## Build vs. Buy Framework
 
-For every significant technology choice, evaluate:
+| Factor | Build | Buy/Use Third-Party |
+|--------|-------|-------------------|
+| Core differentiator | Build if it's part of the product moat | Buy if it's commodity |
+| Time to market | Slower | Faster |
+| Long-term cost | Lower (no per-unit fees) | Higher (API costs scale) |
+| Control | Full | Limited by vendor |
+| Maintenance | You own it | Vendor handles it |
 
-| Factor | Build | Buy/Use SaaS |
-|--------|-------|--------------|
-| Time to first value | Weeks-months | Days-weeks |
-| Ongoing maintenance | We own it | Vendor owns it |
-| Customization | Full control | Limited to API |
-| Cost at low volume | Dev time only | Per-unit/monthly fee |
-| Cost at high volume | Fixed (infra) | Scales with usage |
-| Vendor lock-in risk | None | Medium-high |
+**Figurio-specific guidance:**
+- **Build:** Storefront, order management, checkout flow, admin dashboard — these ARE the product
+- **Buy:** Text-to-3D generation (for now), payment processing (Stripe), hosting (K8s), email (transactional)
+- **Evaluate:** Mesh repair (start with Blender scripting, evaluate commercial tools if quality is insufficient)
 
-### Figurio-Specific Decisions
+## Technology Selection Criteria
 
-| Decision | Recommendation | Rationale |
-|----------|---------------|-----------|
-| 3D generation | **Buy** (API) | Core differentiator but not our core competence. Use API, swap later. |
-| Mesh repair | **Build** (Blender scripts) | Custom quality needs, runs headless, low API cost. |
-| Payment processing | **Buy** (Stripe) | Never build payments. Stripe handles compliance. |
-| Email sending | **Buy** (SendGrid/Resend) | Not worth building. |
-| Auth | **Build** (FastAPI + JWT) | Simple enough, full control over user data. |
-| Search | **Build** (PostgreSQL full-text) | Start simple. Add Elasticsearch when catalog > 1000 items. |
-| Image hosting | **Buy** (S3/Cloudflare R2) | Commodity storage. |
+When evaluating a new tool, library, or service:
 
-## Decision Record
+1. **Is it proven?** Prefer boring technology. FastAPI, PostgreSQL, React, Docker — known quantities with large communities.
+2. **Does it have async support?** The AI pipeline requires async operations. Libraries must support asyncio.
+3. **What's the lock-in risk?** Can we switch away in under a week? If not, the bar is higher.
+4. **What's the cost at scale?** Model API costs at 100, 1,000, and 10,000 orders/month.
+5. **Is the Python package on PyPI and compatible with `uv`?** No pip-only packages.
 
-When making a tech decision, document:
+## Text-to-3D API Selection
 
-1. **What** — the decision and alternatives considered
-2. **Why** — the primary driver (cost, speed, quality, risk)
-3. **Trade-offs** — what we're giving up
-4. **Reversibility** — how hard is it to change later?
-5. **Action** — who implements, by when
+Evaluate candidates on:
+- Output quality (detail, color accuracy, geometric correctness)
+- Printability (manifold geometry, minimum wall thickness compliance)
+- Generation speed (target: under 5 minutes per model)
+- Cost per generation
+- API reliability and uptime
+- Content moderation capabilities (can it reject copyrighted prompts?)
+
+Candidates: Meshy, Tripo3D, Luma Genie, CSM 3D. Run benchmarks with 20 test prompts before selecting.

@@ -1,4 +1,4 @@
-# HEARTBEAT.md -- FrontendEngineer Heartbeat Checklist
+# HEARTBEAT.md -- Frontend Engineer Heartbeat Checklist
 
 Run this checklist on every heartbeat.
 
@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,13 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Frontend Engineering Workflow
-- Check if API contracts/OpenAPI specs exist before building data-dependent components.
-- Use shadcn-ui components as the base — customize with Tailwind, don't reinvent.
-- Test responsive layouts at mobile (375px), tablet (768px), and desktop (1280px) breakpoints.
-- For 3D model viewer integration: test with sample .glb/.gltf files before connecting to the real pipeline.
-- Run `npm run lint` and `npm run test` before pushing changes.
-- Comment on issues with screenshots or component descriptions when completing UI tasks.
+- Before building a page: check if there's a design mockup or wireframe to follow.
+- Build components with shadcn-ui and Radix UI primitives first — custom CSS only when needed.
+- Test on mobile viewport (375px) and desktop (1440px) at minimum.
+- Use the 3D model viewer (Three.js / React Three Fiber) for all figurine previews.
+- For Stripe checkout: use Stripe Elements for PCI compliance, never handle raw card data.
+- Write component tests with Vitest and React Testing Library.
+- When the Backend API isn't ready, mock data with the agreed API contract shape.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

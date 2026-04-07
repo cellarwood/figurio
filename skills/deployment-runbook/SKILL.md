@@ -1,71 +1,80 @@
 ---
-name: deployment-runbook
-description: Deployment procedures and rollback steps for the Figurio platform
+name: Deployment Runbook
+description: Step-by-step deployment procedures and rollback steps for Figurio's Kubernetes infrastructure
 ---
 
 # Deployment Runbook
 
 ## Standard Deployment (via CI/CD)
 
-Automated on merge to `main`:
+Triggered automatically on merge to main:
 
 1. GitHub Actions builds Docker images
-2. Images pushed to Docker Hub with tags: `latest`, `sha-{commit}`
-3. Helm upgrade applied to `figurio-dev` namespace
-4. Smoke test verifies health endpoints
+2. Tags: `lukekelle00/figurio-web:sha-{commit}`, `lukekelle00/figurio-api:sha-{commit}`
+3. Pushes to Docker Hub
+4. (If configured) Updates Helm values and applies to figurio-dev namespace
 
-### Manual Promotion to Staging/Prod
-
+**Verify after deploy:**
 ```bash
-# Promote a specific image to staging
-helm upgrade figurio-api infra/helm/figurio-api \
-  --namespace figurio-staging \
-  --set image.tag=sha-abc1234
-
-helm upgrade figurio-web infra/helm/figurio-web \
-  --namespace figurio-staging \
-  --set image.tag=sha-abc1234
+kubectl -n figurio-dev get pods          # All Running, no restarts
+kubectl -n figurio-dev logs deploy/api   # No errors on startup
+curl -s https://api.figurio.cellarwood.org/api/v1/health  # 200 OK
 ```
 
-```bash
-# Promote to production (same commands, different namespace)
-helm upgrade figurio-api infra/helm/figurio-api \
-  --namespace figurio-prod \
-  --set image.tag=sha-abc1234
-```
+## Manual Deployment
 
-## Rollback Procedure
-
-If a deployment causes issues:
+When CI/CD is not available or for staging/prod:
 
 ```bash
-# Instant rollback via Helm
-helm rollback figurio-api 1 --namespace figurio-prod
-helm rollback figurio-web 1 --namespace figurio-prod
+# 1. Build and push
+docker build -t lukekelle00/figurio-api:v{version} services/api/
+docker push lukekelle00/figurio-api:v{version}
 
-# Verify rollback
-kubectl get pods -n figurio-prod
-curl -s https://api.figurio.cellarwood.org/health
+# 2. Update Helm values
+# Edit infra/helm/figurio-api/values-{env}.yaml → image.tag: v{version}
+
+# 3. Deploy
+helm upgrade figurio-api infra/helm/figurio-api/ \
+  -n figurio-{env} \
+  -f infra/helm/figurio-api/values-{env}.yaml
+
+# 4. Verify
+kubectl -n figurio-{env} rollout status deploy/figurio-api
 ```
 
-## Health Check Endpoints
+## Rollback
 
-| Service | Endpoint | Expected |
-|---------|----------|----------|
-| API | `GET /health` | `{"status": "ok"}` |
-| API | `GET /health/db` | `{"status": "ok", "db": "connected"}` |
-| Web | `GET /` | HTTP 200 |
+```bash
+# Option 1: Helm rollback (preferred)
+helm rollback figurio-api -n figurio-{env}
 
-## Pre-Deployment Checklist
+# Option 2: kubectl rollback
+kubectl -n figurio-{env} rollout undo deploy/figurio-api
 
-- [ ] All CI checks passing on the commit
-- [ ] Database migrations applied (if any)
-- [ ] Environment variables updated in K8s secrets (if any new ones)
-- [ ] No ongoing incidents or maintenance windows
+# Option 3: Pin to specific image
+kubectl -n figurio-{env} set image deploy/figurio-api \
+  api=lukekelle00/figurio-api:v{previous-version}
+```
 
-## Post-Deployment Verification
+**Always verify after rollback:**
+- Pods are healthy
+- API health endpoint responds
+- Storefront loads correctly
 
-1. Check health endpoints
-2. Verify Grafana dashboards for error rate spike
-3. Place a test order in staging (Stripe test mode)
-4. Check Sentry for new errors
+## Database Migrations
+
+**Before deploying code that requires a migration:**
+1. Run migration against dev database first
+2. Verify migration is reversible: `alembic downgrade -1` then `alembic upgrade head`
+3. Deploy migration to staging, verify
+4. Deploy to production during low-traffic window
+
+**Never run migrations and code deploy simultaneously.** Migration first, then code deploy.
+
+## Environment-Specific Notes
+
+| Environment | Namespace | Database | Stripe Mode |
+|-------------|-----------|----------|-------------|
+| Dev | figurio-dev | Local StatefulSet | Test keys |
+| Staging | figurio-staging | Local StatefulSet | Test keys |
+| Production | figurio-prod | Managed (TBD) | Live keys |

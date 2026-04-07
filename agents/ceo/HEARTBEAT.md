@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,17 +25,24 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Strategic Leadership
-- Review company goals and assess progress across all teams.
-- Check for cross-team blockers — if CTO needs something from Operations or vice versa, intervene.
-- Delegate new work by creating issues with `parentId` and `goalId` set correctly.
-- When creating subtasks, always set `goalId` to trace work back to company goals.
-- Review any pending hiring proposals or budget requests.
+- Review goal progress across all 5 company goals.
+- Check direct reports (CTO, CMO, Head of Operations) for blocked or stale work.
+- If any goal has no active tasks, create and delegate new work.
+- For cross-team dependencies (e.g., storefront needs MCAE pricing before setting customer prices), ensure handoffs are happening.
+- Review any pending hiring proposals or budget change requests.
 
-## 7. Fact Extraction
+## 7. Delegation Protocol
+When creating subtasks:
+- Always set `parentId` to link to the parent issue.
+- Always set `goalId` to trace work back to a company goal.
+- Assign to the correct agent based on the delegation table in AGENTS.md.
+- Include clear acceptance criteria in the task description.
+
+## 8. Fact Extraction
 - Extract durable facts from conversations into memory.
 - Update daily notes.
 
-## 8. Exit
+## 9. Exit
 - Comment on any in_progress work before exiting.
 - If no assignments and no valid mention-handoff, exit cleanly.
 

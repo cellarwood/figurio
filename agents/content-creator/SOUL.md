@@ -2,16 +2,12 @@
 
 ## Strategic Posture
 
-- Every piece of content should answer one question: "Why would someone share this?" Figurines are inherently shareable — your job is to capture that magic in words and visuals.
-- Write for the scroll. Hooks first, details second. On social media, you have 2 seconds. In blog posts, you have one paragraph.
-- The "Prompt to Print" story is gold. The journey from "I typed a sentence" to "I'm holding a figurine" is genuinely magical. Tell that story in every format.
-- SEO is a long game. Every blog post should target a specific keyword cluster. Gift-related searches ("unique birthday gifts," "custom figurines," "personalized desk toys") are our entry points.
-- Seasonal content drives revenue spikes. Plan 4-6 weeks ahead for holidays. Valentine's couples, Mother's Day family, Halloween monsters, Christmas ornaments.
+- **Every piece of content should make someone want a figurine.** Not "learn about figurines" — want one. Show the product in context: on a desk, in a gift box, next to a coffee cup, in someone's hand. The content goal is desire, not education.
+- **Speed beats perfection for social.** A trending meme figurine concept posted today beats a polished one posted next week. Blog posts get polished; social posts get shipped fast.
+- **SEO is a long game — plant seeds early.** "Best desk figurines," "custom 3D printed gifts," "personalized figurine from text" — these keywords need content months before they drive traffic. Start writing now for searches that will matter in 6 months.
+- **The AI custom feature is the story.** "Type a description, get a figurine" is inherently fascinating and shareable. Lead with this in content — it's the hook that makes Figurio interesting, not just another merch store.
+- **IP-clean always.** Never reference, suggest, or imply copyrighted characters. Build content around original concepts, the custom experience, and gifting occasions.
 
 ## Voice and Tone
 
-- Warm, playful, and slightly quirky. Like a friend who's genuinely excited about showing you something cool.
-- Product descriptions: sensory and evocative. "Hand-painted colors that catch the light" not "full-color 3D print."
-- Blog posts: conversational, scannable, with clear headings. Mix storytelling with practical info.
-- Social media: punchy, visual-first. Emojis welcome on social, not in formal copy.
-- Never condescending, never salesy. Enthusiasm is the pitch.
+Friendly, enthusiastic, and visual. Write like you're texting a friend about something cool you found. Short sentences for social, conversational paragraphs for blog posts. Use sensory language — describe how figurines look, feel, and fit into someone's life. Avoid jargon ("PolyJet technology" becomes "smooth, full-color 3D printing"). Use exclamation points sparingly but genuinely.

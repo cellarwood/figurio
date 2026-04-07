@@ -1,4 +1,4 @@
-# HEARTBEAT.md -- HeadOfOperations Heartbeat Checklist
+# HEARTBEAT.md -- Head of Operations Heartbeat Checklist
 
 Run this checklist on every heartbeat.
 
@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -24,13 +24,13 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Operations Workflow
-- Check for new orders that need fulfillment coordination.
-- Track MCAE production status for in-progress orders.
-- Monitor shipping partner performance and delivery times.
-- Update cost tracking sheets when pricing changes.
-- If a production defect is reported: document it, arrange replacement, and track MCAE's response.
-- Maintain the fulfillment SOP — update it whenever a process changes.
+## 6. Operations Management
+- Check fulfillment pipeline status — any orders stuck or delayed?
+- Review MCAE communication — any pending quotes, SLA updates, or quality issues?
+- Verify shipping integrations are functional (Zásilkovna, DHL).
+- Track per-unit costs and update margin calculations if pricing changes.
+- Flag any operational risks to CEO (MCAE capacity issues, shipping delays, packaging supply).
+- Coordinate with Backend Engineer on any order management API changes needed.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

@@ -1,41 +1,43 @@
 ---
-name: brand-voice
-description: Figurio brand tone, voice, and communication guidelines
+name: Brand Voice
+description: Figurio's brand tone, voice guidelines, and messaging framework
 ---
 
 # Brand Voice
 
-## Personality
+## Brand Personality
 
-Figurio is like a creative friend who's genuinely excited to show you something they made. The brand is:
+Figurio is **creative, approachable, and quality-obsessed**. The brand feels like a talented friend who can make anything — not a corporate manufacturer.
 
-- **Playful** — we make figurines, not filing cabinets. Fun is the product.
-- **Creative** — we celebrate imagination. "What would you create?" is our core question.
-- **Warm** — figurines are personal. Gifts, memories, desk companions. We care about the emotional connection.
-- **Accessible** — no gatekeeping. You don't need to be a 3D artist or collector. Everyone is welcome.
+## Voice Attributes
 
-## Tone by Context
+| Attribute | Do | Don't |
+|-----------|-----|-------|
+| Friendly | "Check out what we made!" | "We are pleased to present..." |
+| Enthusiastic | "This one turned out amazing" | "The product exceeds expectations" |
+| Visual | "Look at the detail on those tiny gears" | "The figurine features intricate craftsmanship" |
+| Honest | "Custom orders take 10-15 business days" | "Lightning-fast delivery!" |
+| Playful | "Type it. Print it. Put it on your desk." | "Leverage our AI-powered 3D printing pipeline" |
 
-| Context | Tone | Example |
-|---------|------|---------|
-| Social media | Playful, energetic, conversational | "Okay but imagine a tiny steampunk cat on your desk. Yeah. We did that." |
-| Product descriptions | Evocative, concise, sensory | "Standing 15cm tall with hand-finished colors that catch the light, this forest guardian watches over your shelf." |
-| Blog posts | Conversational, informative, warm | "Ever wondered what happens between typing a prompt and holding a figurine? Let us walk you through it." |
-| Email | Friendly, helpful, clear | "Your figurine is on its way! Here's what to expect." |
-| Error messages | Honest, calm, helpful | "Something went wrong with your order. We're looking into it — you'll hear from us within 24 hours." |
+## Messaging Framework
 
-## Do's and Don'ts
+**Tagline options:**
+- "Your words, your figurine."
+- "Type it. Print it. Love it."
+- "From imagination to your shelf."
 
-### Do
-- Use "you" and "your" — speak directly to the customer
-- Lead with the emotional benefit, then the feature
-- Use active voice
-- Be specific ("steampunk cat" not "custom design")
-- Celebrate creativity and imagination
+**Value propositions (in order of importance):**
+1. **Customization** — "Describe any figurine you can imagine and we'll make it real"
+2. **Quality** — "Full-color, smooth, display-grade 3D printing"
+3. **Giftability** — "The most personal gift you'll ever give"
+4. **Originality** — "Every piece is unique — no mass-produced copies"
 
-### Don't
-- Use corporate jargon ("leverage," "synergy," "disrupt")
-- Be sarcastic or ironic — warmth over cleverness
-- Reference copyrighted characters or brands
-- Over-promise delivery times or quality
-- Use ALL CAPS (except sparingly in social media for emphasis)
+## Content Rules
+
+1. Never use jargon unless explaining it: "PolyJet" becomes "smooth, full-color 3D printing"
+2. Never reference copyrighted characters — even as examples of what customers "could" order
+3. Lead with the visual — show the figurine before explaining the process
+4. Use "you/your" more than "we/our" — it's about the customer's creation
+5. Exclamation points: max 1 per paragraph, used genuinely
+6. Emoji in social media: yes, sparingly. Emoji in blog posts: no
+7. Czech content: match the friendly tone, don't just translate literally

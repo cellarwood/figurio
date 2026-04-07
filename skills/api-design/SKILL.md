@@ -1,37 +1,33 @@
 ---
-name: api-design
-description: REST API design conventions for the Figurio backend
+name: API Design
+description: REST API conventions, endpoint naming, and error handling standards for Figurio's FastAPI backend
 ---
 
-# API Design Conventions
+# API Design
 
-## URL Structure
+## URL Convention
 
 ```
-/api/v1/products
-/api/v1/products/{id}
-/api/v1/orders
-/api/v1/orders/{id}
-/api/v1/ai-jobs
-/api/v1/ai-jobs/{id}
-/api/v1/ai-jobs/{id}/approve
-/api/v1/customers/me
-/api/v1/webhooks/stripe
+/api/v1/{resource}              # Collection
+/api/v1/{resource}/{id}         # Single resource
+/api/v1/{resource}/{id}/{sub}   # Sub-resource
 ```
 
-- Plural nouns for collections
-- kebab-case for multi-word resources
-- Version prefix `/api/v1/`
-- Actions as sub-resources (e.g., `/approve`, `/reject`)
+All endpoints prefixed with `/api/v1/`. Resource names are plural, kebab-case.
 
-## Request/Response Format
+## Figurio API Resources
 
-- Always JSON (`Content-Type: application/json`)
-- Use Pydantic models for validation and serialization
-- Dates in ISO 8601 format
-- Money in cents (integer) with currency field
+| Resource | Endpoints | Auth Required |
+|----------|-----------|---------------|
+| `/api/v1/products` | GET (list), GET /{id} | No |
+| `/api/v1/orders` | POST, GET (list), GET /{id}, PATCH /{id}/status | Yes |
+| `/api/v1/custom-orders` | POST, GET /{id}, POST /{id}/approve, POST /{id}/reject | Yes |
+| `/api/v1/users` | POST /register, POST /login, GET /me, PATCH /me | Partial |
+| `/api/v1/checkout` | POST /sessions | Yes |
+| `/api/v1/webhooks/stripe` | POST | No (signature verified) |
+| `/api/v1/admin/qa-queue` | GET, PATCH /{id}/approve, PATCH /{id}/reject | Admin |
 
-### Standard Response Envelope
+## Response Format
 
 ```json
 {
@@ -39,50 +35,48 @@ description: REST API design conventions for the Figurio backend
   "meta": {
     "page": 1,
     "per_page": 20,
-    "total": 142
+    "total": 150
   }
 }
 ```
 
-### Error Response
-
+Error responses:
 ```json
 {
   "error": {
     "code": "VALIDATION_ERROR",
-    "message": "Human-readable description",
+    "message": "Human-readable message",
     "details": [
-      {"field": "email", "message": "Invalid email format"}
+      { "field": "email", "message": "Invalid email format" }
     ]
   }
 }
 ```
 
-## Status Codes
-
-| Code | Usage |
-|------|-------|
-| 200 | Success (GET, PUT) |
-| 201 | Created (POST) |
-| 204 | No content (DELETE) |
-| 400 | Validation error |
-| 401 | Not authenticated |
-| 403 | Not authorized |
-| 404 | Not found |
-| 409 | Conflict (duplicate, state mismatch) |
-| 422 | Unprocessable (valid format, business rule violation) |
-| 500 | Server error |
-
 ## Pagination
 
-Offset-based for catalog browsing:
+Use cursor-based pagination for lists:
+- `?cursor={last_id}&limit=20`
+- Default limit: 20, max: 100
+- Response includes `meta.next_cursor` if more results exist
 
-```
-GET /api/v1/products?page=2&per_page=20&category=fantasy&size=medium&sort=-created_at
-```
+## Status Codes
 
-## Authentication
+| Code | When |
+|------|------|
+| 200 | Successful GET, PATCH |
+| 201 | Successful POST (resource created) |
+| 400 | Validation error, malformed request |
+| 401 | Missing or invalid auth token |
+| 403 | Valid auth but insufficient permissions |
+| 404 | Resource not found |
+| 409 | Conflict (duplicate order, concurrent modification) |
+| 422 | Unprocessable (valid format but business logic violation) |
+| 500 | Unexpected server error |
 
-- JWT Bearer tokens in `Authorization` header
-- Access token (short-lived, 15min) + Refresh token (long-lived, 7 days)
-- Stripe webhooks: verify signature, no JWT needed
+## Stripe Webhook Handling
+
+- Always verify webhook signature with `STRIPE_WEBHOOK_SECRET`
+- Process idempotently (use Stripe event ID for deduplication)
+- Return 200 immediately, process asynchronously if needed
+- Log every webhook event (type, id, outcome)

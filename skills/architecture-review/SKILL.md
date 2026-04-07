@@ -1,54 +1,58 @@
 ---
-name: architecture-review
-description: Architecture review checklist and ADR format for the Figurio platform
+name: Architecture Review
+description: Architecture review checklist and ADR format for Figurio's technical decisions
 ---
 
 # Architecture Review
 
 ## Review Checklist
 
-When reviewing a proposed architecture change or new system design:
+When reviewing an architecture proposal or significant technical change:
 
-### 1. Does it fit the stack?
-- Frontend: React/TypeScript/shadcn-ui/Tailwind
-- Backend: Python/FastAPI/PostgreSQL
-- Infra: Docker/K8s/Helm/Traefik
-- If introducing a new technology: is there a compelling reason vs. using what we have?
+### Fit
+- [ ] Does it align with the monorepo structure (apps/web, services/api)?
+- [ ] Does it use the approved tech stack (React/TS, FastAPI/Python, PostgreSQL)?
+- [ ] Does it fit within the single-database, single-API architecture?
 
-### 2. Coupling and boundaries
-- Are API contracts clearly defined (OpenAPI spec)?
-- Can frontend and backend be deployed independently?
-- Is the AI pipeline behind an adapter interface (so we can swap providers)?
+### Simplicity
+- [ ] Is this the simplest solution that works? (No speculative abstractions)
+- [ ] Could this be done with fewer moving parts?
+- [ ] Does it introduce a new dependency? Is that dependency justified?
 
-### 3. Data flow
-- Where is the source of truth for each piece of data?
-- Stripe is source of truth for payments. PostgreSQL for application state.
-- Are there potential consistency issues between systems?
+### Scalability (within reason)
+- [ ] Will this work for 100 orders/day? 1,000? (Don't over-engineer for 100,000)
+- [ ] Are database queries indexed appropriately?
+- [ ] Are external API calls (Stripe, text-to-3D) handled asynchronously?
 
-### 4. Failure modes
-- What happens when the 3D API is down? (Queue retries, customer sees "generating" status)
-- What happens when Stripe webhooks are delayed? (Idempotent processing, reconciliation)
-- What happens when MCAE is unreachable? (Orders queue, ops notified)
+### Security
+- [ ] Are secrets managed via environment variables / K8s secrets?
+- [ ] Is user input validated at API boundaries?
+- [ ] Are Stripe webhooks verified with signature checking?
+- [ ] Is authentication required on all non-public endpoints?
 
-### 5. Scale readiness
-- Not over-engineering, but: will this design survive 10x order volume without rewrite?
-- Async job processing for AI pipeline (not synchronous request-response)
-- Database indexes on hot query paths
+### Operability
+- [ ] Can this be deployed with the existing Helm chart + GitHub Actions pipeline?
+- [ ] Are there health check endpoints?
+- [ ] Is there logging sufficient for debugging production issues?
 
-## ADR Format
+## ADR (Architecture Decision Record) Format
 
 ```markdown
-# ADR-{number}: {title}
+# ADR-{number}: {Title}
 
-## Status
-Proposed | Accepted | Deprecated | Superseded by ADR-{n}
+**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{n}
+**Date:** {YYYY-MM-DD}
+**Decider:** CTO
 
 ## Context
-What is the issue we're seeing that motivates this decision?
+{What is the issue? Why does a decision need to be made?}
 
 ## Decision
-What is the change that we're proposing and/or doing?
+{What was decided?}
 
 ## Consequences
-What becomes easier or harder as a result of this decision?
+{What are the positive and negative effects of this decision?}
+
+## Alternatives Considered
+{What other options were evaluated and why were they rejected?}
 ```

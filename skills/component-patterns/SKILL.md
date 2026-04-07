@@ -1,6 +1,6 @@
 ---
-name: component-patterns
-description: React component architecture and patterns for the Figurio storefront
+name: Component Patterns
+description: React component architecture, design system usage, and state management patterns for Figurio's storefront
 ---
 
 # Component Patterns
@@ -9,51 +9,47 @@ description: React component architecture and patterns for the Figurio storefron
 
 ```
 App
-├── Layout (header, footer, navigation)
+├── Layout (Header, Footer, Navigation)
 ├── Pages
-│   ├── HomePage (hero, featured grid, CTA sections)
-│   ├── CatalogPage (filters + product grid)
-│   ├── ProductDetailPage (images, 3D viewer, size selector, add to cart)
-│   ├── CustomFigurinePage (prompt input, status, preview, approve/reject)
-│   ├── CartPage (items, summary, checkout CTA)
-│   ├── CheckoutPage (Stripe Elements, address form)
-│   └── AccountPage (order history, order detail)
+│   ├── CatalogPage (product grid, filters, search)
+│   ├── ProductDetailPage (3D viewer, size selector, add to cart)
+│   ├── CustomOrderPage (prompt input, generation progress, preview)
+│   ├── CheckoutPage (cart summary, Stripe payment)
+│   ├── AccountPage (profile, order history)
+│   └── AdminQAPage (QA review dashboard)
 └── Shared Components
-    ├── ProductCard (image, name, price, size badges)
-    ├── ModelViewer (3D preview using model-viewer or Three.js)
-    ├── SizeSelector (small/medium/large with prices)
-    ├── PriceDisplay (formatted price with currency)
-    └── OrderStatusTimeline (visual status steps)
+    ├── FigurineCard (thumbnail, name, price)
+    ├── FigurineViewer (Three.js 3D model viewer)
+    ├── SizeSelector (S/M/L with price)
+    ├── CartSidebar (items, total, checkout button)
+    └── OrderStatusBadge (colored status indicator)
 ```
 
-## Rules
+## Component Rules
 
-1. **Use shadcn-ui first.** Check if a shadcn component exists before building custom. Customize with Tailwind classes.
-2. **Collocate.** Page-specific components live next to the page. Shared components in `src/components/`.
-3. **Props over context.** Pass data via props. Use React context only for: auth state, cart state, theme.
-4. **TypeScript strict.** All props typed with interfaces. No `any`. No implicit returns.
-5. **Server data.** Use React Query (TanStack Query) for API data fetching and caching.
+1. **Use shadcn-ui first.** Before building a custom component, check if shadcn-ui has one. Customize via Tailwind, don't fork.
+2. **One component, one file.** No barrel exports, no index.ts re-exports unless the folder has 3+ related components.
+3. **Props over context.** Pass data via props until it's genuinely painful (3+ levels of prop drilling). Then use React context.
+4. **Server state via React Query.** All API calls go through `useQuery` / `useMutation`. No `useEffect` + `fetch` patterns.
+5. **TypeScript strict.** All props typed, no `any`, no `as` casts unless unavoidable.
 
-## Naming
+## 3D Viewer Component
 
-- Components: PascalCase (`ProductCard.tsx`)
-- Hooks: camelCase with `use` prefix (`useProducts.ts`)
-- Utils: camelCase (`formatPrice.ts`)
-- Types: PascalCase in `types/` directory
+The `FigurineViewer` is the most important component. Requirements:
+- Loads GLB/OBJ files via React Three Fiber
+- Orbit controls: rotate (drag), zoom (scroll), pan (right-drag)
+- Touch controls for mobile (pinch zoom, drag rotate)
+- Auto-rotate when idle (stop on interaction)
+- Loading skeleton while model loads
+- Fallback to static images if WebGL unavailable
+- Performance: target 60fps on mid-range mobile devices
 
-## 3D Model Viewer Integration
+## Responsive Breakpoints
 
-Start with `<model-viewer>` web component:
-
-```tsx
-<model-viewer
-  src={modelUrl}
-  alt={productName}
-  auto-rotate
-  camera-controls
-  shadow-intensity="1"
-  style={{ width: '100%', height: '400px' }}
-/>
+```
+mobile:  < 640px   (1 column, stacked layout)
+tablet:  640-1024px (2 columns, adjusted spacing)
+desktop: > 1024px   (3-4 columns, sidebar layout)
 ```
 
-Upgrade to Three.js only if: custom shading, annotations, or advanced camera control is needed.
+Always design mobile first, then add `sm:`, `md:`, `lg:` Tailwind modifiers.

@@ -1,4 +1,4 @@
-# HEARTBEAT.md -- ContentCreator Heartbeat Checklist
+# HEARTBEAT.md -- Content Creator Heartbeat Checklist
 
 Run this checklist on every heartbeat.
 
@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -24,13 +24,13 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Content Creation Workflow
-- Check for new content briefs from CMO before starting self-directed work.
-- For blog posts: outline first, draft second, SEO-optimize third. Submit to CMO for review.
-- For social media: batch-produce posts for the week. Include visual direction notes.
-- For product descriptions: keep them under 150 words, lead with the emotional hook, include size and material details.
-- Always check content against IP guidelines — no copyrighted characters or brands.
-- Comment on issues with content drafts or links when completing content tasks.
+## 6. Content Production Workflow
+- Check content calendar — what's due this week?
+- Prioritize content that supports upcoming campaigns or product launches.
+- For blog posts: research keywords, write draft, optimize for SEO, submit for review.
+- For social media: create post copy + visual concept, align with brand guidelines.
+- For product descriptions: photograph or render the figurine, write compelling copy, include size/material details.
+- Track trending topics and memes — flag figurine-worthy trends to CMO immediately.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

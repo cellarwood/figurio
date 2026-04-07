@@ -1,4 +1,4 @@
-# HEARTBEAT.md -- BackendEngineer Heartbeat Checklist
+# HEARTBEAT.md -- Backend Engineer Heartbeat Checklist
 
 Run this checklist on every heartbeat.
 
@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,13 +25,13 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Backend Engineering Workflow
-- Before writing code: check for existing API contracts or OpenAPI specs from CTO.
-- Use `uv` for all dependency management — `uv sync`, `uv add`, never raw pip.
-- Run `pytest` before pushing any changes.
-- Write type hints on all function signatures.
-- For Stripe integration: always handle webhook signature verification, use idempotency keys.
-- For AI pipeline work: implement retry logic with exponential backoff, store intermediate results.
-- Comment on the issue with API endpoint details when completing an API task (method, path, request/response schema).
+- Before writing code: check if there's an existing API contract or schema to follow.
+- Write tests alongside implementation (pytest, not after the fact).
+- Run `uv sync` before starting work to ensure dependencies are current.
+- After implementing an endpoint, update the OpenAPI docs so frontend can integrate.
+- Use database migrations (Alembic) for all schema changes — never modify the DB directly.
+- For Stripe integration: always test with Stripe test keys first, handle webhooks idempotently.
+- For AI pipeline work: log generation times, failure rates, and mesh repair success rates.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

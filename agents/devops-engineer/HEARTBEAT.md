@@ -1,4 +1,4 @@
-# HEARTBEAT.md -- DevOpsEngineer Heartbeat Checklist
+# HEARTBEAT.md -- DevOps Engineer Heartbeat Checklist
 
 Run this checklist on every heartbeat.
 
@@ -9,7 +9,7 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 - Read today's plan, review progress, resolve blockers, record updates.
 
-## 3. Approval Follow-Up
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
 - Close resolved issues or comment on what remains open.
@@ -25,12 +25,12 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Infrastructure Workflow
-- Before making K8s changes: check current state with `kubectl get pods -n figurio-dev`.
-- Test all Helm chart changes in dev namespace first.
-- For CI/CD changes: verify GitHub Actions workflow syntax before pushing.
-- For Docker builds: test locally with `docker build` before pushing to registry.
-- After deploying: verify service health via endpoint checks and monitoring dashboards.
-- Document any manual steps in runbooks.
+- Check cluster health: `kubectl get nodes`, `kubectl get pods -A` for any CrashLoopBackOff or pending pods.
+- Check CI/CD pipeline status: any failing workflows on main branch?
+- If a deployment is stuck, investigate logs before restarting pods.
+- After any Helm chart change, validate with `helm template` before applying.
+- Keep Docker images small — use multi-stage builds, Alpine base where possible.
+- Document any manual infrastructure steps in the deployment runbook.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

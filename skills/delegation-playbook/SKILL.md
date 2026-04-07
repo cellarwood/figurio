@@ -1,5 +1,5 @@
 ---
-name: delegation-playbook
+name: Delegation Playbook
 description: Routing rules and delegation patterns for the Figurio CEO
 ---
 
@@ -7,33 +7,32 @@ description: Routing rules and delegation patterns for the Figurio CEO
 
 ## Routing Table
 
-| Signal in task/request | Route to | Why |
-|------------------------|----------|-----|
-| Code, API, database, architecture | **CTO** | All engineering goes through CTO first |
-| Frontend UI, design implementation | **CTO** (who routes to Frontend Engineer) | CTO coordinates engineering |
-| Docker, K8s, CI/CD, deployment | **CTO** (who routes to DevOps Engineer) | CTO owns infrastructure |
-| AI/3D pipeline, model quality | **CTO** | CTO evaluates and delegates |
-| Brand, marketing strategy, campaigns | **CMO** | CMO owns all marketing |
-| Blog posts, social media, content | **CMO** (who routes to Content Creator) | CMO directs content |
-| MCAE, printing, shipping, packaging | **Head of Operations** | Ops owns supply chain |
-| Pricing decisions | **CEO** (with input from Ops + CTO) | Strategic, cross-functional |
-| Hiring proposals | **CEO** reviews, relevant C-suite proposes | CEO approves all hires |
+| Work Type | Delegate To | Escalation Trigger |
+|-----------|------------|-------------------|
+| Any engineering, architecture, or tech decision | CTO | CTO disagrees with CEO on priority |
+| Backend code, API, database, Stripe, AI pipeline | CTO → Backend Engineer | Blocked > 2 heartbeats |
+| Frontend code, UI, 3D viewer, checkout flow | CTO → Frontend Engineer | Blocked > 2 heartbeats |
+| Docker, K8s, CI/CD, infrastructure | CTO → DevOps Engineer | Cluster down or deploy broken |
+| Marketing strategy, campaigns, brand | CMO | Budget request > $500 |
+| Blog posts, social media, SEO content | CMO → Content Creator | Content calendar empty |
+| MCAE negotiation, pricing, fulfillment | Head of Operations | Price negotiation stalled |
+| Shipping, packaging, vendor management | Head of Operations | Vendor SLA breach |
+| Legal, IP, compliance | CEO (external counsel) | Always CEO-owned |
+| Strategy, positioning, market research | CEO (personal) | Never delegate |
+| Hiring new agents | CEO (with input from relevant manager) | Budget approval required |
 
-## Delegation Format
+## Delegation Rules
 
-When creating a task for a direct report:
+1. **Always include context.** When creating a task, explain: what goal it serves, why it matters now, and what "done" looks like.
+2. **Set goalId on every subtask.** All work traces back to a company goal.
+3. **One owner per task.** Never assign a task to two agents.
+4. **Check capacity before assigning.** If an agent has 3+ in-progress tasks, either deprioritize something or wait.
+5. **Don't micromanage ICs.** Tell them what to build, not how. The CTO handles technical direction.
 
-```
-## Task: [clear outcome description]
-**Owner:** [agent slug]
-**Goal:** [which company goal this serves]
-**Context:** [why this matters now]
-**Constraints:** [budget, timeline, dependencies]
-**Definition of done:** [specific, measurable criteria]
-```
+## Cross-Team Coordination
 
-## Anti-Patterns
-
-- **Don't micromanage:** delegate outcomes, not steps. "Build the catalog API" not "create a file called routes.py and add a GET endpoint."
-- **Don't skip levels:** always go through CTO for engineering, CMO for content. Don't assign tasks directly to ICs.
-- **Don't hoard:** if a decision can be made by a direct report, let them make it. Escalate only: budget > $500, external commitments, IP risk, hiring.
+When work spans multiple teams (e.g., storefront needs MCAE pricing to set customer prices):
+1. Identify the dependency explicitly
+2. Create linked tasks in both teams
+3. Set the downstream task as blocked with a comment explaining what it needs
+4. Check both tasks every heartbeat until resolved

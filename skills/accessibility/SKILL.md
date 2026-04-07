@@ -1,50 +1,50 @@
 ---
-name: accessibility
-description: Accessibility checklist and standards for the Figurio web storefront
+name: Accessibility
+description: Accessibility checklist and WCAG compliance guidelines for Figurio's storefront
 ---
 
-# Accessibility Standards
+# Accessibility
 
-## WCAG 2.1 AA Compliance
-
-Figurio targets WCAG 2.1 Level AA. Figurines are gifts for everyone — our website must be usable by everyone.
-
-## Checklist
+## WCAG 2.1 AA Compliance Checklist
 
 ### Perceivable
-- [ ] All images have meaningful `alt` text (product images describe the figurine)
-- [ ] Color contrast ratio >= 4.5:1 for normal text, >= 3:1 for large text
-- [ ] Information is not conveyed by color alone (e.g., status indicators have icons + text)
-- [ ] Video/animation has pause controls (GSAP animations respect `prefers-reduced-motion`)
+- [ ] All images have descriptive `alt` text (figurine name + brief description)
+- [ ] Color contrast ratio ≥ 4.5:1 for normal text, ≥ 3:1 for large text
+- [ ] Information is not conveyed by color alone (e.g., order status uses text + color)
+- [ ] 3D viewer has a text alternative describing the figurine
+- [ ] Video/animation has pause controls
 
 ### Operable
-- [ ] All interactive elements reachable via keyboard (Tab, Enter, Escape, Arrow keys)
-- [ ] Focus indicators visible on all focusable elements
-- [ ] No keyboard traps (modals can be closed with Escape)
-- [ ] Skip-to-content link at top of page
-- [ ] Touch targets >= 44x44px on mobile
+- [ ] All interactive elements are keyboard-accessible (Tab, Enter, Space, Escape)
+- [ ] Focus order follows visual layout (top-to-bottom, left-to-right)
+- [ ] Focus indicators are visible (use Tailwind `focus-visible:ring-2`)
+- [ ] No keyboard traps (modal dialogs have proper focus management)
+- [ ] Skip-to-content link on every page
 
 ### Understandable
 - [ ] Form fields have visible labels (not just placeholders)
 - [ ] Error messages are specific ("Email is required" not "Invalid input")
-- [ ] Language attribute set on `<html>` tag
-- [ ] Consistent navigation across pages
+- [ ] Language attribute set on `<html lang="en">`
+- [ ] Consistent navigation across all pages
 
 ### Robust
-- [ ] Semantic HTML: `<nav>`, `<main>`, `<article>`, `<button>`, proper heading hierarchy
-- [ ] ARIA labels on custom components (3D viewer, custom selects)
-- [ ] Forms use proper `<label for="...">` associations
-- [ ] shadcn-ui components come with ARIA built-in — don't override
+- [ ] Valid HTML (no duplicate IDs, proper nesting)
+- [ ] ARIA attributes used correctly (prefer semantic HTML over ARIA)
+- [ ] Works with screen readers (test with VoiceOver or NVDA)
 
-## 3D Model Viewer Accessibility
+## Figurio-Specific Considerations
 
-- Provide `alt` text describing the figurine
-- Include "Rotate", "Zoom in/out" keyboard controls or instructions
-- Ensure the viewer is skippable via keyboard (not a focus trap)
-- Provide static image fallback for screen readers
+### 3D Viewer
+- Provide a "View as images" fallback for users who can't interact with 3D
+- Announce loading state to screen readers: `aria-live="polite"`
+- Keyboard controls: arrow keys for rotation, +/- for zoom
 
-## Testing
+### Checkout Flow
+- Stripe Elements handles its own accessibility — don't override
+- Order summary must be readable by screen readers before payment
+- Success/error states announced via `aria-live` regions
 
-- Tab through every page to verify keyboard navigation
-- Use Chrome DevTools Lighthouse accessibility audit
-- Test with screen reader (VoiceOver or NVDA) on key flows: browse, cart, checkout
+### Product Catalog
+- Figurine cards: meaningful alt text, not "product image"
+- Filter controls: proper `<fieldset>` and `<legend>` grouping
+- Search: `role="search"`, `aria-label="Search figurines"`
