@@ -3,6 +3,10 @@
 
 cellarwood.org
 
+# Google Workspace
+
+info@cellarwood.org
+
 # Github
 
 https://github.com/cellarwood/figurio

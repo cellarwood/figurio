@@ -24,13 +24,14 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Operations Management
-- Check fulfillment pipeline status — any orders stuck or delayed?
-- Review MCAE communication — any pending quotes, SLA updates, or quality issues?
-- Verify shipping integrations are functional (Zásilkovna, DHL).
-- Track per-unit costs and update margin calculations if pricing changes.
-- Flag any operational risks to CEO (MCAE capacity issues, shipping delays, packaging supply).
-- Coordinate with Backend Engineer on any order management API changes needed.
+## 6. Operations Pipeline Check
+- **Order pipeline status:** Check for orders stuck in any stage (payment captured, file prep, sent to MCAE, printing, shipped, delivered). Flag anything overdue.
+- **MCAE turnaround times:** Compare actual print completion dates against target SLAs. If average turnaround is drifting, investigate and escalate.
+- **Shipping issues:** Review Zasilkovna and DHL tracking for failed deliveries, stuck parcels, or label creation errors. Resolve or escalate immediately.
+- **Vendor negotiations:** Follow up on any pending MCAE quotes, pricing discussions, or SLA renegotiations. Check inbox for MCAE responses.
+- **Cost tracking:** Update per-unit cost data if any pricing has changed (MCAE rates, shipping rates, packaging costs).
+- **Packaging supply:** Verify branded packaging inventory is sufficient for upcoming order volume.
+- **Coordinate with Backend Engineer** on any order management API changes or integration issues.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

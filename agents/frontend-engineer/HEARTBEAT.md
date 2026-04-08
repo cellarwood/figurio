@@ -25,13 +25,17 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Frontend Engineering Workflow
-- Before building a page: check if there's a design mockup or wireframe to follow.
-- Build components with shadcn-ui and Radix UI primitives first — custom CSS only when needed.
-- Test on mobile viewport (375px) and desktop (1440px) at minimum.
-- Use the 3D model viewer (Three.js / React Three Fiber) for all figurine previews.
-- For Stripe checkout: use Stripe Elements for PCI compliance, never handle raw card data.
-- Write component tests with Vitest and React Testing Library.
-- When the Backend API isn't ready, mock data with the agreed API contract shape.
+- Before writing a new component: check if a similar component already exists in the component library.
+- Use shadcn-ui and Radix UI primitives as the foundation — avoid building from scratch.
+- Write TypeScript in strict mode. No `any` types, no `@ts-ignore` without a comment explaining why.
+- Test components with unit tests. Test user flows with integration tests.
+- After building a page or component, check for visual regressions against the existing UI.
+- Review component library consistency: ensure new components follow existing patterns (naming, props API, styling approach).
+- Test responsive layouts at mobile (375px), tablet (768px), and desktop (1280px+) breakpoints.
+- For 3D viewer work: test model loading performance, check progressive rendering, verify camera controls work on touch devices.
+- For checkout flow changes: test the full flow end-to-end with Stripe test mode.
+- Run accessibility checks (axe-core or similar) on new pages and components.
+- Run `npm run lint` and `npm run typecheck` before marking work complete.
 
 ## 7. Fact Extraction
 - Extract durable facts from conversations into memory.

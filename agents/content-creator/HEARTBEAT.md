@@ -25,7 +25,9 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Do the work. Update status and comment when done.
 
 ## 6. Content Production Workflow
-- Check content calendar — what's due this week?
+- Check content calendar — what's due this week? Are there any overdue items?
+- Review pending posts — anything waiting for CMO approval or final edits?
+- Ensure SEO targets are met for all published content (keyword density, meta descriptions, alt tags).
 - Prioritize content that supports upcoming campaigns or product launches.
 - For blog posts: research keywords, write draft, optimize for SEO, submit for review.
 - For social media: create post copy + visual concept, align with brand guidelines.

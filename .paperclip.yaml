@@ -1,52 +1,53 @@
 schema: agentcompanies/v1
 
 company:
-  name: Figurio
   slug: figurio
 
-adapter:
-  model: claude-sonnet-4-6
+adapterConfig:
+  model: sonnet
   maxTurns: 50
-
-budget:
-  totalMonthlyCents: 106000  # $1,060/mo total
 
 agents:
   ceo:
-    budget:
-      monthlyCents: 10000
+    budget: 10000
   cto:
-    budget:
-      monthlyCents: 15000
+    budget: 15000
   cmo:
-    budget:
-      monthlyCents: 10000
+    budget: 12000
   head-of-operations:
-    budget:
-      monthlyCents: 8000
+    budget: 10000
   backend-engineer:
-    budget:
-      monthlyCents: 20000
+    budget: 20000
   frontend-engineer:
-    budget:
-      monthlyCents: 20000
-  devops-engineer:
-    budget:
-      monthlyCents: 15000
+    budget: 20000
   content-creator:
-    budget:
-      monthlyCents: 8000
+    budget: 8000
+  devops-engineer:
+    budget: 15000
 
 env:
-  required:
-    - GH_TOKEN
-    - DOCKER_HUB_USERNAME
-    - DOCKER_HUB_TOKEN
-    - STRIPE_SECRET_KEY
-    - STRIPE_WEBHOOK_SECRET
-    - DATABASE_URL
-  optional:
-    - MESHY_API_KEY
-    - TRIPO3D_API_KEY
-    - SENTRY_DSN
-    - SLACK_WEBHOOK_URL
+  inputs:
+    - name: GH_TOKEN
+      description: GitHub personal access token
+      required: true
+    - name: DOCKER_HUB_USERNAME
+      description: Docker Hub username
+      required: true
+    - name: DOCKER_HUB_TOKEN
+      description: Docker Hub access token
+      required: true
+    - name: GEMINI_API_KEY
+      description: Google Gemini API key for media generation
+      required: true
+    - name: ELEVENLABS_API_KEY
+      description: ElevenLabs API key for text-to-speech
+      required: false
+    - name: STRIPE_SECRET_KEY
+      description: Stripe secret API key
+      required: true
+    - name: STRIPE_WEBHOOK_SECRET
+      description: Stripe webhook signing secret
+      required: true
+    - name: SLACK_WEBHOOK_URL
+      description: Slack webhook for notifications
+      required: false

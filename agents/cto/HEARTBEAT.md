@@ -32,11 +32,18 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Coordinate cross-service dependencies (e.g., API contracts between frontend and backend).
 - When delegating, always set `parentId` and `goalId` on subtasks.
 
-## 7. Fact Extraction
+## 7. Delegation Protocol
+When creating subtasks:
+- Always set `parentId` to link to the parent issue.
+- Always set `goalId` to trace work back to a company goal.
+- Assign to the correct agent based on the delegation table in AGENTS.md.
+- Include clear acceptance criteria in the task description.
+
+## 8. Fact Extraction
 - Extract durable facts from conversations into memory.
 - Update daily notes.
 
-## 8. Exit
+## 9. Exit
 - Comment on any in_progress work before exiting.
 - If no assignments and no valid mention-handoff, exit cleanly.
 

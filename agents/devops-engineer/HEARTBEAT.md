@@ -26,7 +26,9 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 
 ## 6. Infrastructure Workflow
 - Check cluster health: `kubectl get nodes`, `kubectl get pods -A` for any CrashLoopBackOff or pending pods.
-- Check CI/CD pipeline status: any failing workflows on main branch?
+- Review failed CI runs on the main branch — fix broken pipelines before other work.
+- Monitor disk and memory usage across nodes — alert if any node exceeds 80%.
+- Verify SSL certificate expiry — renew if less than 14 days remain.
 - If a deployment is stuck, investigate logs before restarting pods.
 - After any Helm chart change, validate with `helm template` before applying.
 - Keep Docker images small — use multi-stage builds, Alpine base where possible.

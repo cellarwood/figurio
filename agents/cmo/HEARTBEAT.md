@@ -1,45 +1,51 @@
-# HEARTBEAT.md -- CMO Heartbeat Checklist
+# Heartbeat — CMO
 
-Run this checklist on every heartbeat.
+## Purpose
 
-## 1. Identity and Context
-- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+The heartbeat is your regular check-in loop. Run it to stay on top of the content pipeline, campaign performance, and upcoming seasonal opportunities.
 
-## 2. Local Planning Check
-- Read today's plan, review progress, resolve blockers, record updates.
+## Cadence
 
-## 3. Approval Follow-Up (if applicable)
-If `PAPERCLIP_APPROVAL_ID` is set:
-- Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- **Every cycle**, review your active tasks in Paperclip.
+- **Daily**, check Content Creator's task status and unblock if needed.
+- **Weekly**, review campaign analytics and adjust the content calendar.
 
-## 4. Get Assignments
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+## Heartbeat Checklist
 
-## 5. Checkout and Work
-- Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+1. **Check your own tasks** — Are any overdue or stalled? Update status or close completed ones.
+2. **Review content pipeline** — What has Content Creator delivered? What is in progress? What is blocked?
+3. **Check Content Creator's tasks** — Is Content Creator waiting on direction, assets, or approvals from you? Unblock immediately.
+4. **Plan upcoming seasonal campaigns** — Look 6 weeks ahead. Are campaign briefs written? Are content assets in production? Are launch dates on the calendar?
+5. **Review campaign performance** — Check engagement rates, reach, and conversion data for active campaigns. Kill underperformers, double down on winners.
+6. **Review inbox** — Triage email. Respond to influencer inquiries and partnership requests. Flag items that need CEO input.
+7. **Review calendar** — Confirm upcoming deadlines and content launch dates. Ensure nothing is slipping.
 
-## 6. Marketing Leadership
-- Review Content Creator's progress on current content tasks.
-- Check content calendar — ensure upcoming weeks are planned.
-- Review marketing metrics if dashboards are available.
-- Identify trending topics or seasonal opportunities for figurine campaigns.
-- When delegating content work, always set `parentId` and `goalId` on subtasks.
-- Coordinate with CTO on storefront marketing pages and landing page needs.
+## Delegation During Heartbeat
 
-## 7. Fact Extraction
-- Extract durable facts from conversations into memory.
-- Update daily notes.
+When you identify content work that needs doing:
 
-## 8. Exit
-- Comment on any in_progress work before exiting.
-- If no assignments and no valid mention-handoff, exit cleanly.
+1. Create a subtask in Paperclip with:
+   - Clear title describing the deliverable (e.g., "Write Instagram carousel for Valentine's Day collection")
+   - `parentId` linking to the parent campaign or goal
+   - `goalId` linking to the relevant quarterly marketing goal
+   - Assignee set to Content Creator
+   - Deadline, priority, and channel specified
+2. Include a brief in the task description: target audience, tone, key message, and any visual references.
+3. Add a note to the parent task explaining what was delegated.
 
-## Rules
-- Always include `X-Paperclip-Run-Id` header on mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
+## Blocked Reports
+
+If Content Creator is blocked:
+
+- Determine if you can unblock them immediately (e.g., approve a draft, provide direction, share brand assets).
+- If the blocker is cross-team (e.g., waiting on product photos from CTO's team), coordinate directly with that team lead.
+- If the blocker requires budget or pricing decisions, escalate to CEO.
+- Update the task with the resolution plan and expected unblock date.
+
+## Escalation
+
+If something is critical and you cannot resolve it in one cycle:
+
+- Mark the task as blocked with a clear reason.
+- Set a follow-up reminder for the next cycle.
+- If it affects a campaign launch date or seasonal deadline, communicate the impact to CEO immediately.

@@ -1,109 +1,142 @@
 ---
-schema: agentcompanies/v1
----
-
 goals:
   - slug: launch-storefront
-    title: Launch the Figurio e-commerce storefront with catalog browsing, size selection, Stripe checkout, and order tracking
-    description: Ship a production-ready web storefront where customers can browse the figurine catalog, select sizes, pay via Stripe (cards, Apple Pay, Google Pay, SEPA), and track their orders from placement to delivery.
+    title: Launch the Figurio e-commerce storefront with catalog ordering and Stripe checkout
+    description: Ship a working web store where customers can browse pre-designed figurines, select size tiers, pay via Stripe, and receive order confirmation with tracking
     level: company
     status: active
     ownerAgentSlug: cto
-    projectSlugs: [storefront]
+    projectSlugs: [storefront, infrastructure]
     subgoals:
-      - slug: build-catalog-frontend
-        title: Build catalog browsing UI with filtering, search, and 3D model viewer
+      - slug: build-catalog-api
+        title: Build product catalog API with Stripe checkout integration
+        level: team
+        ownerAgentSlug: backend-engineer
+        projectSlugs: [storefront]
+      - slug: build-storefront-ui
+        title: Build storefront UI with product browsing, cart, and order tracking
         level: team
         ownerAgentSlug: frontend-engineer
         projectSlugs: [storefront]
-      - slug: build-checkout-api
-        title: Implement Stripe checkout with multi-currency and EU payment methods
+      - slug: deploy-production
+        title: Deploy storefront to production K8s cluster with CI/CD
         level: team
-        ownerAgentSlug: backend-engineer
-        projectSlugs: [storefront]
-      - slug: build-order-management
-        title: Build order management API with status tracking and customer notifications
-        level: team
-        ownerAgentSlug: backend-engineer
-        projectSlugs: [storefront]
+        ownerAgentSlug: devops-engineer
+        projectSlugs: [infrastructure]
 
   - slug: build-ai-pipeline
-    title: Build the AI Prompt-to-Print pipeline integrating text-to-3D generation, mesh repair, QA preview, and customer approval
-    description: Deliver an end-to-end pipeline where customers enter a text prompt, an AI generates a 3D model, automated tooling repairs the mesh for printability, a QA technician validates quality, and the customer approves a rendered preview before the model enters the print queue. Two-stage payment (50% deposit, 50% on approval).
+    title: Build and validate the AI text-to-3D custom figurine pipeline end-to-end
+    description: Evaluate text-to-3D services, build automated mesh repair, implement 2-stage payment flow, and process at least 5 test orders through MCAE
     level: company
     status: active
     ownerAgentSlug: cto
     projectSlugs: [ai-pipeline]
     subgoals:
-      - slug: integrate-text-to-3d
-        title: Integrate text-to-3D API (Meshy/Tripo3D) with prompt intake and model generation
+      - slug: evaluate-3d-services
+        title: Evaluate and select text-to-3D generation service
         level: team
-        ownerAgentSlug: backend-engineer
+        ownerAgentSlug: cto
         projectSlugs: [ai-pipeline]
       - slug: build-mesh-repair
-        title: Build automated mesh repair pipeline using Blender scripting
+        title: Build automated mesh repair pipeline for printability
         level: team
         ownerAgentSlug: backend-engineer
         projectSlugs: [ai-pipeline]
-      - slug: build-preview-flow
-        title: Create customer preview and approval flow with 3D render viewer
+      - slug: build-custom-order-flow
+        title: Build customer preview and 2-stage payment flow
         level: team
-        ownerAgentSlug: frontend-engineer
+        ownerAgentSlug: backend-engineer
         projectSlugs: [ai-pipeline]
 
-  - slug: establish-mcae-partnership
-    title: Establish the MCAE production partnership with negotiated per-unit pricing and a validated order-to-delivery workflow
-    description: Negotiate pricing with MCAE across all three size tiers, define the order-to-delivery SOP, specify branded packaging requirements, and integrate shipping via Zasilkovna and DHL.
-    level: company
-    status: active
-    ownerAgentSlug: head-of-operations
-    projectSlugs: [production-ops]
-    subgoals:
-      - slug: negotiate-pricing
-        title: Negotiate per-unit pricing with MCAE across Small, Medium, and Large tiers
-        level: team
-        ownerAgentSlug: head-of-operations
-        projectSlugs: [production-ops]
-      - slug: define-fulfillment-sop
-        title: Define end-to-end order-to-delivery workflow and shipping integration
-        level: team
-        ownerAgentSlug: head-of-operations
-        projectSlugs: [production-ops]
-
-  - slug: build-content-engine
-    title: Build a content marketing engine producing product photography, social media content, and SEO blog posts
-    description: Establish Figurio's brand identity, create a content pipeline for Instagram/TikTok, produce SEO-optimized blog content, and build product photography workflows — all before and through launch.
+  - slug: acquire-first-customers
+    title: Establish brand presence and acquire first 100 paying customers within 90 days of launch
+    description: Build social media profiles, launch content marketing with product photography and behind-the-scenes content, drive initial sales through organic and influencer channels
     level: company
     status: active
     ownerAgentSlug: cmo
     projectSlugs: [marketing-launch]
     subgoals:
-      - slug: establish-brand-identity
-        title: Create brand identity guidelines and visual language for Figurio
+      - slug: build-brand-identity
+        title: Create brand visual identity and product photography style guide
         level: team
         ownerAgentSlug: content-creator
         projectSlugs: [marketing-launch]
-      - slug: launch-content-pipeline
-        title: Launch social media profiles, content calendar, and 5 seed blog posts
+      - slug: launch-social-channels
+        title: Launch Instagram and TikTok with 30-day content calendar
         level: team
         ownerAgentSlug: content-creator
+        projectSlugs: [marketing-launch]
+      - slug: run-influencer-campaign
+        title: Plan and execute influencer seeding campaign in 3D printing and collectibles niches
+        level: team
+        ownerAgentSlug: cmo
         projectSlugs: [marketing-launch]
 
-  - slug: deploy-infrastructure
-    title: Deploy CI/CD infrastructure with automated testing, Docker builds, and Kubernetes deployment to microk8s-local
-    description: Set up the monorepo, Docker multi-stage builds, Helm charts for microk8s-local, and GitHub Actions pipelines for continuous integration and deployment with zero-downtime deploys.
+  - slug: setup-fulfillment
+    title: Negotiate MCAE production terms and set up the full fulfillment pipeline
+    description: Finalize per-unit pricing across all 3 size tiers, establish print file handoff process, set up shipping via Zasilkovna (CZ) and DHL (EU), achieve <10 business day turnaround for catalog orders
     level: company
     status: active
-    ownerAgentSlug: devops-engineer
-    projectSlugs: [infrastructure]
+    ownerAgentSlug: head-of-operations
+    projectSlugs: [operations-setup]
     subgoals:
-      - slug: setup-monorepo-docker
-        title: Set up monorepo structure with Docker multi-stage builds for all services
+      - slug: negotiate-mcae-pricing
+        title: Negotiate per-unit pricing with MCAE across all size tiers
         level: team
-        ownerAgentSlug: devops-engineer
-        projectSlugs: [infrastructure]
-      - slug: setup-k8s-cicd
-        title: Configure Kubernetes namespaces, Helm charts, and GitHub Actions CI/CD
+        ownerAgentSlug: head-of-operations
+        projectSlugs: [operations-setup]
+      - slug: setup-shipping
+        title: Set up Zasilkovna (CZ) and DHL (EU) shipping integrations
         level: team
-        ownerAgentSlug: devops-engineer
-        projectSlugs: [infrastructure]
+        ownerAgentSlug: head-of-operations
+        projectSlugs: [operations-setup]
+---
+
+# Figurio Goals
+
+## Company-Level Goals
+
+### 1. Launch Storefront
+**Owner:** CTO | **Projects:** storefront, infrastructure | **Status:** Active
+
+Ship a working web store where customers can browse pre-designed figurines, select size tiers, pay via Stripe, and receive order confirmation with tracking.
+
+#### Team Subgoals
+- **Build Catalog API** (backend-engineer) - Build product catalog API with Stripe checkout integration
+- **Build Storefront UI** (frontend-engineer) - Build storefront UI with product browsing, cart, and order tracking
+- **Deploy Production** (devops-engineer) - Deploy storefront to production K8s cluster with CI/CD
+
+---
+
+### 2. Build AI Pipeline
+**Owner:** CTO | **Projects:** ai-pipeline | **Status:** Active
+
+Evaluate text-to-3D services, build automated mesh repair, implement 2-stage payment flow, and process at least 5 test orders through MCAE.
+
+#### Team Subgoals
+- **Evaluate 3D Services** (cto) - Evaluate and select text-to-3D generation service
+- **Build Mesh Repair** (backend-engineer) - Build automated mesh repair pipeline for printability
+- **Build Custom Order Flow** (backend-engineer) - Build customer preview and 2-stage payment flow
+
+---
+
+### 3. Acquire First Customers
+**Owner:** CMO | **Projects:** marketing-launch | **Status:** Active
+
+Build social media profiles, launch content marketing with product photography and behind-the-scenes content, drive initial sales through organic and influencer channels.
+
+#### Team Subgoals
+- **Build Brand Identity** (content-creator) - Create brand visual identity and product photography style guide
+- **Launch Social Channels** (content-creator) - Launch Instagram and TikTok with 30-day content calendar
+- **Run Influencer Campaign** (cmo) - Plan and execute influencer seeding campaign in 3D printing and collectibles niches
+
+---
+
+### 4. Setup Fulfillment
+**Owner:** Head of Operations | **Projects:** operations-setup | **Status:** Active
+
+Finalize per-unit pricing across all 3 size tiers, establish print file handoff process, set up shipping via Zasilkovna (CZ) and DHL (EU), achieve <10 business day turnaround for catalog orders.
+
+#### Team Subgoals
+- **Negotiate MCAE Pricing** (head-of-operations) - Negotiate per-unit pricing with MCAE across all size tiers
+- **Setup Shipping** (head-of-operations) - Set up Zasilkovna (CZ) and DHL (EU) shipping integrations

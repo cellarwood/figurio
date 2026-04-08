@@ -24,20 +24,24 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Backend Engineering Workflow
-- Before writing code: check if there's an existing API contract or schema to follow.
-- Write tests alongside implementation (pytest, not after the fact).
-- Run `uv sync` before starting work to ensure dependencies are current.
-- After implementing an endpoint, update the OpenAPI docs so frontend can integrate.
-- Use database migrations (Alembic) for all schema changes — never modify the DB directly.
-- For Stripe integration: always test with Stripe test keys first, handle webhooks idempotently.
-- For AI pipeline work: log generation times, failure rates, and mesh repair success rates.
+## 6. Backend Health Checks
+- Run the test suite: `uv run pytest --tb=short -q`. If any tests fail, fix them before starting new work.
+- Check API endpoint status: verify `/health` and `/api/v1/status` return 200.
+- Review Stripe webhook health: check for failed webhook deliveries in the Stripe dashboard or local logs. If webhooks are failing, diagnose and fix immediately — payment issues are P0.
+- Check the mesh repair pipeline logs for any failed or stuck repair jobs. Re-queue or flag for manual review as appropriate.
+- Review database migration status: ensure all migrations are applied and no pending migrations are uncommitted.
 
-## 7. Fact Extraction
+## 7. Delegation Protocol
+When creating subtasks:
+- Always set `parentId` to link to the parent issue.
+- Always set `goalId` to trace work back to a company goal.
+- Include clear acceptance criteria in the task description.
+
+## 8. Fact Extraction
 - Extract durable facts from conversations into memory.
 - Update daily notes.
 
-## 8. Exit
+## 9. Exit
 - Comment on any in_progress work before exiting.
 - If no assignments and no valid mention-handoff, exit cleanly.
 

@@ -1,80 +1,180 @@
 ---
-name: Deployment Runbook
-description: Step-by-step deployment procedures and rollback steps for Figurio's Kubernetes infrastructure
+name: deployment-runbook
+description: Step-by-step deployment procedures for Figurio services — Docker build, push to Docker Hub (lukekelle00), Helm upgrade to microk8s-local K8s cluster.
 ---
 
 # Deployment Runbook
 
-## Standard Deployment (via CI/CD)
+## Purpose
 
-Triggered automatically on merge to main:
+Step-by-step procedures for deploying Figurio services to the microk8s-local Kubernetes cluster. Follow these steps exactly — no shortcuts in production.
 
-1. GitHub Actions builds Docker images
-2. Tags: `lukekelle00/figurio-web:sha-{commit}`, `lukekelle00/figurio-api:sha-{commit}`
-3. Pushes to Docker Hub
-4. (If configured) Updates Helm values and applies to figurio-dev namespace
+## Architecture Overview
 
-**Verify after deploy:**
-```bash
-kubectl -n figurio-dev get pods          # All Running, no restarts
-kubectl -n figurio-dev logs deploy/api   # No errors on startup
-curl -s https://api.figurio.cellarwood.org/api/v1/health  # 200 OK
+```
+GitHub (source) → GitHub Actions (CI) → Docker Hub (registry) → microk8s-local (K8s)
 ```
 
-## Manual Deployment
+- **Registry**: Docker Hub, namespace `lukekelle00`.
+- **Orchestration**: microk8s-local (single-node Kubernetes).
+- **Package manager**: Helm 3.
+- **Environments**: dev, staging, prod (separate namespaces).
 
-When CI/CD is not available or for staging/prod:
+## Docker Image Naming
+
+| Service      | Image Name                        | Example Tag          |
+|--------------|-----------------------------------|----------------------|
+| Web frontend | `lukekelle00/figurio-web:TAG`     | `v1.2.0`, `latest`  |
+| API backend  | `lukekelle00/figurio-api:TAG`     | `v1.2.0`, `latest`  |
+
+Tag format:
+- Release: `v{MAJOR}.{MINOR}.{PATCH}` (e.g., `v1.2.0`).
+- Dev/staging: `{branch}-{short-sha}` (e.g., `main-a1b2c3d`).
+- Latest: `latest` tag updated only from main branch builds.
+
+## Deployment Steps
+
+### 1. Pre-Deploy Checklist
+
+- [ ] All tests pass on the branch being deployed.
+- [ ] Code has been reviewed and merged to the target branch.
+- [ ] Database migrations (if any) have been tested locally.
+- [ ] Environment variables and secrets are up to date in K8s.
+- [ ] MCAE vendor status checked (no planned outages affecting fulfillment).
+
+### 2. Build Docker Images
 
 ```bash
-# 1. Build and push
-docker build -t lukekelle00/figurio-api:v{version} services/api/
-docker push lukekelle00/figurio-api:v{version}
+# API backend
+docker build -t lukekelle00/figurio-api:${TAG} -f docker/api/Dockerfile .
 
-# 2. Update Helm values
-# Edit infra/helm/figurio-api/values-{env}.yaml → image.tag: v{version}
-
-# 3. Deploy
-helm upgrade figurio-api infra/helm/figurio-api/ \
-  -n figurio-{env} \
-  -f infra/helm/figurio-api/values-{env}.yaml
-
-# 4. Verify
-kubectl -n figurio-{env} rollout status deploy/figurio-api
+# Web frontend
+docker build -t lukekelle00/figurio-web:${TAG} -f docker/web/Dockerfile .
 ```
 
-## Rollback
+Multi-stage builds:
+- Stage 1: Install dependencies and run tests.
+- Stage 2: Build production artifacts.
+- Stage 3: Minimal runtime image (python:3.11-slim for API, nginx:alpine for web).
+
+### 3. Run Tests in Container
 
 ```bash
-# Option 1: Helm rollback (preferred)
-helm rollback figurio-api -n figurio-{env}
-
-# Option 2: kubectl rollback
-kubectl -n figurio-{env} rollout undo deploy/figurio-api
-
-# Option 3: Pin to specific image
-kubectl -n figurio-{env} set image deploy/figurio-api \
-  api=lukekelle00/figurio-api:v{previous-version}
+docker run --rm lukekelle00/figurio-api:${TAG} pytest --tb=short
+docker run --rm lukekelle00/figurio-web:${TAG} npm run test -- --ci
 ```
 
-**Always verify after rollback:**
-- Pods are healthy
-- API health endpoint responds
-- Storefront loads correctly
+Do not push images that fail tests.
 
-## Database Migrations
+### 4. Push to Docker Hub
 
-**Before deploying code that requires a migration:**
-1. Run migration against dev database first
-2. Verify migration is reversible: `alembic downgrade -1` then `alembic upgrade head`
-3. Deploy migration to staging, verify
-4. Deploy to production during low-traffic window
+```bash
+docker push lukekelle00/figurio-api:${TAG}
+docker push lukekelle00/figurio-web:${TAG}
+```
 
-**Never run migrations and code deploy simultaneously.** Migration first, then code deploy.
+### 5. Run Database Migrations (if applicable)
 
-## Environment-Specific Notes
+```bash
+# Connect to the cluster
+microk8s kubectl -n ${NAMESPACE} exec -it deploy/figurio-api -- \
+  alembic upgrade head
+```
 
-| Environment | Namespace | Database | Stripe Mode |
-|-------------|-----------|----------|-------------|
-| Dev | figurio-dev | Local StatefulSet | Test keys |
-| Staging | figurio-staging | Local StatefulSet | Test keys |
-| Production | figurio-prod | Managed (TBD) | Live keys |
+Always run migrations before deploying the new application version.
+
+### 6. Helm Upgrade
+
+```bash
+# API backend
+microk8s helm3 upgrade figurio-api ./helm/figurio-api \
+  --namespace ${NAMESPACE} \
+  --set image.tag=${TAG} \
+  --values ./helm/figurio-api/values-${ENV}.yaml \
+  --wait --timeout 5m
+
+# Web frontend
+microk8s helm3 upgrade figurio-web ./helm/figurio-web \
+  --namespace ${NAMESPACE} \
+  --set image.tag=${TAG} \
+  --values ./helm/figurio-web/values-${ENV}.yaml \
+  --wait --timeout 5m
+```
+
+### 7. Post-Deploy Verification
+
+- [ ] Pods are running: `microk8s kubectl -n ${NAMESPACE} get pods`.
+- [ ] Health check passes: `curl https://${DOMAIN}/health`.
+- [ ] API docs accessible: `curl https://${DOMAIN}/docs`.
+- [ ] Frontend loads: open `https://${DOMAIN}` in browser.
+- [ ] Smoke test: browse catalog, add to cart, verify 3D viewer loads.
+- [ ] Check logs for errors: `microk8s kubectl -n ${NAMESPACE} logs deploy/figurio-api --tail=50`.
+- [ ] Stripe webhook test: send test event from Stripe Dashboard.
+
+## Rollback Procedure
+
+If post-deploy verification fails:
+
+```bash
+# Rollback to previous Helm release
+microk8s helm3 rollback figurio-api 0 --namespace ${NAMESPACE}
+microk8s helm3 rollback figurio-web 0 --namespace ${NAMESPACE}
+
+# If database migration needs reversal
+microk8s kubectl -n ${NAMESPACE} exec -it deploy/figurio-api -- \
+  alembic downgrade -1
+```
+
+- `rollback 0` reverts to the immediately previous release.
+- Always rollback application first, then database migration.
+- Notify the team immediately in Slack when rolling back production.
+
+## Environment Configuration
+
+### Namespaces
+
+| Environment | Namespace       | Domain                     |
+|-------------|-----------------|----------------------------|
+| Development | figurio-dev     | dev.figurio.local          |
+| Staging     | figurio-staging | staging.figurio.local      |
+| Production  | figurio-prod    | figurio.cz                 |
+
+### Helm Values per Environment
+
+Each environment has its own values file:
+
+- `values-dev.yaml`: Single replica, debug logging, Stripe test keys.
+- `values-staging.yaml`: Single replica, info logging, Stripe test keys.
+- `values-prod.yaml`: 2+ replicas, warn logging, Stripe live keys.
+
+### Kubernetes Secrets
+
+Managed via `microk8s kubectl create secret`:
+
+```
+figurio-api-secrets:
+  STRIPE_SECRET_KEY
+  STRIPE_WEBHOOK_SECRET
+  DATABASE_URL
+  JWT_SECRET_KEY
+  AI_SERVICE_API_KEY
+
+figurio-db-secrets:
+  POSTGRES_PASSWORD
+```
+
+Never store secrets in Helm values files or Git.
+
+## Deployment Frequency
+
+- **Production**: Weekly releases (Tuesday), hotfixes as needed.
+- **Staging**: On every merge to main.
+- **Development**: On every push to feature branches.
+
+## Emergency Hotfix Process
+
+1. Create branch `hotfix/{description}` from main.
+2. Fix, test, push, and get expedited review.
+3. Merge to main.
+4. Deploy directly to production following steps 2-7 above.
+5. Skip staging for true emergencies, but deploy to staging afterward for parity.

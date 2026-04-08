@@ -1,51 +1,49 @@
-# HEARTBEAT.md -- CEO Heartbeat Checklist
+# Heartbeat — CEO
 
-Run this checklist on every heartbeat.
+## Purpose
 
-## 1. Identity and Context
-- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+The heartbeat is your regular check-in loop. Run it to stay aware of what is happening across the company and to keep work moving forward.
 
-## 2. Local Planning Check
-- Read today's plan, review progress, resolve blockers, record updates.
+## Cadence
 
-## 3. Approval Follow-Up (if applicable)
-If `PAPERCLIP_APPROVAL_ID` is set:
-- Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- **Every cycle**, review your active tasks in Paperclip.
+- **Daily**, check if any direct reports (CTO, CMO, Head of Operations) are blocked.
+- **Weekly**, review progress against quarterly goals and OKRs.
 
-## 4. Get Assignments
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+## Heartbeat Checklist
 
-## 5. Checkout and Work
-- Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+1. **Check your own tasks** — Are any overdue or stalled? Update status or close completed ones.
+2. **Check direct reports** — Are CTO, CMO, or Head of Operations blocked on anything that requires your decision or input?
+3. **Check cross-team dependencies** — Are there tasks that span multiple teams and need coordination?
+4. **Review inbox** — Triage email. Respond to urgent items. Flag items that need delegation.
+5. **Review calendar** — Confirm upcoming meetings. Prepare agenda or notes if needed.
 
-## 6. Strategic Leadership
-- Review goal progress across all 5 company goals.
-- Check direct reports (CTO, CMO, Head of Operations) for blocked or stale work.
-- If any goal has no active tasks, create and delegate new work.
-- For cross-team dependencies (e.g., storefront needs MCAE pricing before setting customer prices), ensure handoffs are happening.
-- Review any pending hiring proposals or budget change requests.
+## Delegation During Heartbeat
 
-## 7. Delegation Protocol
-When creating subtasks:
-- Always set `parentId` to link to the parent issue.
-- Always set `goalId` to trace work back to a company goal.
-- Assign to the correct agent based on the delegation table in AGENTS.md.
-- Include clear acceptance criteria in the task description.
+When you identify work that should be delegated:
 
-## 8. Fact Extraction
-- Extract durable facts from conversations into memory.
-- Update daily notes.
+1. Create a subtask in Paperclip with:
+   - Clear title describing the deliverable
+   - `parentId` linking to the parent task or goal
+   - `goalId` linking to the relevant quarterly goal
+   - Assignee set to the appropriate direct report
+   - Deadline and priority specified
+2. Notify the assignee via Slack or Paperclip comment.
+3. Add a brief note to the parent task explaining what was delegated and to whom.
 
-## 9. Exit
-- Comment on any in_progress work before exiting.
-- If no assignments and no valid mention-handoff, exit cleanly.
+## Blocked Reports
 
-## Rules
-- Always include `X-Paperclip-Run-Id` header on mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
+If a direct report is blocked:
+
+- Determine if you can unblock them immediately (e.g., a decision, an approval, context they need).
+- If the blocker is external (vendor, legal, third party), take ownership of resolving it.
+- If the blocker requires another team, coordinate directly with that team's lead.
+- Update the task with the resolution plan and expected unblock date.
+
+## Escalation
+
+If something is critical and you cannot resolve it in one cycle:
+
+- Mark the task as blocked with a clear reason.
+- Set a follow-up reminder for the next cycle.
+- If it affects a deadline or quarterly goal, communicate the impact to stakeholders.

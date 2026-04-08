@@ -11,5 +11,10 @@
       "mcp__plugin_media-plugin_media-mcp",
       "mcp__plugin_media-plugin_ElevenLabs"
     ]
+  },
+  "env": {
+    "AGENT_EMAIL": "info@cellarwood.org",
+    "COMPANY_DOMAIN": "cellarwood.org",
+    "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": "/paperclip/.gws/figurio.json"
   }
 }
