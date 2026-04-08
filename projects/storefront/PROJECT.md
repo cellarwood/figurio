@@ -1,24 +1,34 @@
 ---
-name: Figurio Storefront
-description: Build and launch the customer-facing e-commerce web store with product catalog, cart, Stripe checkout, and order tracking
+name: Storefront
+description: Build and launch the Figurio e-commerce storefront with catalog browsing, product pages, shopping cart, Stripe checkout, and order tracking
 slug: storefront
 owner: cto
 ---
 
-# Figurio Storefront
+# Storefront
+
+The core e-commerce platform for Figurio. Customers browse the figurine catalog, view product details with 3D previews, select size tiers, add to cart, and complete purchases via Stripe.
 
 ## Scope
 
-- Catalog browsing with product search, filtering, and sorting
-- Size tier selection (small/medium/large) with per-tier pricing
-- Shopping cart with quantity management
-- Stripe prepaid checkout (cards, Apple Pay, Google Pay, SEPA)
-- Order confirmation with tracking and status progression
-- Responsive design (mobile-first)
-- EU accessibility compliance
+- Product catalog with grid/list views, filtering, and search
+- Figurine detail pages with 3D model preview, size tier selector, and pricing
+- Shopping cart with multi-item support
+- Stripe checkout with support for cards, Apple Pay, Google Pay
+- Order confirmation and tracking
+- Admin interface for product management and order fulfillment
+- Responsive mobile-first design
+
+## Tech Stack
+
+- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS
+- **Backend:** Python/FastAPI, PostgreSQL
+- **Payments:** Stripe
+- **Infrastructure:** Docker, K8s, Traefik
 
 ## Success Criteria
 
-- Deployed to production
-- End-to-end purchase flow working (browse → cart → checkout → confirmation)
-- < 3s page load on standard connections
+- Customers can browse, select, and purchase catalog figurines end-to-end
+- Stripe payments process successfully with proper error handling
+- Mobile experience is fully functional
+- Page load time under 3 seconds on mobile

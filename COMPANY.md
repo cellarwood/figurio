@@ -7,7 +7,7 @@ version: 1.0.0
 goals:
   - Launch the Figurio e-commerce storefront with catalog ordering and Stripe checkout
   - Build and validate the AI text-to-3D custom figurine pipeline end-to-end
-  - Establish brand presence and acquire first 100 paying customers within 90 days of launch
+  - Acquire first 100 paying customers within 90 days of launch
   - Negotiate MCAE production terms and set up the full fulfillment pipeline
 ---
 
@@ -19,14 +19,14 @@ Figurio is a direct-to-consumer e-commerce company based in the Czech Republic t
 
 ## Product Lines
 
-### Catalog - "Ready to Print"
+### Catalog — "Ready to Print"
 Pre-designed figurine collection available for immediate ordering. Customers browse the catalog, select a design and size tier, and check out. Print files are already prepared and validated, enabling the fastest turnaround times.
 
-### AI-Prompted Custom - "Prompt to Print"
-Customers describe their desired figurine via text prompt. An AI text-to-3D generation pipeline produces a custom model, which goes through automated mesh repair for printability. Customers preview the result and approve before final payment and production.
+### AI-Prompted Custom — "Prompt to Print"
+Customers describe their desired figurine via text prompt. An AI text-to-3D generation pipeline produces a custom model, which goes through automated mesh repair and human QA review. Customers preview the result and approve before final payment and production. Uses a two-stage payment: 50% deposit at order, 50% on preview approval.
 
-### Scan-to-Print - "Scan Yourself" (Future)
-A future product line allowing customers to upload 3D scans of themselves or objects to be turned into figurines. This service will combine photogrammetry processing with the existing mesh repair and production pipeline.
+### Scan-to-Print — "Scan Yourself" (Phase 2)
+Future product line allowing customers to be 3D-scanned and turned into personalized figurines. Targets families, cosplayers, couples (wedding toppers), and corporate clients. Initially launches as mobile pop-up at events before establishing a permanent scanning studio.
 
 ## Size Tiers
 
@@ -38,23 +38,26 @@ A future product line allowing customers to upload 3D scans of themselves or obj
 
 ## Production Partner
 
-**MCAE** (mcae.cz) - Professional 3D printing and additive manufacturing bureau based in the Czech Republic. Figurio leverages their **Stratasys J55 PolyJet** printer, which delivers full-color, multi-material prints with over 500,000 color combinations and fine detail resolution suitable for consumer figurines.
+**MCAE** (mcae.cz) — Professional 3D printing bureau based in the Czech Republic, Stratasys authorized partner. Figurio leverages their **Stratasys J55 PolyJet** printer for full-color, multi-material prints with over 500,000 color combinations. The customer never interacts with MCAE directly.
 
 ## Payments
 
-All payments are processed through **Stripe**. Orders are fully prepaid before production begins. The AI-Prompted Custom product line uses a 2-stage payment flow: an initial deposit to generate and preview the model, followed by full payment upon customer approval before production starts.
+All payments processed through **Stripe**. Orders are fully prepaid before production begins. The AI-Prompted Custom line uses a 2-stage payment flow: deposit to generate and preview, full payment upon approval.
+
+## Shipping
+
+Domestic (Czech Republic) shipping via **Zasilkovna**. EU shipping planned for later phases.
 
 ## Tech Stack
 
-- **Frontend:** React with TypeScript
-- **Backend:** Python with FastAPI
-- **Infrastructure:** Docker containers orchestrated on Kubernetes (K8s)
+- **Frontend:** React with TypeScript, shadcn-ui, Tailwind CSS
+- **Backend:** Python with FastAPI, uv for package management
+- **Infrastructure:** Docker containers on Kubernetes (microk8s), Traefik ingress
 - **Payments:** Stripe
-- **CI/CD:** Automated deployment pipelines
+- **AI/3D:** Text-to-3D service (Meshy/Tripo3D/Luma), automated mesh repair
+- **CI/CD:** GitHub Actions, Docker Hub
 
 ## Team
-
-Figurio operates with a team of 8 specialized agents:
 
 | Role                | Slug                | Responsibility                                              |
 |---------------------|---------------------|-------------------------------------------------------------|

@@ -1,2 +1,6 @@
-SECRET/
-scripts/
+SECRET
+*.env
+.env.*
+*.pem
+*.key
+credentials.json

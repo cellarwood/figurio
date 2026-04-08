@@ -1,14 +1,37 @@
 ---
-name: Configure CI/CD with GitHub Actions
+name: Configure CI/CD Pipelines
 assignee: devops-engineer
 project: infrastructure
 ---
 
-# Configure CI/CD with GitHub Actions
+Set up GitHub Actions CI/CD pipelines for automated building, testing, and deployment of Figurio services.
 
-Create GitHub Actions workflows:
+## Requirements
 
-- **ci.yml** (on PR): checkout, install deps, lint, type-check, run tests (pytest for backend, npm test for frontend)
-- **deploy.yml** (on merge to main): build Docker images, push to Docker Hub with SHA + latest tags, helm upgrade to figurio-dev namespace
+### CI Pipeline (on push/PR)
+- Lint and type-check frontend (TypeScript)
+- Lint and type-check backend (Python/mypy)
+- Run frontend unit tests
+- Run backend unit tests
+- Build Docker images to verify they compile
 
-Use GitHub Secrets for DOCKER_HUB_USERNAME, DOCKER_HUB_TOKEN.
+### CD Pipeline (on merge to main)
+- Build production Docker images
+- Push to Docker Hub (lukekelle00)
+- Deploy to microk8s-local cluster via kubectl/helm
+- Run smoke tests against deployed services
+- Notify Slack on success/failure
+
+### Secrets Required
+- `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` for image push
+- `GH_TOKEN` for repository operations
+- `KUBE_CONFIG` for cluster access
+- `SLACK_WEBHOOK_URL` for notifications
+
+## Acceptance Criteria
+
+- PRs cannot merge without passing CI checks
+- Merges to main automatically deploy to the cluster
+- Failed deployments roll back automatically
+- Build time under 10 minutes for full pipeline
+- Slack notification on deploy success or failure

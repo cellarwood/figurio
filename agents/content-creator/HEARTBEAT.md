@@ -1,47 +1,50 @@
-# HEARTBEAT.md -- Content Creator Heartbeat Checklist
+# Heartbeat — Content Creator
 
-Run this checklist on every heartbeat.
+## Purpose
 
-## 1. Identity and Context
-- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+The heartbeat is your regular check-in loop. Run it to stay on top of your content pipeline, meet deadlines, and keep assets flowing to the right places.
 
-## 2. Local Planning Check
-- Read today's plan, review progress, resolve blockers, record updates.
+## Cadence
 
-## 3. Approval Follow-Up (if applicable)
-If `PAPERCLIP_APPROVAL_ID` is set:
-- Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- **Every cycle**, review your active tasks in Paperclip.
+- **Daily**, check the content calendar for upcoming deadlines and assigned pieces.
+- **Weekly**, review content performance with CMO and adjust upcoming content accordingly.
 
-## 4. Get Assignments
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+## Heartbeat Checklist
 
-## 5. Checkout and Work
-- Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+1. **Check the content calendar** — What is due today? What is due this week? Are any deadlines at risk? If the calendar is not populated, flag it to CMO immediately.
+2. **Produce assigned content pieces** — Work through your task queue in priority order. Blog posts, social captions, email copy, product descriptions — whatever is next on the calendar gets done first.
+3. **Upload finished assets to Drive** — Every completed piece (photos, renders, documents, videos) goes to the shared Drive folder immediately upon completion. Use consistent naming conventions: `YYYY-MM-DD_channel_description` (e.g., `2026-04-08_instagram_valentines-carousel`).
+4. **Update the content tracking sheet** — Mark completed pieces as done. Update status for in-progress work. Add notes on any blockers or delays. The tracking sheet is the single source of truth for pipeline status.
+5. **Coordinate with CMO on campaign timing** — Check if any upcoming campaigns need content earlier than scheduled. Confirm that seasonal assets are on track for the 4-week-ahead deadline. Flag any capacity issues before they become missed deadlines.
+6. **Check inbox** — Respond to feedback from CMO on drafts. Act on revision requests promptly — stale feedback loops kill content momentum.
+7. **Review calendar** — Confirm upcoming content deadlines and any coordination meetings with CMO or other teams.
 
-## 6. Content Production Workflow
-- Check content calendar — what's due this week? Are there any overdue items?
-- Review pending posts — anything waiting for CMO approval or final edits?
-- Ensure SEO targets are met for all published content (keyword density, meta descriptions, alt tags).
-- Prioritize content that supports upcoming campaigns or product launches.
-- For blog posts: research keywords, write draft, optimize for SEO, submit for review.
-- For social media: create post copy + visual concept, align with brand guidelines.
-- For product descriptions: photograph or render the figurine, write compelling copy, include size/material details.
-- Track trending topics and memes — flag figurine-worthy trends to CMO immediately.
+## Content Production Workflow
 
-## 7. Fact Extraction
-- Extract durable facts from conversations into memory.
-- Update daily notes.
+When producing a content piece:
 
-## 8. Exit
-- Comment on any in_progress work before exiting.
-- If no assignments and no valid mention-handoff, exit cleanly.
+1. Check the brief from CMO — audience, channel, tone, key message, deadline, and examples.
+2. Draft the piece using the appropriate tool (Docs for blog posts, direct for social captions).
+3. Run SEO checklist for blog content before marking as ready for review.
+4. Apply the content style guide for tone and formatting consistency.
+5. Upload the finished asset to Drive.
+6. Update the tracking sheet with status "Ready for Review."
+7. Notify CMO that the piece is ready.
 
-## Rules
-- Always include `X-Paperclip-Run-Id` header on mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
+## Blocked Work
+
+If you are blocked on a content piece:
+
+- Missing brief or direction from CMO — ask for clarification immediately, do not guess.
+- Missing product photos or renders — generate mockups using media tools as placeholders, flag the gap to CMO.
+- Missing product information for descriptions — check with CMO or Head of Operations.
+- Update the task in Paperclip with the blocker and expected resolution.
+
+## Escalation
+
+If something is critical and you cannot resolve it in one cycle:
+
+- Mark the task as blocked with a clear reason.
+- Set a follow-up reminder for the next cycle.
+- If it affects a campaign launch date or seasonal deadline, notify CMO immediately.

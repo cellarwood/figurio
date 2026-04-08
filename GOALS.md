@@ -2,141 +2,92 @@
 goals:
   - slug: launch-storefront
     title: Launch the Figurio e-commerce storefront with catalog ordering and Stripe checkout
-    description: Ship a working web store where customers can browse pre-designed figurines, select size tiers, pay via Stripe, and receive order confirmation with tracking
+    description: Ship a fully functional web storefront where customers can browse the figurine catalog, select size tiers, and complete purchases via Stripe. Includes product pages, cart, checkout, order confirmation, and admin order management.
     level: company
     status: active
     ownerAgentSlug: cto
-    projectSlugs: [storefront, infrastructure]
+    projectSlugs: [storefront]
     subgoals:
       - slug: build-catalog-api
-        title: Build product catalog API with Stripe checkout integration
+        title: Build catalog API with product management and order processing
+        description: REST API for figurine catalog CRUD, size tier pricing, inventory status, and order lifecycle management with Stripe payment capture
         level: team
         ownerAgentSlug: backend-engineer
         projectSlugs: [storefront]
       - slug: build-storefront-ui
-        title: Build storefront UI with product browsing, cart, and order tracking
+        title: Build storefront UI with catalog browsing and checkout flow
+        description: React storefront with product grid, detail pages, size selector, shopping cart, Stripe checkout, and order confirmation
         level: team
         ownerAgentSlug: frontend-engineer
         projectSlugs: [storefront]
-      - slug: deploy-production
-        title: Deploy storefront to production K8s cluster with CI/CD
+      - slug: deploy-storefront
+        title: Deploy storefront infrastructure with CI/CD
+        description: Docker images, Kubernetes manifests, Traefik ingress, and GitHub Actions pipeline for automated builds and deployments
         level: team
         ownerAgentSlug: devops-engineer
         projectSlugs: [infrastructure]
 
   - slug: build-ai-pipeline
     title: Build and validate the AI text-to-3D custom figurine pipeline end-to-end
-    description: Evaluate text-to-3D services, build automated mesh repair, implement 2-stage payment flow, and process at least 5 test orders through MCAE
+    description: Implement the full Prompt-to-Print pipeline from customer text input through AI 3D model generation, automated mesh repair, human QA review, customer preview approval, and handoff to production. Validate output quality meets print standards.
     level: company
     status: active
     ownerAgentSlug: cto
     projectSlugs: [ai-pipeline]
     subgoals:
-      - slug: evaluate-3d-services
-        title: Evaluate and select text-to-3D generation service
+      - slug: integrate-text-to-3d
+        title: Integrate text-to-3D generation service
+        description: Evaluate and integrate a text-to-3D API (Meshy, Tripo3D, or Luma Genie), build the prompt submission endpoint, and handle async model generation with status polling
         level: team
-        ownerAgentSlug: cto
+        ownerAgentSlug: backend-engineer
         projectSlugs: [ai-pipeline]
       - slug: build-mesh-repair
-        title: Build automated mesh repair pipeline for printability
+        title: Build automated mesh repair pipeline
+        description: Automated pipeline using Blender scripting or NetFabb to fix non-manifold geometry, thin walls, floating artifacts, and topology issues on AI-generated models
         level: team
         ownerAgentSlug: backend-engineer
         projectSlugs: [ai-pipeline]
-      - slug: build-custom-order-flow
-        title: Build customer preview and 2-stage payment flow
+      - slug: build-preview-approval-flow
+        title: Build customer preview and approval UI
+        description: 3D model viewer for customers to inspect their generated figurine, request revisions, and approve for production. Triggers second-stage Stripe payment on approval.
         level: team
-        ownerAgentSlug: backend-engineer
+        ownerAgentSlug: frontend-engineer
         projectSlugs: [ai-pipeline]
 
-  - slug: acquire-first-customers
-    title: Establish brand presence and acquire first 100 paying customers within 90 days of launch
-    description: Build social media profiles, launch content marketing with product photography and behind-the-scenes content, drive initial sales through organic and influencer channels
+  - slug: acquire-customers
+    title: Acquire first 100 paying customers within 90 days of launch
+    description: Drive initial customer acquisition through social media content, influencer seeding, and organic search. Build brand awareness in the 3D printing and figurine collector communities.
     level: company
     status: active
     ownerAgentSlug: cmo
-    projectSlugs: [marketing-launch]
+    projectSlugs: [storefront]
     subgoals:
-      - slug: build-brand-identity
-        title: Create brand visual identity and product photography style guide
+      - slug: build-brand-presence
+        title: Establish brand identity and social media presence
+        description: Create Figurio visual identity, set up social media profiles (Instagram, TikTok), produce launch content showcasing figurine quality and customization capabilities
         level: team
         ownerAgentSlug: content-creator
-        projectSlugs: [marketing-launch]
-      - slug: launch-social-channels
-        title: Launch Instagram and TikTok with 30-day content calendar
-        level: team
-        ownerAgentSlug: content-creator
-        projectSlugs: [marketing-launch]
-      - slug: run-influencer-campaign
-        title: Plan and execute influencer seeding campaign in 3D printing and collectibles niches
+      - slug: launch-marketing-campaign
+        title: Plan and execute launch marketing campaign
+        description: Content calendar, influencer outreach to 3D printing and figurine communities, product seeding, and paid social ads targeting collectors and gift buyers
         level: team
         ownerAgentSlug: cmo
-        projectSlugs: [marketing-launch]
 
   - slug: setup-fulfillment
     title: Negotiate MCAE production terms and set up the full fulfillment pipeline
-    description: Finalize per-unit pricing across all 3 size tiers, establish print file handoff process, set up shipping via Zasilkovna (CZ) and DHL (EU), achieve <10 business day turnaround for catalog orders
+    description: Establish per-unit pricing with MCAE across all size tiers, set up the order-to-shipment workflow, integrate Zasilkovna for domestic shipping, and define SLAs for production turnaround.
     level: company
     status: active
     ownerAgentSlug: head-of-operations
-    projectSlugs: [operations-setup]
     subgoals:
-      - slug: negotiate-mcae-pricing
-        title: Negotiate per-unit pricing with MCAE across all size tiers
+      - slug: negotiate-mcae-terms
+        title: Negotiate MCAE pricing and production SLAs
+        description: Obtain per-unit pricing for Small/Medium/Large tiers, negotiate volume discounts, agree on turnaround times, and establish a print file submission workflow
         level: team
         ownerAgentSlug: head-of-operations
-        projectSlugs: [operations-setup]
       - slug: setup-shipping
-        title: Set up Zasilkovna (CZ) and DHL (EU) shipping integrations
+        title: Set up Zasilkovna shipping integration
+        description: Configure Zasilkovna API for domestic Czech Republic shipping, set up label generation, tracking, and pickup point selection for customers
         level: team
         ownerAgentSlug: head-of-operations
-        projectSlugs: [operations-setup]
 ---
-
-# Figurio Goals
-
-## Company-Level Goals
-
-### 1. Launch Storefront
-**Owner:** CTO | **Projects:** storefront, infrastructure | **Status:** Active
-
-Ship a working web store where customers can browse pre-designed figurines, select size tiers, pay via Stripe, and receive order confirmation with tracking.
-
-#### Team Subgoals
-- **Build Catalog API** (backend-engineer) - Build product catalog API with Stripe checkout integration
-- **Build Storefront UI** (frontend-engineer) - Build storefront UI with product browsing, cart, and order tracking
-- **Deploy Production** (devops-engineer) - Deploy storefront to production K8s cluster with CI/CD
-
----
-
-### 2. Build AI Pipeline
-**Owner:** CTO | **Projects:** ai-pipeline | **Status:** Active
-
-Evaluate text-to-3D services, build automated mesh repair, implement 2-stage payment flow, and process at least 5 test orders through MCAE.
-
-#### Team Subgoals
-- **Evaluate 3D Services** (cto) - Evaluate and select text-to-3D generation service
-- **Build Mesh Repair** (backend-engineer) - Build automated mesh repair pipeline for printability
-- **Build Custom Order Flow** (backend-engineer) - Build customer preview and 2-stage payment flow
-
----
-
-### 3. Acquire First Customers
-**Owner:** CMO | **Projects:** marketing-launch | **Status:** Active
-
-Build social media profiles, launch content marketing with product photography and behind-the-scenes content, drive initial sales through organic and influencer channels.
-
-#### Team Subgoals
-- **Build Brand Identity** (content-creator) - Create brand visual identity and product photography style guide
-- **Launch Social Channels** (content-creator) - Launch Instagram and TikTok with 30-day content calendar
-- **Run Influencer Campaign** (cmo) - Plan and execute influencer seeding campaign in 3D printing and collectibles niches
-
----
-
-### 4. Setup Fulfillment
-**Owner:** Head of Operations | **Projects:** operations-setup | **Status:** Active
-
-Finalize per-unit pricing across all 3 size tiers, establish print file handoff process, set up shipping via Zasilkovna (CZ) and DHL (EU), achieve <10 business day turnaround for catalog orders.
-
-#### Team Subgoals
-- **Negotiate MCAE Pricing** (head-of-operations) - Negotiate per-unit pricing with MCAE across all size tiers
-- **Setup Shipping** (head-of-operations) - Set up Zasilkovna (CZ) and DHL (EU) shipping integrations

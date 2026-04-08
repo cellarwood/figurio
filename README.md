@@ -1,39 +1,41 @@
-# Figurio — 3D-Printed Figurines E-Commerce
+# Figurio
 
-## Overview
-Figurio is a direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. Based in Czech Republic, production outsourced to MCAE (Stratasys J55 PolyJet).
+Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. Based in the Czech Republic, powered by Stratasys J55 PolyJet technology via MCAE.
 
 ## Product Lines
-- **Catalog Figurines** ("Ready to Print") — curated, rotating catalog
-- **AI-Prompted Custom** ("Prompt to Print") — describe a figurine, AI generates it
-- **3D Scan-to-Print** ("Scan Yourself") — Phase 2
+
+- **Catalog** ("Ready to Print") — curated figurine collection for immediate ordering
+- **AI Custom** ("Prompt to Print") — text-to-3D pipeline for custom figurines
+- **Scan-to-Print** ("Scan Yourself") — Phase 2, personalized figurines from 3D scans
 
 ## Org Chart
+
 ```
-CEO
-├── CTO
-│   ├── Backend Engineer
-│   ├── Frontend Engineer
-│   └── DevOps Engineer
-├── CMO
-│   └── Content Creator
-└── Head of Operations
+Board Operator (Human)
+  |
+  CEO ($100/mo)
+  |
+  +-- CTO ($150/mo)
+  |    +-- Backend Engineer ($200/mo)
+  |    +-- Frontend Engineer ($200/mo)
+  |    +-- DevOps Engineer ($150/mo)
+  |
+  +-- CMO ($120/mo)
+  |    +-- Content Creator ($80/mo)
+  |
+  +-- Head of Operations ($100/mo)
 ```
+
+**Total monthly budget:** $1,100/mo
 
 ## Tech Stack
-- **Frontend:** TypeScript, React, shadcn-ui, Tailwind CSS, Three.js
-- **Backend:** Python, FastAPI, PostgreSQL, Stripe
-- **Infrastructure:** Docker, Kubernetes (microk8s-local), Helm, Traefik, GitHub Actions
-- **AI Pipeline:** Text-to-3D (TBD), Blender/NetFabb mesh repair, PyTorch
 
-## Infrastructure
-- **Domain:** cellarwood.org
-- **GitHub:** github.com/cellarwood/figurio
-- **Docker Hub:** lukekelle00
-- **Slack:** 00aiworkspace.slack.com
-- **K8s:** microk8s-local
-- **Payments:** Stripe (Cellarwood account)
-- **Shipping:** Zasilkovna (CZ), DHL (EU)
+- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS
+- **Backend:** Python/FastAPI, PostgreSQL, uv
+- **Infrastructure:** Docker, Kubernetes (microk8s), Traefik, GitHub Actions
+- **Payments:** Stripe
+- **AI/3D:** Text-to-3D API, Blender mesh repair
+- **Shipping:** Zasilkovna (CZ)
 
 ## Importing Into Paperclip
 
@@ -41,52 +43,54 @@ CEO
 
 **Step 1: Global Config**
 ```bash
-cp global/settings.json /path/to/paperclip/.company/claude/settings.json
-cp global/plugins.json /path/to/paperclip/.company/claude/plugins.json
+cp global/settings.json <paperclip-repo>/.company/claude/settings.json
+cp global/plugins.json <paperclip-repo>/.company/claude/plugins.json
 ```
 
 **Step 2: Google Workspace credentials**
 ```bash
-cp /path/to/figurio-service-account.json /path/to/paperclip/.company/gws/figurio.json
+cp <your-gws-service-account>.json <paperclip-repo>/.company/gws/figurio.json
 ```
 
-**Step 3: Start Paperclip**
+**Step 3: Import GWS skills**
 ```bash
-cd docker && docker compose up -d
+bash <paperclip-repo>/paperclip-plugin/skills/gws-cli/scripts/import-gws-skills.sh .
+```
+
+**Step 4: Start Paperclip**
+```bash
+cd <paperclip-repo>/docker && docker compose up -d
 ```
 
 ### After Paperclip is running
 
-**Step 4: Company Import**
+**Step 5: Company Import**
 ```bash
+# Push this package to GitHub first, then:
 curl -X POST http://localhost:3100/api/companies/import \
   -H "Authorization: Bearer $AUTH_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"source": {"type": "github", "url": "https://github.com/cellarwood/figurio"}}'
+  -d '{"source": {"type": "github", "url": "https://github.com/cellarwood/figurio"}, "target": {"mode": "new_company"}}'
 ```
 
-**Step 5: Secrets**
-Fill in COMPANY_ID, AUTH_TOKEN, and secret values in scripts/setup-secrets.sh, then:
+**Step 6: Secrets**
 ```bash
+# Edit scripts/setup-secrets.sh with your COMPANY_ID, AUTH_TOKEN, and secret values
 bash scripts/setup-secrets.sh
 ```
 
-## Budget
-Total: $1,100/month (110,000 cents)
+## Infrastructure
 
-| Agent | Budget |
-|-------|--------|
-| CEO | $100/mo |
-| CTO | $150/mo |
-| CMO | $120/mo |
-| Head of Operations | $100/mo |
-| Backend Engineer | $200/mo |
-| Frontend Engineer | $200/mo |
-| Content Creator | $80/mo |
-| DevOps Engineer | $150/mo |
+| Resource | Value |
+|----------|-------|
+| Domain | cellarwood.org |
+| GitHub | github.com/cellarwood/figurio |
+| Docker Hub | lukekelle00 |
+| K8s Cluster | microk8s-local |
+| Slack | 00aiworkspace.slack.com |
+| Stripe | Cellarwood account |
+| Google Workspace | info@cellarwood.org |
 
 ## License
-MIT
 
----
-Generated with [Paperclip](https://paperclip.dev)
+MIT

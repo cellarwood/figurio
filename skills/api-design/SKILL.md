@@ -1,173 +1,73 @@
 ---
 name: api-design
-description: REST API design conventions for Figurio's FastAPI backend — endpoint naming, pagination, error responses, and authentication for the figurine e-commerce platform.
+description: REST API design conventions for Figurio — endpoint naming, request/response format, pagination, error handling, and Stripe integration patterns
 ---
 
 # API Design Conventions
 
-## Purpose
+## Endpoint Naming
 
-Define consistent REST API conventions for the Figurio FastAPI backend. All engineers must follow these patterns to ensure a predictable, well-documented API.
-
-## Base Configuration
-
-- **Base path**: `/api/v1/`
-- **Framework**: FastAPI (Python 3.11+)
-- **Serialization**: Pydantic v2 models for all request/response schemas.
-- **Documentation**: Auto-generated OpenAPI at `/docs` (Swagger UI) and `/redoc`.
-- **Content-Type**: `application/json` for all endpoints.
-
-## Resource Naming
-
-Use plural nouns, lowercase, hyphen-separated for multi-word resources:
-
-| Resource              | Path                                  |
-|-----------------------|---------------------------------------|
-| Products              | `/api/v1/products`                    |
-| Product size tiers    | `/api/v1/products/{sku}/size-tiers`   |
-| Orders                | `/api/v1/orders`                      |
-| Order items           | `/api/v1/orders/{id}/items`           |
-| Customers             | `/api/v1/customers`                   |
-| Custom orders         | `/api/v1/custom-orders`               |
-| Custom order preview  | `/api/v1/custom-orders/{id}/preview`  |
-| Custom order approval | `/api/v1/custom-orders/{id}/approve`  |
-| Payments              | `/api/v1/payments`                    |
-| Webhooks (Stripe)     | `/api/v1/webhooks/stripe`             |
+- Use plural nouns: `/api/v1/figurines`, `/api/v1/orders`
+- Nested resources for ownership: `/api/v1/orders/{id}/items`
+- Use kebab-case for multi-word resources: `/api/v1/size-tiers`
+- Version prefix: `/api/v1/`
 
 ## HTTP Methods
 
-| Method  | Usage                          | Idempotent | Response Code    |
-|---------|--------------------------------|------------|------------------|
-| GET     | Retrieve resource(s)           | Yes        | 200              |
-| POST    | Create new resource            | No         | 201              |
-| PUT     | Full update of resource        | Yes        | 200              |
-| PATCH   | Partial update of resource     | Yes        | 200              |
-| DELETE  | Soft-delete resource           | Yes        | 204              |
+| Method | Purpose | Example |
+|--------|---------|---------|
+| GET | Read | `GET /api/v1/figurines` |
+| POST | Create | `POST /api/v1/orders` |
+| PUT | Full replace | `PUT /api/v1/figurines/{id}` |
+| PATCH | Partial update | `PATCH /api/v1/orders/{id}/status` |
+| DELETE | Remove | `DELETE /api/v1/figurines/{id}` |
+
+## Response Format
+
+```json
+{
+  "data": { ... },
+  "meta": {
+    "cursor": "abc123",
+    "hasMore": true
+  }
+}
+```
+
+Error format:
+```json
+{
+  "error": {
+    "code": "FIGURINE_NOT_FOUND",
+    "message": "Figurine with ID abc123 does not exist",
+    "details": {}
+  }
+}
+```
 
 ## Pagination
 
-All list endpoints must support pagination:
+Use cursor-based pagination for catalog listings:
+- `GET /api/v1/figurines?cursor=abc&limit=20`
+- Response includes `meta.cursor` and `meta.hasMore`
+
+## Stripe Integration Patterns
+
+- Create Checkout Sessions server-side, never expose secret keys to frontend
+- Use webhook endpoints for payment confirmations (don't rely on redirect)
+- Always verify webhook signatures
+- Implement idempotency keys for order creation
+- Two-stage payment for custom figurines: create PaymentIntent with `capture_method: manual`, capture on approval
+
+## Figurine-Specific Endpoints
 
 ```
-GET /api/v1/products?page=1&per_page=20
+GET    /api/v1/figurines                    # List catalog
+GET    /api/v1/figurines/{id}               # Detail with size tiers
+POST   /api/v1/figurines                    # Admin: create
+POST   /api/v1/orders                       # Create order (from cart)
+GET    /api/v1/orders/{id}                  # Order status
+POST   /api/v1/custom-orders               # Submit AI prompt + deposit
+PATCH  /api/v1/custom-orders/{id}/approve   # Customer approves preview
+POST   /api/v1/webhooks/stripe              # Stripe webhook handler
 ```
-
-Response envelope:
-
-```json
-{
-  "items": [...],
-  "total": 150,
-  "page": 1,
-  "per_page": 20,
-  "pages": 8
-}
-```
-
-- Default `per_page`: 20.
-- Maximum `per_page`: 100.
-- Always return `total` and `pages` for client-side pagination UI.
-
-## Filtering and Sorting
-
-- Filters as query parameters: `GET /api/v1/products?category=gaming&size_tier=M`.
-- Sorting: `?sort_by=price&sort_order=asc` (default: `created_at` desc).
-- Search: `?q=dragon` for full-text search across relevant fields.
-
-## Error Response Format
-
-All errors must use this consistent structure:
-
-```json
-{
-  "code": "VALIDATION_ERROR",
-  "message": "Human-readable description of what went wrong.",
-  "details": [
-    {
-      "field": "email",
-      "issue": "Invalid email format."
-    }
-  ]
-}
-```
-
-### Standard Error Codes
-
-| HTTP Status | Code                    | When to use                            |
-|-------------|-------------------------|----------------------------------------|
-| 400         | VALIDATION_ERROR        | Invalid request body or parameters.    |
-| 401         | UNAUTHORIZED            | Missing or invalid JWT token.          |
-| 403         | FORBIDDEN               | Valid token but insufficient permissions.|
-| 404         | NOT_FOUND               | Resource does not exist.               |
-| 409         | CONFLICT                | Duplicate resource or state conflict.  |
-| 422         | UNPROCESSABLE_ENTITY    | Valid syntax but business rule failure. |
-| 429         | RATE_LIMITED             | Too many requests.                     |
-| 500         | INTERNAL_ERROR          | Unexpected server error.               |
-| 503         | SERVICE_UNAVAILABLE     | Dependency down (Stripe, AI service).  |
-
-## Authentication
-
-- **Method**: JWT Bearer tokens in the `Authorization` header.
-- **Format**: `Authorization: Bearer <token>`
-- **Token lifetime**: Access token 15 minutes, refresh token 7 days.
-- **Issuer**: Figurio API (`iss: figurio-api`).
-
-### Public Endpoints (No Auth Required)
-
-- `GET /api/v1/products` — Product catalog browsing.
-- `GET /api/v1/products/{sku}` — Single product detail.
-- `GET /api/v1/products/{sku}/size-tiers` — Available sizes and prices.
-- `GET /health` — Health check.
-- `GET /docs` — OpenAPI documentation.
-- `POST /api/v1/auth/login` — Login.
-- `POST /api/v1/auth/register` — Registration.
-
-### Authenticated Endpoints
-
-All other endpoints require a valid JWT token.
-
-## Figurio-Specific Endpoints
-
-### Custom Order Flow
-
-```
-POST   /api/v1/custom-orders                  → Create custom order with prompt
-GET    /api/v1/custom-orders/{id}              → Get order status and details
-GET    /api/v1/custom-orders/{id}/preview      → Get 3D preview (GLB URL + thumbnail)
-POST   /api/v1/custom-orders/{id}/approve      → Customer approves design for printing
-POST   /api/v1/custom-orders/{id}/revise       → Customer requests revision with feedback
-DELETE /api/v1/custom-orders/{id}              → Cancel custom order (before printing)
-```
-
-### Custom Order Status Flow
-
-```
-submitted → generating → preview_ready → approved → printing → shipped → delivered
-                ↓                           ↓
-            generation_failed          revision_requested → generating (loop)
-```
-
-### Stripe Webhook
-
-```
-POST /api/v1/webhooks/stripe
-```
-
-- Verify webhook signature using `STRIPE_WEBHOOK_SECRET`.
-- Handle events: `payment_intent.succeeded`, `payment_intent.failed`, `charge.refunded`.
-- Return 200 immediately, process asynchronously.
-
-## Request Validation Rules
-
-- All monetary amounts in the smallest currency unit (hellers for CZK, cents for EUR).
-- Dates in ISO 8601 format (`2026-04-08T10:30:00Z`).
-- SKUs follow pattern: `FIG-{CATEGORY}-{ID}` (e.g., `FIG-GAME-001`).
-- UUIDs for all resource identifiers (not auto-increment integers).
-- Email addresses validated with regex and domain check.
-
-## Rate Limiting
-
-- Public endpoints: 60 requests/minute per IP.
-- Authenticated endpoints: 120 requests/minute per user.
-- Custom order creation: 5 requests/hour per user (expensive AI generation).
-- Webhook endpoints: no rate limit (Stripe controls the rate).

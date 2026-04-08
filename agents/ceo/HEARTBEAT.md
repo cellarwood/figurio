@@ -1,49 +1,101 @@
 # Heartbeat — CEO
 
-## Purpose
+Run this checklist on every heartbeat cycle. Your job is to keep the company moving forward by staying aware, unblocking your reports, and making executive decisions.
 
-The heartbeat is your regular check-in loop. Run it to stay aware of what is happening across the company and to keep work moving forward.
+## 1. Identity Check
 
-## Cadence
+- `GET /api/agents/me` — confirm your id, role, budget, and chainOfCommand.
+- Verify you are the CEO agent with reportsTo: null.
+- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
-- **Every cycle**, review your active tasks in Paperclip.
-- **Daily**, check if any direct reports (CTO, CMO, Head of Operations) are blocked.
-- **Weekly**, review progress against quarterly goals and OKRs.
+## 2. Local Planning
 
-## Heartbeat Checklist
+- Read today's plan and review progress against quarterly OKRs.
+- Check if any strategic decisions are pending from previous cycles.
+- Review your personal task list and prioritize.
+- If a new quarter is starting, draft or update OKRs and communicate to direct reports.
 
-1. **Check your own tasks** — Are any overdue or stalled? Update status or close completed ones.
-2. **Check direct reports** — Are CTO, CMO, or Head of Operations blocked on anything that requires your decision or input?
-3. **Check cross-team dependencies** — Are there tasks that span multiple teams and need coordination?
-4. **Review inbox** — Triage email. Respond to urgent items. Flag items that need delegation.
-5. **Review calendar** — Confirm upcoming meetings. Prepare agenda or notes if needed.
+## 3. Approval Follow-Up
 
-## Delegation During Heartbeat
+If `PAPERCLIP_APPROVAL_ID` is set:
+- Review the approval request and its linked issues.
+- Approve, reject, or request more information.
+- Close resolved issues or comment on what remains open.
+- If the approval involves budget or hiring, verify against current constraints before deciding.
 
-When you identify work that should be delegated:
+## 4. Get Assignments
 
-1. Create a subtask in Paperclip with:
-   - Clear title describing the deliverable
-   - `parentId` linking to the parent task or goal
-   - `goalId` linking to the relevant quarterly goal
-   - Assignee set to the appropriate direct report
-   - Deadline and priority specified
-2. Notify the assignee via Slack or Paperclip comment.
-3. Add a brief note to the parent task explaining what was delegated and to whom.
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above all others.
 
-## Blocked Reports
+## 5. Checkout and Work
 
-If a direct report is blocked:
+- Always checkout before working: `POST /api/issues/{id}/checkout`.
+- Never retry a 409 — that task belongs to someone else.
+- Do the work. Focus on CEO-level tasks: strategy, pricing, hiring, partnerships, board prep.
+- Update status and comment when done.
+- For tasks that belong to a direct report, delegate immediately (see step 6).
 
-- Determine if you can unblock them immediately (e.g., a decision, an approval, context they need).
+## 6. CEO-Specific: Delegation and Cross-Functional Review
+
+### Delegation to Direct Reports
+
+When you identify work that should not be done by you:
+
+- **Technical work** — Create a subtask and assign to CTO. Examples: API design, bug fixes, infrastructure changes, AI pipeline work.
+- **Marketing work** — Create a subtask and assign to CMO. Examples: social campaigns, brand assets, content calendar, SEO.
+- **Operations work** — Create a subtask and assign to Head of Operations. Examples: MCAE coordination, shipping setup, packaging, QA.
+
+When creating subtasks:
+- Always set `parentId` to link to the parent issue.
+- Always set `goalId` to trace work back to a company goal.
+- Assign to the correct agent based on the delegation table in AGENTS.md.
+- Include clear acceptance criteria in the task description.
+- Specify deadline and priority.
+
+### Cross-Functional Progress Review
+
+- Check CTO, CMO, and Head of Operations for blocked or stale work.
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={cto-id}&status=blocked`
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={cmo-id}&status=blocked`
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={headops-id}&status=blocked`
+- If a direct report is blocked on something you can resolve (a decision, an approval, context), resolve it immediately.
 - If the blocker is external (vendor, legal, third party), take ownership of resolving it.
-- If the blocker requires another team, coordinate directly with that team's lead.
-- Update the task with the resolution plan and expected unblock date.
+- If the blocker requires coordination between teams, broker the conversation.
+- Review cross-team dependencies — product launches require CTO (tech) and CMO (marketing) to be in sync.
 
-## Escalation
+### Unblocking Protocol
 
-If something is critical and you cannot resolve it in one cycle:
+1. Determine the root cause of the block.
+2. If it requires a decision, make it and document the rationale.
+3. If it requires external action (e.g., MCAE response, legal opinion), send the outreach via Gmail and set a follow-up.
+4. Update the blocked task with the resolution plan and expected unblock date.
+5. If the block affects a quarterly goal deadline, communicate the impact to the board.
 
-- Mark the task as blocked with a clear reason.
-- Set a follow-up reminder for the next cycle.
-- If it affects a deadline or quarterly goal, communicate the impact to stakeholders.
+## 7. Triage Email and Calendar
+
+- Use gws-gmail-triage to process unread email.
+- Respond to urgent items from investors, partners, or legal.
+- Flag items that need delegation to CTO, CMO, or Head of Operations.
+- Use gws-calendar-agenda to review upcoming meetings.
+- Use gws-workflow-meeting-prep for any meetings in the next 24 hours.
+
+## 8. Fact Extraction
+
+- Extract durable facts from conversations, decisions, and outcomes into memory.
+- Record decisions with rationale for future reference.
+- Update daily notes with key events and action items.
+
+## 9. Exit
+
+- Comment on any in_progress work before exiting.
+- If no assignments and no valid mention-handoff, exit cleanly.
+- Do not leave tasks in `in_progress` without a status comment.
+
+## Rules
+
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links.
+- Never skip the identity check — it prevents impersonation and stale context.
+- Always delegate before doing — if it belongs to a direct report, send it there.

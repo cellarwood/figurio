@@ -1,122 +1,57 @@
 ---
 name: tech-decisions
-description: Technical decision-making framework for Figurio — text-to-3D service selection, mesh repair tooling, frontend 3D rendering, and infrastructure choices.
+description: Framework for making and documenting technical decisions using Architecture Decision Records (ADRs) at Figurio
 ---
 
-# Technical Decision Framework
+# Tech Decisions
 
-## Purpose
+Use this skill when making build-vs-buy decisions, selecting technologies, or documenting architectural choices.
 
-Guide technology choices for the Figurio platform. Every significant technical decision must be documented, evaluated against clear criteria, and recorded for future reference.
-
-## Decision Record Format
+## ADR Format
 
 ```markdown
-# TDR-{NNN}: {Title}
+# ADR-{number}: {Title}
 
-**Date:** YYYY-MM-DD
-**Status:** Proposed | Accepted | Rejected | Superseded
-**Decider:** CTO (with input from relevant engineers)
+**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{n}
+**Date:** {YYYY-MM-DD}
+**Decision maker:** CTO
 
 ## Context
-What problem are we solving? What constraints exist?
+{What is the problem or decision we need to make?}
 
-## Options Evaluated
-### Option A: {Name}
-- Pros: ...
-- Cons: ...
-- Cost: ...
+## Options Considered
+1. **{Option A}** — {brief description}
+   - Pros: {list}
+   - Cons: {list}
+   - Cost: {estimate}
 
-### Option B: {Name}
-- Pros: ...
-- Cons: ...
-- Cost: ...
+2. **{Option B}** — {brief description}
+   - Pros: {list}
+   - Cons: {list}
+   - Cost: {estimate}
 
 ## Decision
-Which option was chosen and why.
+{Which option was chosen and why}
 
 ## Consequences
-What changes as a result of this decision.
+- {What changes as a result}
+- {What new constraints this creates}
 ```
 
-## Text-to-3D Service Evaluation
+## Decision Criteria for Figurio
 
-### Evaluation Criteria
+When evaluating technology choices, weigh these factors:
 
-| Criterion           | Weight | Description                                        |
-|---------------------|--------|----------------------------------------------------|
-| Output quality      | 30%    | Visual fidelity, detail level, anatomical accuracy. |
-| Printability        | 25%    | Watertight meshes, manifold geometry, wall thickness.|
-| API cost            | 20%    | Cost per generation, pricing model (per-call, subscription).|
-| Turnaround time     | 15%    | Time from prompt submission to model delivery.     |
-| API reliability     | 10%    | Uptime, rate limits, error handling.               |
+1. **Output quality** — for AI/3D services, actual output quality trumps feature lists
+2. **Operational simplicity** — fewer moving parts for a team of 8
+3. **Cost at scale** — model per-unit cost at 100, 1000, 10000 orders/month
+4. **Reversibility** — prefer decisions that can be changed later
+5. **Community and support** — active maintenance, good documentation
 
-### Key Services to Evaluate
+## Key Decisions to Track
 
-- **Meshy.ai**: Good quality, REST API, pay-per-generation. Evaluate mesh printability.
-- **Luma Genie**: High fidelity, but check watertightness of output.
-- **OpenAI Shap-E**: Open source, self-hostable, lower quality but no API cost.
-- **Stability AI (Stable3D)**: Evaluate when available; Stability has strong 2D foundation.
-- **Tripo3D**: Competitive quality, evaluate API maturity and pricing.
-
-### Printability Requirements
-
-Every generated model must meet these minimums before MCAE submission:
-- Watertight (no holes in mesh).
-- Minimum wall thickness: 0.8mm.
-- No inverted normals.
-- Triangle count: 50K-500K (balanced for detail vs file size).
-- No floating geometry or disconnected components.
-
-## Mesh Repair Tool Comparison
-
-| Feature                | Blender bpy (scripted) | NetFabb (Autodesk)  | Meshmixer           |
-|------------------------|------------------------|---------------------|---------------------|
-| Automation             | Full (Python API)      | CLI available       | Manual only         |
-| Watertight repair      | Good (3D Print Toolbox)| Excellent           | Good                |
-| Wall thickness check   | Via add-on             | Built-in            | Built-in            |
-| Normal fixing          | Built-in               | Built-in            | Built-in            |
-| Cost                   | Free (GPL)             | Licensed ($)        | Free (discontinued) |
-| Pipeline integration   | Excellent (Python)     | Moderate (CLI)      | Poor (no API)       |
-| Docker-friendly        | Yes (headless)         | Possible (Linux)    | No (GUI only)       |
-
-**Recommendation:** Blender bpy for automated pipeline (headless Docker container). NetFabb as secondary validation for complex repairs. Meshmixer only for manual intervention on edge cases.
-
-## 3D Viewer Technology
-
-| Feature                | Three.js (raw)     | React Three Fiber  | model-viewer (Google)|
-|------------------------|--------------------|--------------------|----------------------|
-| React integration      | Manual wrapper     | Native             | Web component        |
-| Bundle size            | ~150KB             | ~180KB + R3F       | ~80KB                |
-| glTF/GLB support       | Via loader         | Via drei helpers    | Built-in             |
-| Orbit controls         | Manual setup       | @react-three/drei  | Built-in             |
-| AR support             | No                 | No                 | Yes (WebXR)          |
-| Customization          | Full               | Full               | Limited              |
-| Learning curve         | Steep              | Moderate           | Low                  |
-| Performance            | Best               | Good               | Good                 |
-
-**Recommendation:** React Three Fiber with @react-three/drei for the product detail page 3D viewer. Provides best React integration while maintaining Three.js performance. Use model-viewer as fallback for browsers with WebGL issues.
-
-## Database Technology
-
-- **PostgreSQL 16**: Primary database for all application data.
-- **Redis**: Session cache, rate limiting, background job queue.
-- **Object storage (MinIO or S3-compatible)**: 3D model files (STL, GLB).
-- No NoSQL — Figurio's data is relational (products → orders → customers).
-
-## Infrastructure Choices
-
-- **Container runtime**: Docker with multi-stage builds.
-- **Orchestration**: microk8s-local (single-node Kubernetes for MVP).
-- **Registry**: Docker Hub (lukekelle00 namespace).
-- **Package management**: Helm charts for all services.
-- **CI/CD**: GitHub Actions (build → test → push → deploy).
-- **Monitoring**: Prometheus + Grafana (microk8s add-ons).
-
-## Decision Principles
-
-1. **Always document**: No "we just went with X" — every choice has a TDR.
-2. **Prefer boring technology**: Use proven tools unless a novel tool provides 10x advantage.
-3. **Reversibility matters**: Prefer decisions that are easy to reverse.
-4. **Cost at scale**: Evaluate pricing at 10x current volume, not just today.
-5. **Community health**: Check GitHub stars trend, last commit date, issue response time.
+- Text-to-3D service selection (Meshy vs. Tripo3D vs. Luma vs. self-hosted)
+- Mesh repair tooling (Blender scripting vs. trimesh vs. NetFabb)
+- 3D model storage (local PV vs. S3-compatible object storage)
+- Frontend 3D viewer (three.js vs. model-viewer vs. Babylon.js)
+- Database choice (PostgreSQL is default — document why if changing)
