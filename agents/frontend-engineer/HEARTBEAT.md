@@ -22,27 +22,22 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 ## 5. Checkout and Work
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
 - Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+- Update status and comment when done.
 
 ## 6. Frontend Development Workflow
-- **Read the spec first.** Understand the component's purpose, props, states, and edge cases before writing code.
-- **Build with accessibility from the start.** Use semantic HTML elements, add ARIA labels, ensure keyboard navigation works. Do not bolt accessibility on at the end.
-- **Component structure:** Create the component skeleton with TypeScript types, then implement rendering, then add interactivity, then polish with GSAP animations.
-- **Test in browser using Chrome DevTools.** After every significant change:
-  - Check responsive breakpoints (320px, 375px, 768px, 1024px, 1440px).
-  - Verify color contrast and focus indicators.
-  - Check network tab for unnecessary requests or large payloads.
-  - Run Lighthouse accessibility audit.
-- **Visual testing with Playwright.** Before marking a component as done:
-  - Capture screenshots at key breakpoints.
-  - Compare against the design reference or previous baseline.
-  - Test interactive states (hover, focus, active, disabled, loading, error).
-- **Update the issue with evidence.** Attach screenshots or screen recordings showing the component in multiple states and breakpoints. Include Lighthouse scores if relevant.
+- Pull latest from main before starting new work.
+- Create a feature branch: `feat/{task-slug}`.
+- Implement using React + TypeScript + shadcn-ui + Tailwind CSS.
+- For 3D viewer work: use Three.js / React Three Fiber, test with sample .glb/.gltf models.
+- Write component tests with Vitest + React Testing Library.
+- Test responsive layout on mobile (375px), tablet (768px), and desktop (1440px).
+- Run accessibility checks: keyboard navigation, screen reader labels, color contrast.
+- Create PR with screenshots/recordings, link to the task.
 
-## 7. Cross-Team Coordination
-- If a backend API you depend on is missing, incomplete, or returns unexpected data, comment on the issue tagging the CTO and Backend Engineer.
-- If a design spec is ambiguous, check brand guidelines in the design plugin before improvising.
-- When your work changes a shared component, comment on any issues that might be affected.
+## 7. API Integration
+- Check if required backend endpoints exist. If not, flag the dependency to Backend Engineer via task comment.
+- Use mock data for development when endpoints are unavailable.
+- Use React Query for server state management.
 
 ## 8. Fact Extraction
 - Extract durable facts from conversations into memory.

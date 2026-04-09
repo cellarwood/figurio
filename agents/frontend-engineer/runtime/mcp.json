@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "chrome": {
-      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-chrome-devtools@latest"]
+      "args": ["-y", "@anthropic-ai/chrome-devtools-mcp@latest"]
     }
   }
 }

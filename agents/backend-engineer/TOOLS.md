@@ -1,26 +1,18 @@
-# Tools -- Backend Engineer
+# Tools — Backend Engineer
 
 ## Plugins
 
-### dev-tools (`dev-tools-plugin@claude-my-marketplace`)
-Git workflows, code analysis, dependency management. Use for:
-- Creating and managing feature branches and pull requests
-- Running static analysis and linting checks
-- Detecting dead code and unused imports
-- Reviewing dependency updates and security advisories via `uv`
-
-### infra (`infra-plugin@claude-my-marketplace`)
-Kubernetes manifests, Docker configuration, deployment tooling. Use for:
-- Reviewing and updating Dockerfiles and docker-compose configs
-- Inspecting Kubernetes manifests and Helm chart values
-- Checking service resource limits and health check configurations
-
-## MCP Servers
-
-No MCP servers are configured for this agent.
+| Plugin | Capabilities |
+|--------|-------------|
+| `dev-tools-plugin` | Git workflows, dead-code analysis, dependency updates, docs generation |
+| `infra-plugin` | K8s/GKE, Helm, Terraform, Traefik configuration |
 
 ## Usage Guidelines
 
-- Use **dev-tools** for all PR workflows: branch creation, diff review, commit hygiene, and dead code analysis.
-- Use **infra** when reviewing or updating deployment configurations — Dockerfiles, K8s manifests, Helm values. Do not modify infrastructure without coordinating with DevOps Engineer.
-- Always check tool availability before attempting to use a tool that may not be configured.
+- Use dev-tools-plugin for git workflows, dependency management, and code quality checks
+- Use infra-plugin only for understanding deployment configs — delegate actual infra changes to DevOps Engineer
+- Focus on FastAPI development, database migrations, Stripe integration, and AI pipeline implementation
+- Use `uv` for all Python package management — never pip
+
+---
+*Add personal tool notes below as you discover and use tools.*

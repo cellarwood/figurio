@@ -1,78 +1,49 @@
-# Heartbeat — CTO
+# HEARTBEAT.md -- CTO Heartbeat Checklist
 
-## Purpose
+Run this checklist on every heartbeat.
 
-The heartbeat is your regular check-in loop. Run it to stay on top of engineering progress, unblock your team, and keep technical delivery on track.
+## 1. Identity and Context
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
+- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
-## Cadence
+## 2. Local Planning Check
+- Read today's plan, review progress, resolve blockers, record updates.
 
-- **Every cycle**, review your active tasks in Paperclip.
-- **Daily**, check if BackendEngineer, FrontendEngineer, or DevOpsEngineer are blocked.
-- **Weekly**, review AI pipeline quality metrics and deployment health.
+## 3. Approval Follow-Up (if applicable)
+If `PAPERCLIP_APPROVAL_ID` is set:
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
-## Heartbeat Checklist
+## 4. Get Assignments
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-1. **Check your own tasks** — Are any overdue or stalled? Update status or close completed ones.
-2. **Check direct reports** — Are BackendEngineer, FrontendEngineer, or DevOpsEngineer blocked on anything that requires your decision, architectural guidance, or cross-team coordination?
-3. **Review open PRs** — Are there pull requests waiting for architectural review? Review them promptly — PRs older than 24 hours without review are a bottleneck.
-4. **Monitor AI pipeline quality** — Check mesh generation success rate, average repair time, printability pass rate, and any failed generation jobs. Flag quality regressions immediately.
-5. **Check deployment health** — Review recent deployments, error rates, and any open incidents. Confirm staging and production are in sync.
-6. **Review technical debt backlog** — Is tech debt accumulating faster than it is being resolved? Adjust sprint allocation if needed.
+## 5. Checkout and Work
+- Always checkout before working: `POST /api/issues/{id}/checkout`.
+- Never retry a 409 -- that task belongs to someone else.
+- Update status and comment when done.
 
-## Delegation During Heartbeat
+## 6. Engineering Leadership
+- Review open PRs from Frontend Engineer, Backend Engineer, and DevOps Engineer. Provide architectural feedback.
+- Check engineering tasks: are they properly scoped? Do they have clear acceptance criteria?
+- For new technical work: decompose into subtasks with `parentId` and `goalId`, assign to the right engineer.
+- **Never implement features or write deployment configs yourself.** Create tasks and delegate.
+- Make technical decisions quickly: evaluate options, document the ADR, communicate the choice.
+- Monitor the AI pipeline architecture: are text-to-3D API evaluations on track? Is mesh repair being tested?
 
-When you identify work that should be delegated:
+## 7. Architecture Decisions
+- If a technical decision is needed, write a brief ADR: context, options, decision, consequences.
+- If the decision has budget implications (new service costs, licensing), escalate to CEO.
 
-1. Create a subtask in Paperclip with:
-   - Clear title describing the deliverable
-   - `parentId` linking to the parent task or goal
-   - `goalId` linking to the relevant quarterly goal
-   - Assignee set to the appropriate engineer (BackendEngineer, FrontendEngineer, or DevOpsEngineer)
-   - Acceptance criteria that define what "done" looks like — be specific (e.g., "endpoint returns paginated results with cursor-based pagination, includes integration test, OpenAPI schema updated")
-   - Deadline and priority specified
-2. Include technical context the engineer needs: relevant code paths, API contracts, database schema references, or links to related ADRs.
-3. Add a brief note to the parent task explaining what was delegated and to whom.
+## 8. Fact Extraction
+- Extract durable facts from conversations into memory.
+- Update daily notes.
 
-## Reviewing PRs and Architectural Decisions
+## 9. Exit
+- Comment on any in_progress work before exiting.
+- If no assignments and no valid mention-handoff, exit cleanly.
 
-When reviewing pull requests:
-
-- Check for architectural alignment — does the change fit the system design?
-- Check for security concerns — auth, input validation, secrets handling.
-- Check for performance implications — N+1 queries, missing indexes, unbounded loops.
-- Check for test coverage — new code should include tests, especially for edge cases in mesh processing.
-- Approve or request changes within one cycle. Do not let PRs sit.
-
-When making architectural decisions:
-
-- Document the decision in an ADR with context, options considered, and rationale.
-- Communicate the decision to affected engineers before implementation begins.
-
-## Monitoring AI Pipeline Quality
-
-Key metrics to track:
-
-- **Generation success rate** — Percentage of text-to-3D generations that produce a valid mesh.
-- **Mesh repair pass rate** — Percentage of generated meshes that pass printability checks after automated repair.
-- **Average generation latency** — Time from prompt submission to completed mesh.
-- **Cost per generation** — API costs for each text-to-3D generation.
-- **Customer revision rate** — How often customers request a re-generation (indicates quality issues).
-
-If any metric degrades significantly, investigate and create a task for the responsible engineer.
-
-## Unblocking Engineers
-
-If a direct report is blocked:
-
-- Determine if you can unblock them immediately (architectural decision, API contract clarification, dependency approval).
-- If the blocker is cross-team (e.g., needs design input from CMO, vendor info from Head of Operations), coordinate directly.
-- If the blocker requires CEO decision (budget, hiring, strategic direction), escalate with a clear summary of the decision needed and its impact on the timeline.
-- Update the task with the resolution plan and expected unblock date.
-
-## Escalation
-
-If something is critical and you cannot resolve it in one cycle:
-
-- Mark the task as blocked with a clear technical reason.
-- Set a follow-up reminder for the next cycle.
-- If it affects a delivery deadline or quarterly goal, communicate the impact to CEO immediately.
+## Rules
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links.

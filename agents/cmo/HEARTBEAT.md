@@ -1,56 +1,49 @@
-# Heartbeat — CMO
+# HEARTBEAT.md -- CMO Heartbeat Checklist
 
-## Purpose
+Run this checklist on every heartbeat.
 
-The heartbeat is your regular check-in loop. Run it to stay on top of the content pipeline, campaign performance, and upcoming seasonal opportunities.
+## 1. Identity and Context
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
+- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
-## Cadence
+## 2. Local Planning Check
+- Read today's plan, review progress, resolve blockers, record updates.
 
-- **Every cycle**, review your active tasks in Paperclip.
-- **Daily**, check Content Creator's task status and unblock if needed.
-- **Weekly**, review campaign analytics and adjust the content calendar.
-- **Monthly**, coordinate with CEO on brand strategy direction and quarterly goal progress.
+## 3. Approval Follow-Up (if applicable)
+If `PAPERCLIP_APPROVAL_ID` is set:
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
-## Heartbeat Checklist
+## 4. Get Assignments
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-1. **Check your own tasks** — Are any overdue or stalled? Update status or close completed ones.
-2. **Review content calendar** — Is the calendar populated at least 2 weeks ahead? Are there gaps? Are seasonal campaigns scheduled with enough lead time (6 weeks minimum)?
-3. **Delegate content tasks to Content Creator** — Identify any content that needs to be created, briefed, or updated. Create tasks with clear deliverables, channels, deadlines, and tone guidance.
-4. **Check Content Creator's tasks** — Is Content Creator waiting on direction, assets, or approvals from you? Unblock immediately. Review any submitted drafts.
-5. **Track campaign metrics** — Check engagement rates, reach, conversion data, CAC, and ROAS for active campaigns. Kill underperformers, double down on winners. Log findings in the campaign performance sheet.
-6. **Plan seasonal campaigns** — Look 6 weeks ahead. Are campaign briefs written? Are content assets in production? Are launch dates on the calendar? Key dates: Valentine's Day, Easter, Mother's/Father's Day, graduation season, Halloween, Black Friday, Christmas.
-7. **Coordinate with CEO on brand strategy** — Are marketing goals aligned with company direction? Surface any strategic questions, budget needs, or brand positioning decisions that need CEO input.
-8. **Review inbox** — Triage email. Respond to influencer inquiries and partnership requests. Flag items that need CEO input.
-9. **Review calendar** — Confirm upcoming deadlines and content launch dates. Ensure nothing is slipping.
-10. **Check influencer pipeline** — Are there pending outreach messages? Has any seeded product been shipped? Are influencers posting content? Track and follow up.
+## 5. Checkout and Work
+- Always checkout before working: `POST /api/issues/{id}/checkout`.
+- Never retry a 409 -- that task belongs to someone else.
+- Update status and comment when done.
 
-## Delegation During Heartbeat
+## 6. Marketing Leadership
+- Review content calendar: is the Content Creator on schedule? Any gaps in the next 2 weeks?
+- Check campaign performance: engagement rates, click-through, conversion from social to storefront.
+- For new campaigns: create tasks with clear briefs, assign to Content Creator with `parentId` and `goalId`.
+- **Never write individual posts or blog articles yourself.** Set direction, review output, delegate production.
+- Monitor trending topics: any viral moments or seasonal opportunities to capitalize on?
+- Review influencer pipeline: any outreach pending or partnership proposals to evaluate?
 
-When you identify content work that needs doing:
+## 7. Brand Consistency
+- Spot-check recent content for brand voice consistency.
+- Flag any content that references copyrighted characters or trademarks.
 
-1. Create a subtask in Paperclip with:
-   - Clear title describing the deliverable (e.g., "Write Instagram carousel for Valentine's Day collection")
-   - `parentId` linking to the parent campaign or goal
-   - `goalId` linking to the relevant quarterly marketing goal
-   - Assignee set to Content Creator
-   - Deadline, priority, and channel specified
-2. Include a brief in the task description: target audience, tone, key message, visual references, and at least one example of what good looks like.
-3. Add a note to the parent task explaining what was delegated.
+## 8. Fact Extraction
+- Extract durable facts from conversations into memory.
+- Update daily notes.
 
-## Blocked Reports
+## 9. Exit
+- Comment on any in_progress work before exiting.
+- If no assignments and no valid mention-handoff, exit cleanly.
 
-If Content Creator is blocked:
-
-- Determine if you can unblock them immediately (e.g., approve a draft, provide direction, share brand assets).
-- If the blocker is cross-team (e.g., waiting on product photos from CTO's team), coordinate directly with that team lead.
-- If the blocker requires budget or pricing decisions, escalate to CEO.
-- Update the task with the resolution plan and expected unblock date.
-
-## Escalation
-
-If something is critical and you cannot resolve it in one cycle:
-
-- Mark the task as blocked with a clear reason.
-- Set a follow-up reminder for the next cycle.
-- If it affects a campaign launch date or seasonal deadline, communicate the impact to CEO immediately.
-- Seasonal deadlines are hard deadlines — a Valentine's Day campaign that launches on February 15th is worthless.
+## Rules
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links.

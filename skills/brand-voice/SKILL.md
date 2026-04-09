@@ -1,44 +1,42 @@
 ---
 name: brand-voice
-description: Figurio brand tone, voice guidelines, and visual identity standards for all customer-facing communication
+description: >
+  Figurio brand voice and tone guide — writing style, personality traits,
+  dos and don'ts, and examples for product descriptions, social media,
+  and customer communication.
 ---
 
-# Brand Voice — Figurio
+# Brand Voice
 
-## Brand Personality
+## Personality
 
-Figurio is **creative, premium, and approachable**. We make custom 3D-printed figurines — turning imagination into physical objects. The brand should feel like a skilled artisan who's also fun to talk to.
+Figurio's brand personality is: **playful, premium, and slightly irreverent**.
+
+We make tiny works of art. We don't take ourselves too seriously — but we take the craft seriously.
 
 ## Voice Attributes
 
-| Attribute | What it means | Example |
-|-----------|--------------|---------|
-| **Creative** | Inspire imagination, celebrate uniqueness | "Your idea, made real. From steampunk cats to galaxy warriors." |
-| **Premium** | Quality craftsmanship, attention to detail | "Full-color PolyJet printing with 500,000+ color combinations." |
-| **Approachable** | Friendly, not pretentious | "Not sure what to create? Start with one of our favorites." |
-| **Trustworthy** | Transparent about process and timelines | "Your figurine takes 5-7 business days. Here's exactly where it is." |
+| Attribute | What it means | What it's NOT |
+|-----------|--------------|---------------|
+| Playful | Fun, energetic, lighthearted | Childish, silly, random |
+| Premium | Quality-focused, confident, tasteful | Snobbish, exclusive, overpriced |
+| Irreverent | Witty, surprising, personality-driven | Rude, edgy, offensive |
+| Authentic | Honest about process and materials | Overpromising, corporate-speak |
 
-## Writing Rules
-
-1. **Active voice** — "We print your figurine" not "Your figurine is printed by us"
-2. **Short sentences** — one idea per sentence, especially on product pages
-3. **Concrete over abstract** — "8cm tall, fits on your desk" not "perfectly sized"
-4. **Show, don't tell** — use photos and 3D renders over adjectives
-5. **No hype words** — avoid "revolutionary", "game-changing", "world-class"
-6. **Address the customer directly** — "your figurine", "you choose"
-
-## Tone by Context
+## Tone Adjustments by Context
 
 | Context | Tone | Example |
 |---------|------|---------|
-| Product pages | Descriptive, confident | "Hand-detailed fantasy warrior. Available in three sizes." |
-| Social media | Playful, visual-first | "This started as 'a tiny dragon reading a book' 📖🐉" |
-| Email | Warm, informative | "Your figurine just entered production. Here's what happens next." |
-| Error/issue | Honest, solution-focused | "The 3D generation took longer than expected. We're on it." |
+| Product description | Wonder + detail | "Standing barely 15cm tall, this knight commands attention with hand-painted armor detail that catches light from every angle." |
+| Social media | Punchy + fun | "Someone prompted 'a cat as a Victorian gentleman' and honestly? We'd hang out with him." |
+| Customer support | Warm + helpful | "We're sorry about the delay with your order. Here's what's happening and when you can expect it." |
+| Error/empty states | Gentle humor | "Your cart is feeling lonely. Maybe a steampunk octopus would cheer it up?" |
 
-## Visual Identity Notes
+## Writing Rules
 
-- Photography style: clean backgrounds, natural lighting, product hero shots
-- Color palette: to be defined by design team (suggest neutral + one accent)
-- Typography: clean, modern sans-serif for headings; readable body font
-- Product images: always show figurine with scale reference
+1. Lead with what's special, not what's generic
+2. Use "we" for the company, "you" for the customer
+3. Active voice always
+4. No jargon (say "full-color 3D printing" not "PolyJet multi-material additive manufacturing")
+5. Short sentences. Vary rhythm. Punch when it matters.
+6. Never reference copyrighted characters or trademarks

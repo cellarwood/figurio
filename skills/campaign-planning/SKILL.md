@@ -1,70 +1,55 @@
 ---
 name: campaign-planning
-description: Framework for planning marketing campaigns at Figurio — seasonal promotions, product launches, and customer acquisition initiatives
+description: >
+  Marketing campaign planning framework for Figurio —
+  seasonal and event-driven campaign structures, channel strategy,
+  budget allocation, and success metrics for a 3D-printed figurine brand.
 ---
 
 # Campaign Planning
 
-Use this skill when planning marketing campaigns, seasonal promotions, or product launches.
+## Campaign Types
+
+### Seasonal Campaigns
+Figurines are inherently giftable. Key seasonal moments:
+- **Valentine's Day**: couples figurines, personalized gifts
+- **Easter**: spring-themed collectibles, family figurines
+- **Halloween**: horror, fantasy, costume figurines
+- **Christmas**: holiday ornaments, gift sets, "Scan Yourself" pop-up at Christmas markets
+- **Mother's/Father's Day**: family portrait figurines
+
+### Trend Campaigns
+React to viral moments, meme culture, pop culture events (without IP infringement):
+- Monitor Reddit, TikTok, Twitter for trending figurine-worthy moments
+- Turnaround: design to listing in < 2 weeks for trend-driven catalog items
+- Use original, IP-clean interpretations of trending themes
+
+### Launch Campaigns
+Major product or feature launches:
+- MVP storefront launch
+- AI custom figurine feature launch
+- Scan-to-print pop-up events
 
 ## Campaign Brief Template
 
-```markdown
-# Campaign: {Name}
-
-**Goal:** {What this campaign achieves — tie to a company goal}
-**Timeline:** {Start date → End date}
-**Budget:** {If applicable}
-**Owner:** CMO
-**Content support:** Content Creator
-
-## Target Audience
-- Primary: {Who and why}
-- Secondary: {Who and why}
-
-## Channels
-- [ ] Instagram (posts, stories, reels)
-- [ ] TikTok (short-form video)
-- [ ] Blog/SEO content
-- [ ] Email newsletter
-- [ ] Influencer partnerships
-- [ ] Paid ads (Meta, Google)
-
-## Key Messages
-1. {Primary message}
-2. {Supporting message}
-3. {Call to action}
-
-## Content Calendar
-| Date | Channel | Content | Status |
-|------|---------|---------|--------|
-| {date} | {channel} | {description} | Draft/Ready/Published |
-
-## Success Metrics
-- {Metric 1: target value}
-- {Metric 2: target value}
+```
+Campaign: {name}
+Objective: {awareness / traffic / conversion / retention}
+Dates: {start} — {end}
+Channels: {Instagram, TikTok, Twitter, email, blog}
+Budget: {amount}
+Target audience: {segment}
+Key messages: {1-3 bullet points}
+Content needed: {list of assets}
+Success metrics: {specific, measurable KPIs}
 ```
 
-## Figurio Campaign Calendar
+## Channel Strategy
 
-Figurines are seasonal and gift-driven. Key campaign windows:
-
-| Period | Theme | Product Focus |
-|--------|-------|---------------|
-| Feb | Valentine's Day | Couple figurines, romantic designs |
-| Mar-Apr | Easter/Spring | Animal figurines, pastel themes |
-| May | Mother's Day | Family portrait figurines |
-| Jun | Father's Day | Hobby/sports figurines |
-| Sep | Back to school / Fall | Fantasy, sci-fi collectibles |
-| Oct | Halloween | Spooky, horror, monster figurines |
-| Nov | Black Friday / Pre-Christmas | Gift bundles, discounts |
-| Dec | Christmas | Gift figurines, ornaments, winter themes |
-
-## Content Types That Work for Figurines
-
-- Before/after: prompt text → finished figurine
-- Unboxing videos
-- Time-lapse of 3D printing process
-- Size comparison photos (figurine next to common objects)
-- Customer spotlight / user-generated content
-- "How it's made" behind-the-scenes
+| Channel | Strength for Figurio | Content Format |
+|---------|---------------------|----------------|
+| Instagram | Visual showcase, product photography | Reels, carousel, stories |
+| TikTok | Behind-the-scenes, viral potential | Short video, trends |
+| Twitter/X | Community engagement, announcements | Text + image, threads |
+| Email | Direct conversion, retention | Newsletter, drip campaigns |
+| Blog | SEO, long-form storytelling | How-to, gift guides, process stories |

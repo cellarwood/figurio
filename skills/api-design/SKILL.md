@@ -1,73 +1,63 @@
 ---
 name: api-design
-description: REST API design conventions for Figurio — endpoint naming, request/response format, pagination, error handling, and Stripe integration patterns
+description: >
+  REST API design conventions for the Figurio e-commerce platform —
+  endpoint naming, pagination, error responses, authentication,
+  and Stripe webhook handling patterns.
 ---
 
-# API Design Conventions
+# API Design
 
-## Endpoint Naming
+## URL Structure
 
-- Use plural nouns: `/api/v1/figurines`, `/api/v1/orders`
-- Nested resources for ownership: `/api/v1/orders/{id}/items`
-- Use kebab-case for multi-word resources: `/api/v1/size-tiers`
-- Version prefix: `/api/v1/`
+```
+/api/v1/products                    # Product catalog
+/api/v1/products/{id}               # Single product
+/api/v1/orders                      # Customer orders
+/api/v1/orders/{id}                 # Single order
+/api/v1/orders/{id}/status          # Order status updates
+/api/v1/custom-figurines            # AI custom figurine jobs
+/api/v1/custom-figurines/{id}       # Single custom figurine job
+/api/v1/webhooks/stripe             # Stripe webhook endpoint
+```
 
-## HTTP Methods
+## Pagination
 
-| Method | Purpose | Example |
-|--------|---------|---------|
-| GET | Read | `GET /api/v1/figurines` |
-| POST | Create | `POST /api/v1/orders` |
-| PUT | Full replace | `PUT /api/v1/figurines/{id}` |
-| PATCH | Partial update | `PATCH /api/v1/orders/{id}/status` |
-| DELETE | Remove | `DELETE /api/v1/figurines/{id}` |
-
-## Response Format
+All list endpoints use cursor-based pagination:
 
 ```json
 {
-  "data": { ... },
-  "meta": {
-    "cursor": "abc123",
-    "hasMore": true
-  }
+  "items": [...],
+  "cursor": "eyJpZCI6MTIzfQ==",
+  "hasMore": true
 }
 ```
 
-Error format:
+Query params: `?cursor={cursor}&limit={limit}` (default limit: 20, max: 100).
+
+## Error Response Format
+
 ```json
 {
   "error": {
-    "code": "FIGURINE_NOT_FOUND",
-    "message": "Figurine with ID abc123 does not exist",
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "Product with ID 'abc123' does not exist",
     "details": {}
   }
 }
 ```
 
-## Pagination
+HTTP status codes: 400 (validation), 401 (auth), 403 (forbidden), 404 (not found), 409 (conflict), 422 (unprocessable), 500 (server error).
 
-Use cursor-based pagination for catalog listings:
-- `GET /api/v1/figurines?cursor=abc&limit=20`
-- Response includes `meta.cursor` and `meta.hasMore`
+## Stripe Webhook Handling
 
-## Stripe Integration Patterns
+- Verify webhook signature using `stripe.Webhook.construct_event()`
+- Handle events idempotently (store processed event IDs)
+- Key events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`
+- Return 200 immediately, process asynchronously if needed
 
-- Create Checkout Sessions server-side, never expose secret keys to frontend
-- Use webhook endpoints for payment confirmations (don't rely on redirect)
-- Always verify webhook signatures
-- Implement idempotency keys for order creation
-- Two-stage payment for custom figurines: create PaymentIntent with `capture_method: manual`, capture on approval
+## Authentication
 
-## Figurine-Specific Endpoints
-
-```
-GET    /api/v1/figurines                    # List catalog
-GET    /api/v1/figurines/{id}               # Detail with size tiers
-POST   /api/v1/figurines                    # Admin: create
-POST   /api/v1/orders                       # Create order (from cart)
-GET    /api/v1/orders/{id}                  # Order status
-POST   /api/v1/custom-orders               # Submit AI prompt + deposit
-PATCH  /api/v1/custom-orders/{id}/approve   # Customer approves preview
-POST   /api/v1/webhooks/stripe              # Stripe webhook handler
-```
+- Customer auth: JWT tokens via `/api/v1/auth/login` and `/api/v1/auth/register`
+- Admin auth: separate admin JWT with elevated permissions
+- Stripe webhooks: signature verification (no JWT)

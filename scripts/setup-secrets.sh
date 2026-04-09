@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Figurio — Company Secrets Setup Script
+# Company Secrets Setup Script
 # =============================================================================
 # This script creates company-wide secrets via the Paperclip API.
 # Secrets are injected into agent environments at runtime via .paperclip.yaml.
@@ -22,7 +22,7 @@ AUTH_TOKEN=""            # Fill in your auth token
 GH_TOKEN=""                     # GitHub personal access token for gh CLI
 
 # === CONTAINER REGISTRY ===
-DOCKER_HUB_USERNAME=""          # Docker Hub username (lukekelle00)
+DOCKER_HUB_USERNAME=""          # Docker Hub username
 DOCKER_HUB_TOKEN=""             # Docker Hub access token
 
 # === AI / MEDIA ===
@@ -64,7 +64,7 @@ create_secret() {
     fi
 }
 
-echo "Creating secrets for Figurio (company $COMPANY_ID)..."
+echo "Creating secrets for company $COMPANY_ID..."
 echo ""
 
 # Source Code & CI/CD
@@ -90,5 +90,5 @@ echo "Done."
 
 # === GOOGLE WORKSPACE ===
 # GWS credentials are NOT managed via secrets API.
-# Place your service account JSON at: .company/gws/figurio.json (repo root)
-# It is mounted into the container at /paperclip/.gws/figurio.json
+# Place your service account JSON at: .company/gws/<company-slug>.json (repo root)
+# It is mounted into the container at /paperclip/.gws/<company-slug>.json

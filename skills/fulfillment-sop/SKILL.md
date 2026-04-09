@@ -1,63 +1,54 @@
 ---
 name: fulfillment-sop
-description: Standard operating procedures for Figurio order fulfillment — from payment capture through MCAE printing to Zasilkovna delivery
+description: >
+  Standard operating procedures for Figurio's order fulfillment pipeline —
+  from paid order to customer delivery, including MCAE print handoff,
+  quality inspection, packaging, and shipping via Zasilkovna and DHL.
 ---
 
 # Fulfillment SOP
 
-Standard operating procedures for processing orders from payment to delivery.
+## Order Fulfillment Flow
 
-## Catalog Order Flow
+```
+Order Paid → Print File Prep → MCAE Handoff → Production → QC Inspection → Packaging → Shipping → Delivery
+```
 
-### 1. Order Received
-- Stripe payment confirmed via webhook
-- Order record created with status: `confirmed`
-- Customer receives order confirmation email
+### 1. Print File Preparation
+- Verify the product model is print-ready (manifold, wall thickness, support structures)
+- For custom AI figurines: confirm customer approval of preview
+- Export print file in MCAE's required format (STL/OBJ with color data, or 3MF)
+- Record file submission in order tracking system
 
-### 2. Print File Preparation
-- Retrieve pre-validated print file for the ordered figurine and size tier
-- Verify file integrity (checksum match)
-- Package print job: model file + size specifications + color profile
-- Update order status: `preparing`
+### 2. MCAE Handoff
+- Submit print file to MCAE via agreed delivery method
+- Include order reference number, size tier, quantity, and any special instructions
+- Log submission timestamp for SLA tracking
+- Expected turnaround: [TBD - negotiate with MCAE]
 
-### 3. Submit to MCAE
-- Send print job to MCAE via agreed submission method (email/portal/API)
-- Record MCAE job reference number
-- Update order status: `in_production`
-- Expected turnaround: {per MCAE SLA — typically 3-5 business days}
+### 3. Quality Inspection
+- Inspect received prints against QC criteria:
+  - [ ] Color accuracy matches preview/catalog image
+  - [ ] Surface finish is smooth (no visible layer lines, supports removed)
+  - [ ] Structural integrity (no cracks, broken parts, warping)
+  - [ ] Correct size tier
+  - [ ] No visible defects (bubbles, missing detail, color bleeding)
+- Defective prints: photograph defect, log in QC tracker, request reprint from MCAE
+- Target defect rate: < 2%
 
-### 4. Receive from MCAE
-- Inspect finished figurine against quality checklist
-- Quality checklist: color accuracy, surface finish, dimensional accuracy, no visible defects
-- If defective: photograph defect, request reprint from MCAE, notify customer of delay
-- If acceptable: proceed to packaging
-- Update order status: `quality_check`
+### 4. Packaging
+- Branded packaging: box with Figurio logo, tissue paper, care card
+- Secure figurine with foam insert or bubble wrap
+- Include: packing slip, care instructions, thank-you card with social media handles
+- For gift orders: optional gift wrapping (future upsell)
 
-### 5. Package and Ship
-- Package in branded Figurio box with protective padding
-- Include: figurine, care instructions card, thank-you card
-- Create Zasilkovna shipment via API
-- Print and attach shipping label
-- Update order status: `shipped`
-- Send customer tracking notification
+### 5. Shipping
+- **Czech Republic:** Zasilkovna — create label, schedule pickup or drop at collection point
+- **EU/International:** DHL — create label, schedule courier pickup
+- Update order status to "shipped" with tracking number
+- Send shipping notification email to customer with tracking link
 
-### 6. Delivery
-- Monitor Zasilkovna tracking for delivery confirmation
-- Update order status: `delivered`
-- Trigger review request email (3 days after delivery)
-
-## Custom Figurine Additional Steps
-
-Between steps 1 and 2, the AI pipeline runs:
-- AI generation → mesh repair → QA review → customer preview → approval
-- Second payment captured on approval
-- Then proceeds to standard print file submission
-
-## Escalation Procedures
-
-| Issue | Action | Timeline |
-|-------|--------|----------|
-| MCAE missed SLA | Contact MCAE, notify customer | Same day |
-| Defective print | Request reprint, notify customer | 24 hours |
-| Lost shipment | File Zasilkovna claim, offer reprint or refund | 48 hours |
-| Customer complaint | Acknowledge within 4 hours, resolve within 48 hours | Immediate |
+### 6. Post-Delivery
+- Monitor for delivery confirmation
+- Update order status to "delivered"
+- Send follow-up email: satisfaction check + review request + referral incentive

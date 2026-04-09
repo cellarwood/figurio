@@ -1,77 +1,55 @@
 ---
 name: component-patterns
-description: React component architecture and patterns for the Figurio storefront — shadcn-ui composition, state management, and reusable component guidelines
+description: >
+  React component architecture patterns for the Figurio storefront —
+  shadcn-ui customization, Three.js 3D viewer integration, product card design,
+  and state management conventions.
 ---
 
 # Component Patterns
 
-## Component Architecture
-
-Figurio uses a composition-based component architecture built on shadcn-ui and Radix UI primitives.
-
-### Directory Structure
+## Component Structure
 
 ```
 src/
-  components/
-    ui/              # shadcn-ui base components (Button, Card, Dialog, etc.)
-    catalog/         # Product catalog components
-      ProductCard.tsx
-      ProductGrid.tsx
-      CatalogFilters.tsx
-      SizeTierSelector.tsx
-    cart/            # Shopping cart components
-      CartItem.tsx
-      CartSummary.tsx
-      CartDrawer.tsx
-    checkout/        # Checkout flow components
-      StripeCheckout.tsx
-      OrderConfirmation.tsx
-    custom/          # AI custom figurine components
-      PromptInput.tsx
-      ModelViewer.tsx
-      PreviewApproval.tsx
-    order/           # Order tracking components
-      OrderStatus.tsx
-      StatusTimeline.tsx
-    layout/          # Layout components
-      Header.tsx
-      Footer.tsx
-      Navigation.tsx
+├── components/
+│   ├── ui/              # shadcn-ui primitives (Button, Card, Dialog, etc.)
+│   ├── product/         # Product-specific components
+│   │   ├── ProductCard.tsx
+│   │   ├── ProductGrid.tsx
+│   │   ├── ProductDetail.tsx
+│   │   ├── SizeTierSelector.tsx
+│   │   └── ModelViewer.tsx      # Three.js 3D viewer
+│   ├── cart/            # Cart and checkout components
+│   ├── order/           # Order tracking components
+│   └── custom/          # AI custom figurine flow
+├── hooks/               # Custom React hooks
+├── lib/                 # Utilities, API client
+└── pages/               # Route-level page components
 ```
 
-### Component Rules
+## Conventions
 
-1. **One component per file** — named export matching filename
-2. **Props interface** — define inline above the component, not in a separate file
-3. **Composition over configuration** — build complex UIs from simple parts
-4. **Controlled components** — parent owns state, child receives via props
-5. **shadcn-ui first** — use existing shadcn components before building custom ones
+- Use shadcn-ui components as the base — customize via Tailwind, don't override internals
+- Every component gets its own file (no multi-component files)
+- Props interfaces are defined in the same file as the component
+- Server state via React Query (`useQuery`, `useMutation`)
+- Client state via Zustand stores (cart, UI state) or React context
+- All components must accept a `className` prop for composition
+- Use TypeScript strict mode — no `any` types
 
-### Key Components
+## Product Card Pattern
 
-#### SizeTierSelector
-Displays Small/Medium/Large options with pricing. Used on product detail and custom order pages.
-- Shows height, price, and visual size comparison
-- Controlled: `value` and `onChange` props
-- Highlights price difference between tiers
+The ProductCard is the most reused component. It must:
+- Show product image with hover effect (zoom or 3D rotation preview)
+- Display name, price range (smallest to largest tier), and category badge
+- Link to product detail page
+- Support grid and list layout variants
 
-#### ModelViewer
-Interactive 3D model viewer for figurine preview.
-- Wraps three.js or @google/model-viewer
-- Supports rotation, zoom, and pan
-- Loading state with skeleton
-- Works on mobile with touch gestures
+## 3D Viewer Pattern
 
-#### ProductCard
-Catalog grid item showing figurine thumbnail, name, and price range.
-- Lazy-loads images
-- Shows price range (lowest tier – highest tier)
-- Quick-add button opens size selector
-
-### State Management
-
-- **Server state:** React Query (TanStack Query) for API data
-- **UI state:** React useState/useReducer for component state
-- **Cart state:** Context + useReducer, persisted to localStorage
-- No global state library — keep it simple until complexity demands it
+The ModelViewer component wraps React Three Fiber:
+- Lazy-load the 3D model (show skeleton/placeholder while loading)
+- Support orbit controls with touch gestures on mobile
+- Auto-rotate by default, pause on interaction
+- Provide fallback to image gallery if WebGL unavailable

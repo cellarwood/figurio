@@ -1,7 +1,7 @@
 {
   "enabledPlugins": {
-    "office-plugin@claude-my-marketplace": true,
-    "company-plugin@claude-my-marketplace": true
+    "company-plugin@claude-my-marketplace": true,
+    "office-plugin@claude-my-marketplace": true
   },
   "permissions": {
     "allow": [
@@ -10,7 +10,7 @@
     ]
   },
   "env": {
-    "AGENT_EMAIL": "operations@cellarwood.org",
+    "AGENT_EMAIL": "ops@cellarwood.org",
     "COMPANY_DOMAIN": "cellarwood.org",
     "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": "/paperclip/.gws/figurio.json"
   }

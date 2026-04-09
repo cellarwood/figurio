@@ -1,69 +1,48 @@
 ---
 name: incident-response
-description: Incident response procedures for Figurio infrastructure — detection, triage, mitigation, resolution, and post-incident review
+description: >
+  Incident response playbook for the Figurio platform —
+  severity classification, triage procedures, communication templates,
+  and post-incident review process.
 ---
 
 # Incident Response
 
 ## Severity Levels
 
-| Level | Definition | Response Time | Example |
-|-------|-----------|---------------|---------|
-| **P1** | Service down, customers can't order | Immediate | Storefront unreachable, Stripe payments failing |
-| **P2** | Major feature broken, workaround exists | 1 hour | AI pipeline stuck, order tracking not updating |
-| **P3** | Minor feature broken, low impact | 4 hours | Image loading slow, search results inaccurate |
-| **P4** | Cosmetic or non-urgent | Next business day | Styling bug, log noise |
+| Severity | Definition | Response Time | Example |
+|----------|-----------|---------------|---------|
+| P1 - Critical | Storefront down, payments failing, data loss | Immediate | 503 errors on all pages, Stripe webhooks failing |
+| P2 - Major | Degraded functionality, partial outage | < 1 hour | 3D viewer broken, search not working, slow checkout |
+| P3 - Minor | Cosmetic issues, non-critical feature broken | < 24 hours | Styling bug, analytics not tracking, minor UI glitch |
 
-## Incident Flow
+## Triage Procedure
 
-### 1. Detect
-- Health check alerts (K8s liveness/readiness probes)
-- Error rate spike in application logs
-- Customer report via support channel
-- Stripe webhook failures
+1. **Assess impact**: How many customers affected? Is money involved (payments, refunds)?
+2. **Classify severity**: Use the table above
+3. **Communicate**: Notify CTO immediately for P1/P2
+4. **Investigate**: Check pod logs, Traefik access logs, Stripe dashboard
+5. **Fix or mitigate**: Apply fix if quick, rollback if not, enable maintenance mode if critical
+6. **Verify**: Confirm the fix with health checks and a test order flow
+7. **Document**: Write a brief incident report
 
-### 2. Triage
-- Confirm the issue is real (not a monitoring false positive)
-- Determine severity level
-- Identify affected service (frontend, backend, database, infrastructure)
-- Check: is this a deploy-related regression? (`kubectl rollout history`)
+## Communication Template
 
-### 3. Mitigate
-- **P1:** Rollback immediately if deploy-related. Redirect traffic if infrastructure.
-- **P2:** Attempt quick fix. If not obvious in 15 minutes, rollback.
-- **P3/P4:** Fix in normal workflow, no emergency action.
+```
+**Incident: {title}**
+Severity: P{n}
+Status: Investigating / Mitigating / Resolved
+Impact: {who is affected and how}
+Cause: {root cause or "under investigation"}
+Action: {what we're doing about it}
+ETA: {when we expect resolution}
+```
 
-### 4. Resolve
-- Apply fix and verify through normal deployment process
-- Confirm health checks pass
-- Monitor for 30 minutes after fix
+## Post-Incident Review
 
-### 5. Post-Incident
-- Write incident report within 24 hours:
-  ```
-  ## Incident: {Title}
-  **Severity:** P{N}
-  **Duration:** {start} to {end}
-  **Impact:** {what customers experienced}
-  **Root cause:** {why it happened}
-  **Fix:** {what was done}
-  **Prevention:** {what changes prevent recurrence}
-  ```
-
-## Key Contacts
-
-- **Infrastructure:** DevOps Engineer (primary)
-- **Backend/API:** Backend Engineer
-- **Frontend/UI:** Frontend Engineer
-- **Payments:** Backend Engineer (Stripe) + Head of Operations
-- **Escalation:** CTO → CEO
-
-## Common Scenarios
-
-| Scenario | First Action |
-|----------|-------------|
-| Pod CrashLoopBackOff | Check logs: `kubectl logs --previous` |
-| Database connection refused | Check PG pod status, connection pool exhaustion |
-| Stripe webhook 500s | Check webhook handler logs, verify secret |
-| SSL certificate expired | Renew via Traefik / cert-manager |
-| Disk full | Identify large files, clean up, expand PV if needed |
+After every P1/P2 incident:
+- What happened?
+- What was the root cause?
+- How did we detect it?
+- How long was the impact?
+- What will prevent recurrence?

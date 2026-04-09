@@ -1,53 +1,39 @@
 schema: agentcompanies/v1
+adapter: claude-code
+version: "1.0.0"
 
 company:
   slug: figurio
-
-adapterConfig:
-  model: sonnet
-  maxTurns: 50
+  name: Figurio
+  budgetMonthlyCents: 38000
 
 agents:
   ceo:
-    budget: 10000
+    budgetMonthlyCents: 5000
   cto:
-    budget: 15000
-  cmo:
-    budget: 12000
-  head-of-operations:
-    budget: 10000
-  backend-engineer:
-    budget: 20000
+    budgetMonthlyCents: 4000
   frontend-engineer:
-    budget: 20000
-  content-creator:
-    budget: 8000
+    budgetMonthlyCents: 6000
+  backend-engineer:
+    budgetMonthlyCents: 6000
   devops-engineer:
-    budget: 15000
+    budgetMonthlyCents: 5000
+  cmo:
+    budgetMonthlyCents: 4000
+  content-creator:
+    budgetMonthlyCents: 5000
+  head-of-operations:
+    budgetMonthlyCents: 3000
 
-env:
-  inputs:
-    - name: GH_TOKEN
-      description: GitHub personal access token
-      required: true
-    - name: DOCKER_HUB_USERNAME
-      description: Docker Hub username
-      required: true
-    - name: DOCKER_HUB_TOKEN
-      description: Docker Hub access token
-      required: true
-    - name: GEMINI_API_KEY
-      description: Google Gemini API key for media generation
-      required: true
-    - name: ELEVENLABS_API_KEY
-      description: ElevenLabs API key for text-to-speech
-      required: false
-    - name: STRIPE_SECRET_KEY
-      description: Stripe secret API key
-      required: true
-    - name: STRIPE_WEBHOOK_SECRET
-      description: Stripe webhook signing secret
-      required: true
-    - name: SLACK_WEBHOOK_URL
-      description: Slack webhook for notifications
-      required: false
+adapterConfig:
+  env:
+    GH_TOKEN: "${GH_TOKEN}"
+    DOCKER_HUB_USERNAME: "lukekelle00"
+    DOCKER_HUB_TOKEN: "${DOCKER_HUB_TOKEN}"
+    STRIPE_SECRET_KEY: "${STRIPE_SECRET_KEY}"
+    STRIPE_WEBHOOK_SECRET: "${STRIPE_WEBHOOK_SECRET}"
+    GEMINI_API_KEY: "${GEMINI_API_KEY}"
+    ELEVENLABS_API_KEY: "${ELEVENLABS_API_KEY}"
+    MEDIA_OUTPUT_DIR: "/paperclip/media"
+    DATABASE_URL: "${DATABASE_URL}"
+    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: "/paperclip/.gws/figurio.json"

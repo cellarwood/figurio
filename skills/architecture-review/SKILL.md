@@ -1,52 +1,48 @@
 ---
 name: architecture-review
-description: Checklist for reviewing architectural decisions and system designs at Figurio, covering API design, AI pipeline, and infrastructure
+description: >
+  Architecture review checklist for Figurio's e-commerce platform and AI pipeline —
+  evaluating API design, service boundaries, data flow, security, and scalability
+  for the figurine storefront and text-to-3D pipeline.
 ---
 
 # Architecture Review
 
-Use this skill when reviewing system designs, API contracts, or architectural proposals.
+## When to Use
+
+When reviewing a technical proposal, PR with architectural changes, or system design document.
 
 ## Review Checklist
 
 ### API Design
-- [ ] RESTful conventions followed (proper HTTP methods, status codes, resource naming)
-- [ ] Pagination strategy defined (cursor-based preferred for large collections)
-- [ ] Authentication and authorization model specified
-- [ ] Error response format standardized (error code, message, details)
-- [ ] Rate limiting considered for public endpoints
-- [ ] API versioning strategy defined
+- [ ] RESTful conventions followed (resource-based URLs, proper HTTP methods)
+- [ ] Consistent error response format across all endpoints
+- [ ] Pagination on list endpoints
+- [ ] Input validation at the API boundary
+- [ ] OpenAPI documentation present
 
 ### Data Model
-- [ ] Database schema normalized appropriately
-- [ ] Indexes defined for common query patterns (catalog filtering, order lookup)
-- [ ] Migration strategy defined (Alembic for Python/PostgreSQL)
-- [ ] Soft delete vs. hard delete decision documented
-- [ ] File storage strategy for 3D models (S3-compatible or local volume)
+- [ ] Proper normalization (no redundant data across tables)
+- [ ] Indexes on frequently queried columns
+- [ ] Foreign key constraints enforced
+- [ ] Alembic migration included
+- [ ] No breaking schema changes without migration path
 
-### AI Pipeline
-- [ ] Text-to-3D service abstracted behind an interface (swap providers easily)
-- [ ] Async processing with status tracking (don't block on generation)
-- [ ] Mesh repair pipeline is idempotent (re-running produces same result)
-- [ ] Failure handling: what happens when generation fails? when repair fails?
-- [ ] Model file format standardized (STL, OBJ, glTF)
+### Security
+- [ ] No hardcoded secrets or API keys
+- [ ] User input sanitized (SQL injection, XSS prevention)
+- [ ] Authentication required on protected endpoints
+- [ ] Stripe webhook signature verification
+- [ ] Content moderation for AI prompts (IP infringement prevention)
 
-### Infrastructure
-- [ ] Services are stateless (state in database/object storage, not in containers)
-- [ ] Health check endpoints defined for K8s liveness/readiness probes
-- [ ] Secret management — no secrets in code or Docker images
-- [ ] Resource limits set for K8s pods (CPU, memory)
-- [ ] Logging strategy defined (structured JSON logs)
+### AI Pipeline Specifics
+- [ ] Async job processing (not blocking the API response)
+- [ ] Mesh repair validates against printability constraints
+- [ ] Failed AI generations handled gracefully (retry, fallback, user notification)
+- [ ] Generated models stored securely with access control
 
-## Output Format
-
-```markdown
-## Architecture Review: {Component}
-
-**Verdict:** Approve / Approve with changes / Redesign needed
-
-**Strengths:** {what's good}
-**Concerns:** {issues found, ordered by severity}
-**Required changes:** {must-fix before implementation}
-**Recommendations:** {nice-to-have improvements}
-```
+### Scalability
+- [ ] Stateless services (no server-side session state)
+- [ ] Database connection pooling
+- [ ] Appropriate use of caching (product catalog, not order state)
+- [ ] Task queue for long-running operations (AI generation, mesh repair)

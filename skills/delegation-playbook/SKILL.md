@@ -1,36 +1,38 @@
 ---
 name: delegation-playbook
-description: Routing rules for delegating work to CTO, CMO, and Head of Operations based on task type and domain
+description: >
+  Routing rules for delegating work across Figurio's org structure —
+  which agent handles which domain, how to create properly scoped tasks,
+  and when to escalate to the board.
 ---
 
 # Delegation Playbook
 
-Use this skill to determine which direct report should own a task.
-
 ## Routing Table
 
-| Task Domain | Route To | Examples |
-|------------|----------|----------|
-| Technical architecture, API design, AI pipeline | **CTO** | "Evaluate text-to-3D services", "Design the mesh repair pipeline" |
-| Code implementation, bug fixes, infrastructure | **CTO** (who delegates to engineers) | "Build the catalog API", "Fix Docker build" |
-| Marketing campaigns, brand, customer acquisition | **CMO** | "Plan launch campaign", "Design social strategy" |
-| Content creation, social media, blog posts | **CMO** (who delegates to Content Creator) | "Write product descriptions", "Create Instagram posts" |
-| MCAE relations, printing, fulfillment, shipping | **Head of Operations** | "Negotiate pricing", "Set up Zasilkovna", "Track shipments" |
-| Pricing decisions, financial modeling | **CEO owns** (with input from HeadOps on costs) | "Set retail prices", "Model subscription economics" |
-| Hiring proposals, team changes | **CEO owns** | "Add a QA engineer", "Adjust budgets" |
-| Cross-functional coordination | **CEO owns** | "Align product launch timing", "Resolve priority conflicts" |
+| Work Type | Assign To | Example |
+|-----------|-----------|---------|
+| System architecture, tech stack decisions | CTO | "Evaluate text-to-3D API options" |
+| Frontend UI, storefront UX | CTO → Frontend Engineer | "Build the checkout flow" |
+| Backend API, database, payments | CTO → Backend Engineer | "Integrate Stripe webhooks" |
+| Infrastructure, CI/CD, deployment | CTO → DevOps Engineer | "Set up K8s Helm charts" |
+| Brand strategy, campaign planning | CMO | "Plan Valentine's Day campaign" |
+| Content creation, social media, SEO | CMO → Content Creator | "Write product descriptions" |
+| Vendor negotiations, fulfillment, shipping | Head of Operations | "Negotiate MCAE pricing" |
+| Legal, IP, compliance | CEO (external attorney) | "Review content moderation policy" |
+| Budget increases, partnerships, hiring | Board (escalate) | "Approve MCAE contract" |
 
-## Delegation Rules
+## Task Creation Rules
 
-1. **Always delegate with context** — include the goal, acceptance criteria, and deadline
-2. **Set goalId** — every delegated task must link to a company goal
-3. **One owner** — never assign the same task to multiple agents
-4. **Check capacity** — review the assignee's current workload before delegating
-5. **Follow up** — check in if no update within 24 hours of delegation
+1. Every task needs: clear deliverable, assigned agent, linked goal
+2. Include enough context that the assignee doesn't need to ask "why?"
+3. Set priority: tasks blocking other work are always high priority
+4. Never assign work two levels down — delegate to the manager, not the IC
 
-## Do NOT Delegate
+## Escalation Triggers
 
-- Board communication and strategy decisions
-- Hiring and budget approval
-- Goal prioritization and quarterly planning
-- Vendor contract negotiations (CEO leads, HeadOps supports)
+Escalate to the board when:
+- A decision commits budget beyond the monthly allocation
+- Legal agreements need signing
+- A strategic direction change is needed
+- An agent is consistently underperforming and may need replacement

@@ -1,11 +1,17 @@
 {
   "enabledPlugins": {
-    "dev-tools-plugin@claude-my-marketplace": true,
     "design-plugin@claude-my-marketplace": true,
+    "dev-tools-plugin@claude-my-marketplace": true,
+    "media-plugin@claude-my-marketplace": true,
+    "office-plugin@claude-my-marketplace": true,
     "web-design-plugin@claude-my-marketplace": true
   },
   "permissions": {
     "allow": [
+      "mcp__plugin_media-plugin_mermaid",
+      "mcp__plugin_media-plugin_media-playwright",
+      "mcp__plugin_media-plugin_media-mcp",
+      "mcp__plugin_media-plugin_ElevenLabs",
       "mcp__plugin_web-design-plugin_webdesign-playwright",
       "mcp__chrome"
     ]

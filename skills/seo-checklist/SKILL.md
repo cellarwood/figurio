@@ -1,56 +1,61 @@
 ---
 name: seo-checklist
-description: SEO checklist for Figurio content — on-page optimization, product page SEO, blog post SEO, and technical SEO basics
+description: >
+  SEO checklist for Figurio content — on-page optimization, keyword strategy,
+  meta tags, structured data, and content audit procedures for the
+  3D-printed figurine e-commerce storefront.
 ---
 
 # SEO Checklist
 
-## Every Page
+## On-Page Optimization
 
-- [ ] Unique title tag (50-60 characters) with primary keyword
-- [ ] Meta description (150-160 characters) with CTA
-- [ ] One H1 per page containing primary keyword
-- [ ] Structured heading hierarchy (H1 → H2 → H3)
-- [ ] Internal links to related products/content (2-3 per page)
-- [ ] Image alt text with descriptive keywords
+### Every Page
+- [ ] Unique meta title (50-60 characters, includes primary keyword)
+- [ ] Meta description (150-160 characters, includes CTA)
+- [ ] H1 tag present and unique per page
+- [ ] Heading hierarchy (H1 > H2 > H3, no skips)
+- [ ] Internal links to related products/content
+- [ ] Images have descriptive alt text
 - [ ] URL is clean and descriptive (`/figurines/steampunk-cat` not `/product?id=123`)
-- [ ] Page loads under 3 seconds on mobile
 
-## Product Pages
+### Product Pages
+- [ ] Product name in H1 and meta title
+- [ ] Unique product description (not duplicate/templated)
+- [ ] Schema.org Product structured data (name, image, price, availability)
+- [ ] Breadcrumb navigation with Schema.org BreadcrumbList
+- [ ] Customer reviews section (when available) with AggregateRating schema
 
-- [ ] Product name in H1 and title tag
-- [ ] Unique product description (no duplicate content across products)
-- [ ] Size tier information with structured data (Product schema)
-- [ ] Customer reviews section (when available)
-- [ ] Related products section for internal linking
-- [ ] Schema.org Product markup with price, availability, images
-- [ ] Breadcrumb navigation with BreadcrumbList schema
+### Blog Posts
+- [ ] Target keyword in title, first paragraph, and 1-2 subheadings
+- [ ] Keyword density: 1-2% (natural, not stuffed)
+- [ ] At least 800 words
+- [ ] Internal links to products and related posts
+- [ ] External links to authoritative sources where relevant
 
-## Blog Posts
+## Keyword Strategy
 
-- [ ] Target one primary keyword and 2-3 secondary keywords
-- [ ] Primary keyword in: title, H1, first paragraph, one H2, URL slug
-- [ ] Word count: 800+ for standard posts, 1500+ for pillar content
-- [ ] At least one image with keyword-rich alt text
-- [ ] Internal links to product pages where relevant
-- [ ] External links to authoritative sources (1-2 per post)
-- [ ] FAQ section for long-tail keyword capture
+### Primary Keywords
+- "3D printed figurine" / "3D printed figurines"
+- "custom 3D figurine"
+- "personalized figurine"
+- "full color 3D print"
 
-## Target Keywords for Figurio
+### Long-Tail Keywords
+- "custom figurine from text description"
+- "3D printed gift ideas"
+- "personalized desk figurine"
+- "custom collectible figurine Czech Republic"
 
-| Category | Keywords |
-|----------|----------|
-| Product | custom 3d printed figurine, personalized figurine, full color 3d print |
-| Gift | unique gift ideas, personalized gift, custom figurine gift |
-| Hobby | figurine collector, 3d printed miniature, desktop figurine |
-| Process | text to 3d model, ai generated figurine, custom 3d printing |
-| Location | 3d printing czech republic, figurine shop europe |
+### Category Keywords
+- "fantasy figurines", "seasonal figurines", "animal figurines"
+- "custom wedding cake topper 3D print"
+- "corporate gift figurines"
 
-## Technical SEO
+## Content Audit (Monthly)
 
-- [ ] XML sitemap generated and submitted to Google Search Console
-- [ ] robots.txt properly configured
-- [ ] Canonical URLs set on all pages
-- [ ] 301 redirects for any changed URLs
-- [ ] Mobile-friendly (responsive design)
-- [ ] HTTPS everywhere
+1. Check for pages with zero organic traffic — update or consolidate
+2. Review keyword rankings for target terms
+3. Check for broken links and 404 pages
+4. Verify structured data with Google Rich Results Test
+5. Review page speed (target: LCP < 2.5s, CLS < 0.1)

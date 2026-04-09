@@ -1,8 +1,8 @@
 {
   "enabledPlugins": {
-    "office-plugin@claude-my-marketplace": true,
+    "design-plugin@claude-my-marketplace": true,
     "media-plugin@claude-my-marketplace": true,
-    "design-plugin@claude-my-marketplace": true
+    "office-plugin@claude-my-marketplace": true
   },
   "permissions": {
     "allow": [

@@ -1,57 +1,54 @@
 ---
 name: tech-decisions
-description: Framework for making and documenting technical decisions using Architecture Decision Records (ADRs) at Figurio
+description: >
+  Framework for making and documenting technical decisions at Figurio —
+  ADR format, build-vs-buy evaluation, and technology selection criteria
+  for the e-commerce platform and AI pipeline.
 ---
 
 # Tech Decisions
 
-Use this skill when making build-vs-buy decisions, selecting technologies, or documenting architectural choices.
+## ADR (Architecture Decision Record) Format
 
-## ADR Format
+Use this format for significant technical decisions:
 
-```markdown
+```
 # ADR-{number}: {Title}
 
-**Status:** Proposed | Accepted | Deprecated | Superseded by ADR-{n}
-**Date:** {YYYY-MM-DD}
-**Decision maker:** CTO
+## Status: Proposed / Accepted / Superseded
 
 ## Context
-{What is the problem or decision we need to make?}
+What is the problem or situation that requires a decision?
 
 ## Options Considered
-1. **{Option A}** — {brief description}
-   - Pros: {list}
-   - Cons: {list}
-   - Cost: {estimate}
-
-2. **{Option B}** — {brief description}
-   - Pros: {list}
-   - Cons: {list}
-   - Cost: {estimate}
+| Option | Pros | Cons | Cost |
+|--------|------|------|------|
+| A | ... | ... | ... |
+| B | ... | ... | ... |
 
 ## Decision
-{Which option was chosen and why}
+Which option was chosen and why.
 
 ## Consequences
-- {What changes as a result}
-- {What new constraints this creates}
+What changes as a result of this decision. Both positive and negative.
 ```
 
-## Decision Criteria for Figurio
+## Build vs Buy Criteria
 
-When evaluating technology choices, weigh these factors:
+For Figurio, prefer buying/using existing solutions when:
+- The capability is not a core differentiator (payments, email, hosting)
+- A mature, well-documented option exists (Stripe, PostgreSQL, Docker)
+- The team's time is better spent on product-specific work
 
-1. **Output quality** — for AI/3D services, actual output quality trumps feature lists
-2. **Operational simplicity** — fewer moving parts for a team of 8
-3. **Cost at scale** — model per-unit cost at 100, 1000, 10000 orders/month
-4. **Reversibility** — prefer decisions that can be changed later
-5. **Community and support** — active maintenance, good documentation
+Build when:
+- The capability IS the product (AI figurine pipeline, mesh repair)
+- No existing solution meets quality requirements
+- The long-term cost of external dependency exceeds build cost
 
 ## Key Decisions to Track
 
-- Text-to-3D service selection (Meshy vs. Tripo3D vs. Luma vs. self-hosted)
-- Mesh repair tooling (Blender scripting vs. trimesh vs. NetFabb)
-- 3D model storage (local PV vs. S3-compatible object storage)
-- Frontend 3D viewer (three.js vs. model-viewer vs. Babylon.js)
-- Database choice (PostgreSQL is default — document why if changing)
+- Text-to-3D API provider selection (Meshy vs Tripo3D vs self-hosted)
+- Mesh repair tooling (Blender scripting vs NetFabb vs trimesh)
+- 3D model format and storage strategy
+- Frontend 3D viewer library (Three.js vs alternative)
+- Task queue technology (Celery+Redis vs alternatives)

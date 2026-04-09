@@ -1,49 +1,39 @@
 ---
 name: strategy-review
-description: Framework for evaluating strategic proposals, market positioning decisions, and growth initiatives at Figurio
+description: >
+  Framework for evaluating strategic proposals at Figurio — market positioning,
+  pricing decisions, partnership terms, and resource allocation trade-offs
+  for a 3D-printed figurine e-commerce business.
 ---
 
 # Strategy Review
 
-Use this skill when evaluating strategic proposals, market entry decisions, or growth initiatives.
+## When to Use
+
+When evaluating a proposal that affects company direction: new product lines, pricing changes, partnership terms, market expansion, or budget reallocation.
 
 ## Review Framework
 
-### 1. Market Fit Check
-- Does this align with Figurio's positioning as a premium 3D-printed figurine brand?
-- Is there validated demand (data, competitor success, customer signals)?
-- Does it strengthen or dilute the brand?
+### 1. Revenue Impact
+- Does this move Figurio closer to first revenue or increase existing revenue?
+- What's the expected impact on average order value, conversion rate, or customer acquisition cost?
 
-### 2. Unit Economics
-- What are the per-unit costs (MCAE printing, materials, shipping, labor)?
-- What margin does this deliver at target price points?
-- Does it scale — do margins improve or compress with volume?
+### 2. Risk Assessment
+- What's the worst realistic outcome? Can we recover from it?
+- Does this create IP risk, margin compression, or customer experience degradation?
+- Is this reversible? If not, what's the cost of being wrong?
 
-### 3. Execution Feasibility
-- Can the current team (8 agents) execute this alongside existing priorities?
-- What's the timeline to first revenue from this initiative?
-- What are the technical dependencies (AI pipeline, infrastructure, integrations)?
+### 3. Resource Cost
+- What engineering, marketing, or operations effort does this require?
+- Does this pull resources from higher-priority goals?
+- What's the opportunity cost of doing this instead of something else?
 
-### 4. Risk Assessment
-- IP risk — does this involve copyrighted characters or trademarks?
-- Customer expectation risk — can we deliver what we promise?
-- Cash flow risk — what's the upfront investment before revenue?
+### 4. Strategic Fit
+- Does this align with Figurio's positioning (premium but accessible, artisanal, original IP)?
+- Does this strengthen or dilute the brand?
+- Does this build toward the long-term roadmap (catalog → AI custom → scan-to-print → marketplace)?
 
 ### 5. Decision
-- **Go** — clear fit, positive economics, team capacity exists
-- **Defer** — good idea, wrong timing or missing prerequisites
-- **Kill** — poor fit, negative economics, or unacceptable risk
-
-## Output Format
-
-```markdown
-## Strategy Review: {Proposal Name}
-
-**Recommendation:** Go / Defer / Kill
-
-**Market fit:** {1-2 sentences}
-**Unit economics:** {margin analysis}
-**Execution:** {timeline and dependencies}
-**Key risk:** {top risk and mitigation}
-**Next step:** {specific action if Go}
-```
+- Approve, reject, or request modifications
+- If approving, assign ownership and set success metrics
+- If rejecting, explain clearly so the team doesn't relitigate

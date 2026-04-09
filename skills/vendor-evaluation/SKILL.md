@@ -1,44 +1,56 @@
 ---
 name: vendor-evaluation
-description: Framework for evaluating and managing vendor relationships at Figurio, especially MCAE printing partnership and shipping providers
+description: >
+  Vendor evaluation framework for Figurio's supply chain —
+  criteria for assessing printing partners, shipping providers,
+  and material suppliers with scoring methodology and decision matrix.
 ---
 
 # Vendor Evaluation
 
-Use this skill when evaluating new vendors, renegotiating existing partnerships, or comparing supplier options.
+## When to Use
 
-## Evaluation Scorecard
+When evaluating a new printing partner, shipping provider, or any vendor in the supply chain.
 
-| Criteria | Weight | Score (1-5) | Notes |
-|----------|--------|-------------|-------|
-| **Quality** | 30% | | Output consistency, defect rate |
-| **Price** | 25% | | Per-unit cost, volume discounts |
-| **Turnaround** | 20% | | Standard and rush timelines |
-| **Reliability** | 15% | | On-time delivery rate, communication |
-| **Flexibility** | 10% | | Willingness to accommodate special requests |
+## Evaluation Criteria
 
-## MCAE-Specific Evaluation
+### Printing Partners (MCAE and alternatives)
 
-MCAE (mcae.cz) is Figurio's primary printing partner. Key metrics to track:
+| Criterion | Weight | How to Assess |
+|-----------|--------|---------------|
+| Print quality | 30% | Request sample prints across all size tiers, evaluate color accuracy, surface finish, detail resolution |
+| Per-unit pricing | 25% | Get quotes for small/medium/large at volumes of 10, 50, 100 units/month |
+| Turnaround time | 20% | Measure from file submission to finished print delivery |
+| Reliability | 15% | Track on-time delivery rate, defect rate over first 10 orders |
+| Communication | 10% | Responsiveness, transparency, willingness to share production status |
 
-- **Per-unit cost** by size tier (Small/Medium/Large)
-- **Defect rate** — percentage of prints requiring reprint
-- **Average turnaround** — order to finished product
-- **Communication responsiveness** — hours to respond to queries
-- **Volume capacity** — maximum monthly output
-- **Material costs** — PolyJet material pricing trends
+### Shipping Partners (Zasilkovna, DHL)
 
-## Shipping Provider Evaluation
+| Criterion | Weight | How to Assess |
+|-----------|--------|---------------|
+| Delivery speed | 25% | Average days to delivery by zone (CZ, EU, international) |
+| Cost per shipment | 30% | Rates for figurine-sized packages (weight, dimensions) |
+| Tracking quality | 20% | Real-time tracking, customer-facing tracking page quality |
+| Insurance/claims | 15% | Coverage for damaged goods, claims process speed |
+| Integration | 10% | API availability, label generation, pickup scheduling |
 
-### Zasilkovna (CZ domestic)
-- Pickup point coverage in Czech Republic
-- Per-package cost by weight/size
-- Tracking quality and delivery time
-- Customer pickup experience
-- API integration quality
+## Decision Matrix Template
 
-## Vendor Review Cadence
+```
+Vendor A vs Vendor B
 
-- **Monthly:** delivery metrics, defect tracking, cost reconciliation
-- **Quarterly:** relationship review, pricing renegotiation, capacity planning
-- **Annually:** market scan for alternative vendors, contract renewal
+| Criterion | Weight | Vendor A Score (1-5) | Weighted | Vendor B Score (1-5) | Weighted |
+|-----------|--------|---------------------|----------|---------------------|----------|
+| Quality   | 30%    | 4                   | 1.2      | 3                   | 0.9      |
+| Price     | 25%    | 3                   | 0.75     | 5                   | 1.25     |
+| ...       | ...    | ...                 | ...      | ...                 | ...      |
+| TOTAL     | 100%   |                     | X.XX     |                     | X.XX     |
+```
+
+## Red Flags
+
+- Won't provide sample prints before commitment
+- No volume discount structure
+- Turnaround times longer than 10 business days for standard orders
+- Defect rate above 5%
+- No written SLA or contract terms

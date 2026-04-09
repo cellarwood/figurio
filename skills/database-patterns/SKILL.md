@@ -1,90 +1,70 @@
 ---
 name: database-patterns
-description: PostgreSQL schema patterns for Figurio — figurines, orders, customers, payments, and AI pipeline models
+description: >
+  PostgreSQL schema patterns for the Figurio e-commerce platform —
+  product catalog, orders, customers, payments, and AI figurine jobs
+  with migration conventions and indexing strategy.
 ---
 
 # Database Patterns
 
-## Core Schema
+## Core Tables
 
-### figurines
+### products
 ```sql
-CREATE TABLE figurines (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT,
-    category VARCHAR(100),
-    tags TEXT[],
-    images JSONB NOT NULL DEFAULT '[]',
-    model_file_url TEXT,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
-
-### size_tiers
-```sql
-CREATE TABLE size_tiers (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    figurine_id UUID REFERENCES figurines(id) ON DELETE CASCADE,
-    size VARCHAR(20) NOT NULL CHECK (size IN ('small', 'medium', 'large')),
-    height_cm NUMERIC(5,1) NOT NULL,
-    price_cents INTEGER NOT NULL,
-    UNIQUE(figurine_id, size)
-);
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+name VARCHAR(255) NOT NULL,
+slug VARCHAR(255) UNIQUE NOT NULL,
+description TEXT,
+category VARCHAR(100) NOT NULL,
+images JSONB NOT NULL DEFAULT '[]',
+model_url VARCHAR(500),          -- .glb/.gltf 3D model URL
+price_small_cents INTEGER,       -- ~8cm tier
+price_medium_cents INTEGER,      -- ~15cm tier
+price_large_cents INTEGER,       -- ~25cm tier
+stock_status VARCHAR(20) DEFAULT 'available',
+created_at TIMESTAMPTZ DEFAULT now(),
+updated_at TIMESTAMPTZ DEFAULT now()
 ```
 
 ### orders
 ```sql
-CREATE TABLE orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_number VARCHAR(20) UNIQUE NOT NULL,
-    customer_email VARCHAR(255) NOT NULL,
-    status VARCHAR(30) NOT NULL DEFAULT 'confirmed',
-    stripe_payment_intent_id VARCHAR(255),
-    stripe_checkout_session_id VARCHAR(255),
-    total_cents INTEGER NOT NULL,
-    shipping_address JSONB,
-    tracking_number VARCHAR(100),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
--- Status enum: confirmed, preparing, in_production, quality_check, shipped, delivered, cancelled
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+customer_id UUID REFERENCES customers(id),
+status VARCHAR(20) NOT NULL DEFAULT 'draft',  -- draft|paid|processing|printing|shipped|delivered
+items JSONB NOT NULL,
+shipping_address JSONB NOT NULL,
+total_cents INTEGER NOT NULL,
+stripe_payment_intent_id VARCHAR(255),
+tracking_number VARCHAR(100),
+created_at TIMESTAMPTZ DEFAULT now(),
+updated_at TIMESTAMPTZ DEFAULT now()
 ```
 
-### custom_orders (AI pipeline)
+### custom_figurine_jobs
 ```sql
-CREATE TABLE custom_orders (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id UUID REFERENCES orders(id),
-    prompt_text TEXT NOT NULL,
-    style VARCHAR(50),
-    size VARCHAR(20) NOT NULL,
-    deposit_payment_intent_id VARCHAR(255),
-    final_payment_intent_id VARCHAR(255),
-    generated_model_url TEXT,
-    repaired_model_url TEXT,
-    qa_status VARCHAR(20) DEFAULT 'pending',
-    customer_approved BOOLEAN,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+customer_id UUID REFERENCES customers(id),
+prompt TEXT NOT NULL,
+status VARCHAR(20) DEFAULT 'pending',  -- pending|generating|repairing|qa_review|preview_sent|approved|rejected
+generated_model_url VARCHAR(500),
+repaired_model_url VARCHAR(500),
+preview_image_url VARCHAR(500),
+deposit_payment_intent_id VARCHAR(255),
+final_payment_intent_id VARCHAR(255),
+created_at TIMESTAMPTZ DEFAULT now()
 ```
 
 ## Indexing Strategy
 
-```sql
-CREATE INDEX idx_figurines_category ON figurines(category) WHERE is_active;
-CREATE INDEX idx_figurines_tags ON figurines USING GIN(tags);
-CREATE INDEX idx_orders_email ON orders(customer_email);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_custom_orders_qa ON custom_orders(qa_status) WHERE customer_approved IS NULL;
-```
+- Index on `products.category` and `products.slug`
+- Index on `orders.customer_id` and `orders.status`
+- Index on `custom_figurine_jobs.customer_id` and `custom_figurine_jobs.status`
+- GIN index on `products.name` for full-text search
 
-## Migration Rules
+## Migration Conventions
 
-- Use Alembic for all migrations
-- Every migration must be reversible (include downgrade)
-- Never modify a deployed migration — create a new one
+- One migration per schema change, never combine unrelated changes
+- Migration names: `{timestamp}_{description}.py` (e.g., `20260415_add_products_table.py`)
+- Always include both upgrade and downgrade functions
 - Test migrations against a copy of production data before deploying
