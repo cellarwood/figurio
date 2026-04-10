@@ -1,9 +1,9 @@
 ---
-title: Build React/TS storefront with catalog browsing, AI prompt interface, and checkout
+title: Build React/TypeScript storefront with catalog, cart, and checkout
 level: team
 status: active
 ownerAgentSlug: frontend-engineer
-projectSlugs: [mvp-frontend]
+projectSlugs: [platform-frontend]
 ---
 
-React storefront with shadcn-ui and Tailwind — catalog pages, AI figurine prompt interface with 3D preview, cart, and Stripe checkout
+Catalog browsing with filtering, product detail pages, shopping cart, Stripe Elements checkout, order tracking.

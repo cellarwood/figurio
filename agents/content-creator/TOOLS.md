@@ -4,31 +4,25 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `office-plugin` | Read and write structured documents and spreadsheets; manage content calendars, keyword trackers, and copy libraries |
-| `media-plugin` | Browser screenshots via Playwright, image preview, media asset inspection, ElevenLabs audio generation for TikTok voiceover scripts |
-| `design-plugin` | Visual asset creation, image composition review, graphic brief generation |
+| `media-plugin` | Generate images and video, capture screenshots via Playwright, create Mermaid diagrams, text-to-speech via ElevenLabs |
+| `design-plugin` | Create brand-consistent visual assets, layouts, banners, and typography compositions |
+| `office-plugin` | Create and edit documents, spreadsheets, and presentations locally |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`content@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-content@cellarwood.org`).
 
-**Services:**
+**Services:** Gmail (read, send, reply), Google Drive (upload, organize), Google Docs (draft, write, collaborate), Google Sheets (keyword tracking, content calendars, performance data), Google Calendar (editorial calendar, deadlines).
 
-- **Gmail** -- receive briefs from the CMO, coordinate with contributors, send drafts for review, reply to editorial feedback
-- **Drive** -- store and organize all content drafts, published archives, asset libraries, and the email copy library
-- **Docs** -- write long-form blog posts and email sequences for collaborative CMO review before publishing
-- **Sheets** -- maintain the content calendar, keyword research tracker, social scheduling log, and performance data
-- **Calendar** -- track publishing deadlines, campaign go-live dates, and content review checkpoints
-
-Run `gws --help` or `gws <service> --help` for full CLI documentation.
+Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use `media-plugin` Playwright to screenshot live product pages or published blog posts for quality checks before sharing with the CMO.
-- Use `design-plugin` to generate or review visual asset briefs when a social post requires custom imagery — always attach the brief to the relevant issue before marking content done.
-- Store every finalized content artifact in Google Drive in the appropriate folder (blog/, product-descriptions/, email-library/, social/) before closing an issue.
-- Use Google Sheets as the single source of truth for the content calendar — update it whenever a post is drafted, approved, or published.
-- Use ElevenLabs (via `media-plugin`) only for internal script read-through checks or TikTok voiceover prototypes; do not publish AI-generated audio without CMO sign-off.
+- Use `media-plugin` for all image generation; always verify outputs are IP-clean before saving or uploading anything.
+- Use `design-plugin` when brand consistency matters — banners, social templates, and anything that will be reused should be built here, not hand-assembled in a doc.
+- Store every finished content asset in Google Drive using a consistent folder structure: `/Figurio Content/[Year]/[Type]/`; upload with `gws drive upload` and record the link in the relevant issue comment.
+- Use Google Docs for all long-form drafts so the CMO can review and comment inline; do not paste final copy directly into issue comments.
+- Maintain the keyword tracker and editorial calendar in Google Sheets and Google Calendar respectively — these are the shared source of truth for content planning and must be kept current each session.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

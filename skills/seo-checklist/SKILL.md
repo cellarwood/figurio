@@ -1,165 +1,180 @@
 ---
 name: seo-checklist
 description: >
-  SEO optimization checklist for Figurio content — keyword research for figurines,
-  3D printing, custom collectibles, and personalized gifts. Covers on-page optimization,
-  meta descriptions, structured data for e-commerce products, and internal linking
-  strategy across the Figurio shop and blog.
+  SEO checklist for Figurio content — keyword targeting for '3D printed figurines',
+  'custom figurines', and 'personalized gifts', meta tags, image alt text for
+  product photos, internal linking strategy, and JSON-LD product schema markup
+  for the Figurio e-commerce catalog.
 allowed-tools:
   - Read
-  - Write
   - Grep
 metadata:
   paperclip:
     tags:
       - seo
       - content
-      - marketing
+      - engineering
 ---
 
 # SEO Checklist
 
-Figurio competes in a niche intersection: 3D-printed collectibles, personalized gifts, and custom figurines. SEO targets both product-intent queries ("buy custom figurine") and discovery queries ("3D printed gift ideas"). Apply this checklist to every product page, blog post, and landing page before publishing.
+Apply this checklist to every page published on figurio.cz or figurio.eu —
+product pages, blog posts, landing pages, and category pages.
 
-## 1. Keyword Research
+## Primary Keyword Targets
 
-### Primary Keyword Categories
-
-| Category | Example Keywords | Content Type |
+| Intent | Primary keyword | Supporting keywords |
 |---|---|---|
-| Product — catalog | "3D printed figurine", "collectible figurines", "resin figurine Czech" | Product pages, collection pages |
-| Product — custom | "custom 3D figurine", "personalized figurine gift", "AI custom figurine" | Custom product page, landing pages |
-| Gifting intent | "unique gift for him/her", "personalized gift ideas", "custom figurine gift" | Blog posts, gift guide landing pages |
-| Discovery / informational | "how are 3D figurines made", "best 3D printed collectibles", "3D printing resin vs FDM" | Blog posts |
-| Local / brand | "Figurio", "3D figurine shop Czech Republic", "Prague 3D print figurine" | Homepage, about page |
+| Commercial | `custom figurines` | `custom 3D figurines`, `personalized figurine` |
+| Commercial | `3D printed figurines` | `3D print figurine`, `resin figurines` |
+| Gift intent | `personalized gifts` | `unique personalized gifts`, `custom gift ideas` |
+| Niche | `scan to print figurine` | `3D scan figurine`, `photo to figurine` |
+| Niche | `AI custom figurine` | `AI generated figurine`, `custom miniature` |
 
-### Keyword Selection Rules
+Target one primary keyword per page. Do not stuff multiple primary keywords onto the same URL.
 
-- Target one primary keyword per page; 2–4 supporting/related keywords
-- Avoid targeting the same primary keyword on multiple pages (cannibalization)
-- Prefer long-tail keywords for blog content (lower competition, higher intent)
-- Do not target keywords that require referencing copyrighted IP (e.g., "Zelda figurine" — IP risk)
-- Use search volume + difficulty tools; aim for keywords under difficulty 40 for new content
+## Title Tags
 
-## 2. On-Page Optimization
+- Length: 50–60 characters
+- Pattern: `{Primary Keyword} — {Differentiator} | Figurio`
+- Examples:
+  - `Custom 3D Printed Figurines — Full-Color Resin | Figurio`
+  - `Personalized Gift Figurines for Collectors | Figurio`
+- The primary keyword must appear in the first 40 characters
+- Never duplicate title tags across pages
 
-### Title Tag
+## Meta Descriptions
 
-- Include the primary keyword; keep under 60 characters
-- Lead with keyword when natural: "Custom 3D Figurine — Personalized Gift | Figurio"
-- Do not stuff keywords; one primary mention is enough
-- Every page has a unique title tag — no duplicates
+- Length: 140–155 characters
+- Must include: primary keyword, one concrete benefit, a soft CTA
+- Example:
+  ```
+  Order a full-color custom figurine from your photo. 0.1 mm detail, gift-ready
+  packaging, ships in 5–7 days. Design yours at Figurio.
+  ```
+- Do not use the same meta description on two pages
 
-### Meta Description
+## Heading Structure
 
-- 140–160 characters
-- Include the primary keyword naturally
-- Write a genuine benefit statement — this is a click driver, not a keyword container
-- Include a soft CTA ("Shop now", "See the full collection", "Order yours")
+- One `H1` per page — contains the primary keyword, matches the page intent
+- `H2` headings: supporting keywords or subtopics; 2–5 per page
+- `H3` and below: descriptive only, no keyword stuffing
+- Product pages: H1 = figurine name (which must follow naming conventions in `content-style-guide`)
 
-Example:
-> "Turn your imagination into a one-of-a-kind 3D-printed figurine. Designed from your prompt, shipped from Prague. Order your custom figurine today."
+## Image Alt Text
 
-### H1
+Every product photo requires descriptive alt text. Format:
 
-- One H1 per page, matches or closely reflects the title tag keyword
-- Never repeat the H1 as an H2
+```
+{color/finish} {material} {subject} figurine[, {size}][, {occasion}]
+```
 
-### Body Content
+Examples:
+- `full-color resin custom wedding figurine, 15 cm`
+- `matte finish 3D printed fantasy warrior figurine, gift box`
+- `scan-to-print portrait figurine of elderly man, display base`
 
-- Primary keyword in the first 100 words
-- Supporting keywords appear naturally across the content — do not force density
-- Use H2/H3 subheadings with related terms (they capture supporting queries)
-- Product descriptions: minimum 60 words; blog posts: minimum 600 words
-- Images: always include descriptive `alt` text with keywords where natural ("hand-painted resin figurine on desk")
+Rules:
+- Never use filename as alt text
+- Never leave alt text empty on product images
+- Do not start with "image of" or "photo of"
+- Keep under 125 characters
 
-### URL Structure
+## Internal Linking
 
-- Lowercase, hyphen-separated, no special characters
-- Product pages: `/products/[product-name]` — keep slugs short and keyword-relevant
-- Blog posts: `/blog/[topic-slug]` — include primary keyword in slug
-- Collection pages: `/collections/[category]` (e.g., `/collections/custom-figurines`)
-- Never use dates in URLs for evergreen content
+Minimum links per page type:
 
-## 3. E-Commerce Structured Data
+| Page type | Minimum internal links |
+|---|---|
+| Blog post | 3 — at least 1 to a product category, 1 to a related blog post |
+| Product page | 2 — to the parent category and one related product |
+| Category page | 1 — to the most popular product in the category |
 
-Add `Product` schema markup to every catalog and custom figurine product page.
+Anchor text rules:
+- Use descriptive anchors: "browse custom figurines" not "click here"
+- Match anchor text to the title of the destination page where possible
+- Do not use the same anchor text for different destination URLs
 
-Required fields:
+## URL Structure
+
+- Lowercase, hyphen-separated, no underscores
+- Product pages: `/products/{category-slug}/{product-slug}`
+- Blog posts: `/blog/{topic-slug}/{post-slug}`
+- Category pages: `/categories/{category-slug}`
+- Examples:
+  - `/products/custom/ai-portrait-figurine`
+  - `/blog/gift-guides/best-3d-printed-gifts-2026`
+
+## JSON-LD Product Schema
+
+Every product page must include a `<script type="application/ld+json">` block with the following fields populated:
 
 ```json
 {
+  "@context": "https://schema.org",
   "@type": "Product",
-  "name": "[Product name]",
-  "description": "[Product description]",
-  "image": "[Primary product image URL]",
-  "brand": { "@type": "Brand", "name": "Figurio" },
+  "name": "Classic Portrait Figurine",
+  "description": "Full-color resin figurine printed at 0.1 mm resolution...",
+  "brand": {
+    "@type": "Brand",
+    "name": "Figurio"
+  },
+  "image": ["https://figurio.cz/images/products/classic-portrait-front.jpg"],
+  "sku": "FIG-CPF-001",
   "offers": {
     "@type": "Offer",
-    "priceCurrency": "EUR",
-    "price": "[price]",
+    "url": "https://figurio.cz/products/custom/classic-portrait-figurine",
+    "priceCurrency": "CZK",
+    "price": "1490",
     "availability": "https://schema.org/InStock",
-    "url": "[product URL]"
+    "shippingDetails": {
+      "@type": "OfferShippingDetails",
+      "deliveryTime": {
+        "@type": "ShippingDeliveryTime",
+        "businessDays": { "@type": "QuantitativeValue", "minValue": 5, "maxValue": 7 }
+      }
+    }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "reviewCount": "124"
   }
 }
 ```
 
-Add `AggregateRating` once reviews are collected (minimum 5 reviews before enabling).
+Required fields: `name`, `description`, `brand`, `image`, `sku`, `offers` (with `price`, `priceCurrency`, `availability`).
+Optional but high-value: `aggregateRating`, `shippingDetails`.
 
-For blog posts, use `Article` schema with `datePublished`, `dateModified`, `author`, and `publisher`.
+## Blog Post SEO Checklist
 
-Validate all structured data with Google's Rich Results Test before publishing.
+Before publishing any blog post, confirm:
 
-## 4. Internal Linking Strategy
-
-### Principles
-
-- Every blog post links to at least one relevant product page or collection
-- Every product page links to at least one related blog post or collection page
-- Use descriptive anchor text — never "click here" or "read more"
-- Link to the deepest relevant page (product page, not just homepage)
-
-### Priority Link Targets
-
-Pages that should receive the most internal links:
-
-1. `/products/custom-ai-figurine` — custom figurine product (highest margin, key growth driver)
-2. `/collections/custom-figurines` — collection page for custom products
-3. `/collections/catalog-figurines` — main catalog collection
-4. Top seasonal landing pages (link from blog posts during relevant season)
-
-### Blog-to-Product Linking Pattern
-
-In blog posts, link to products naturally within the content body — not only in a trailing "Shop the look" section. Example: "...which is why our [custom AI figurine](/products/custom-ai-figurine) uses your prompt as the design input..."
-
-## 5. Content Freshness
-
-- Update seasonal blog posts (gifting guides, Halloween, Christmas) each year — refresh examples, update dates, check internal links
-- Add `dateModified` to schema when making meaningful content updates
-- Audit product page copy every 6 months; stale descriptions hurt CTR from search results
-
-## 6. Pre-Publish Checklist
-
-Work through this before publishing any page:
-
-- [ ] Primary keyword identified; not already used as primary on another page
-- [ ] Title tag under 60 characters, includes primary keyword
-- [ ] Meta description 140–160 characters, includes keyword and CTA
-- [ ] One H1 matching the keyword intent
+- [ ] Primary keyword in title (within first 60 chars)
 - [ ] Primary keyword in first 100 words of body
-- [ ] URL slug is short, lowercase, hyphen-separated, keyword-relevant
+- [ ] Primary keyword in at least one H2
+- [ ] Meta description written, 140–155 chars, includes keyword
 - [ ] All images have descriptive alt text
-- [ ] At least one internal link to a product page or collection
-- [ ] At least one internal link from an existing page to this new page
-- [ ] Structured data added and validated (product pages and blog posts)
-- [ ] No copyrighted character references in keywords, copy, or alt text
+- [ ] At least 3 internal links with descriptive anchors
+- [ ] URL slug matches primary keyword (hyphenated, lowercase)
+- [ ] No duplicate title tag or meta description with existing posts
+
+## Product Page SEO Checklist
+
+Before publishing any product page, confirm:
+
+- [ ] H1 matches the figurine name (naming convention from `content-style-guide`)
+- [ ] Title tag 50–60 chars, primary keyword in first 40 chars
+- [ ] Meta description 140–155 chars with benefit and CTA
+- [ ] All product photos have alt text (format above)
+- [ ] JSON-LD Product schema present and valid (test with Google Rich Results Tool)
+- [ ] SKU populated in schema matches catalog SKU
+- [ ] Price and currency correct in schema (`CZK` for .cz, `EUR` for .eu)
+- [ ] At least 2 internal links (parent category + related product)
 
 ## Anti-patterns
 
-- Writing meta descriptions over 160 characters (Google rewrites them, often poorly)
-- Using the same primary keyword as the target on two different pages
-- Publishing blog posts under 600 words — too thin to rank and provides poor UX
-- Keyword stuffing in alt text ("figurine figurine 3D printed resin figurine")
-- Targeting branded competitor keywords (legal risk, low conversion)
-- Leaving URL slugs as auto-generated IDs (`/products/product-38472`)
-- Adding structured data that does not match the visible page content
+- Do not target more than one primary keyword per page
+- Do not use auto-generated meta descriptions — write them manually
+- Do not add `noindex` to product pages without explicit approval
+- Do not use keyword-stuffed alt text: "3D figurine custom figurine printed figurine" is a violation

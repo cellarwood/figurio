@@ -1,105 +1,153 @@
 ---
 name: campaign-planning
 description: >
-  Plan and execute marketing campaigns for Figurio, a Czech D2C 3D-printed figurine brand.
-  Covers product launches (catalog and custom AI figurines), seasonal promotions (Christmas,
-  Halloween, Valentine's), social media campaigns, and influencer partnerships in the
-  3D printing and collectibles space.
+  Marketing campaign planning for Figurio — D2C 3D-printed figurine brand.
+  Covers seasonal campaign structure (Valentine's, Christmas, Halloween),
+  channel strategy across Instagram and TikTok, influencer outreach templates,
+  and budget allocation guidelines for a Czech Republic-based print-on-demand brand.
 allowed-tools:
   - Read
   - Write
+  - Glob
   - Grep
 metadata:
   paperclip:
     tags:
       - marketing
       - campaigns
-      - cmo
+      - social-media
 ---
 
 # Campaign Planning
 
-Figurio runs campaigns across product launches, seasonal moments, and always-on social channels. Every campaign must reflect the brand: playful, creative, premium but accessible.
+## When to Use
 
-## Campaign Types
+Use this skill when planning a new marketing campaign, drafting a campaign brief, allocating budget across channels, or preparing influencer outreach for Figurio.
 
-### Product Launch Campaigns
-Used for new catalog figurines — viral/meme drops, evergreen character releases, and seasonal editions.
+---
 
-**Timeline:** 2 weeks pre-launch to 1 week post-launch.
+## Seasonal Campaign Calendar
 
-Structure:
-1. **Teaser phase** (D-14 to D-7) — Partial reveal, behind-the-scenes 3D print process, "coming soon" posts
-2. **Launch week** (D-7 to D0) — Full reveal, influencer seeding, paid social activation
-3. **Post-launch** (D+1 to D+7) — User-generated content reposts, reviews, limited-time offer if needed
+Figurio's primary campaign windows. Plan creative assets and copy at least 3 weeks before launch.
 
-### Seasonal Promotions
+| Campaign | Launch Window | Core Hook | Key Products |
+|---|---|---|---|
+| Valentine's Day | Jan 20 – Feb 14 | "Give something one-of-a-kind" | Couple figurines, mini portraits |
+| Easter / Spring | Mar 15 – Apr 10 | "Surprise that lasts forever" | Family sets, kids' characters |
+| Father's Day | May 25 – Jun 15 | "The gift dads actually keep" | Single figurines, hobby scenes |
+| Halloween | Oct 1 – Oct 31 | "Print your alter ego" | Custom character, costume variants |
+| Christmas | Nov 15 – Dec 20 | "The most personal gift under the tree" | Family sets, custom scenes, gift bundles |
+| New Year / Cosplay Season | Dec 26 – Jan 10 | "New year, new you — in 3D" | Cosplay figurines, AI custom |
 
-Key Figurio seasonal moments and their lead times:
+---
 
-| Season | Campaign Start | Key Themes |
+## Channel Strategy
+
+### Instagram
+
+- Primary use: brand storytelling, product showcase, influencer reposts
+- Content mix: 50% product/UGC, 30% behind-the-scenes (MCAE printing, painting detail), 20% educational (how AI custom works)
+- Post cadence: 4–5 feed posts/week + daily Stories during active campaigns
+- Formats: Reels preferred for reach; carousel for process walkthroughs; single image for UGC reposts
+- Hashtag clusters: `#3Dprinting #customfigurines #personalisedgifts #figurinepainting #giftsforher #giftsforhim #collectibles`
+
+### TikTok
+
+- Primary use: discovery and top-of-funnel acquisition
+- Content mix: 60% satisfying process videos (timelapse print, unboxing), 25% before/after (scan → figurine), 15% trend participation
+- Post cadence: 5–7 videos/week during campaigns; 3/week in evergreen periods
+- Hook rule: first 2 seconds must show the finished figurine or a surprising transformation — no slow intros
+- Sound: use trending audio where appropriate; original "print reveal" audio asset should be consistent
+
+### Paid Social (Meta/TikTok Ads)
+
+- Retargeting: always-on for site visitors and abandoned carts
+- Prospecting: activate during campaign windows with seasonal creative
+- Lookalike audiences: seed from past buyers; build separate lists for gift buyers vs. collectible enthusiasts
+
+---
+
+## Budget Allocation Guidelines
+
+Baseline monthly budget split (scale amounts proportionally to total budget):
+
+| Channel | Evergreen % | Campaign Window % |
 |---|---|---|
-| Valentine's Day (Feb 14) | Jan 20 | Couple figurines, gift messaging, "print your love" |
-| Easter | 3 weeks prior | Seasonal catalog editions, pastel palette |
-| Halloween (Oct 31) | Oct 1 | Spooky/meme figurines, horror collectibles, cosplay audience |
-| Christmas | Nov 15 | Gift buyers, catalog best-sellers, custom figurine gifting |
-| Black Friday / Cyber Monday | Nov 1 | Discount on catalog, free shipping bundles |
+| Meta Ads (Instagram/Facebook) | 40% | 35% |
+| TikTok Ads | 20% | 25% |
+| Influencer (paid/gifted) | 25% | 25% |
+| Email / SMS tools | 5% | 5% |
+| Content production | 10% | 10% |
 
-Seasonal campaigns always include:
-- A dedicated landing page or collection filter on the Figurio shop
-- Email sequence (announce → reminder → last chance)
-- At least one platform-specific social asset per channel (Instagram, TikTok, Facebook)
+Campaign windows (Halloween, Christmas, Valentine's) justify a 30–50% budget increase over the monthly baseline.
 
-### Custom AI Figurine Campaigns
-Promote the AI-prompted custom figurine product. These campaigns focus on the novelty and personalization angle.
+---
 
-- Lead with "turn yourself into a figurine" messaging
-- Show before/after: prompt input → finished product
-- Target: gamers, cosplayers, collectors, birthday/gift buyers
-- Best formats: TikTok video walkthroughs, Instagram Reels, influencer unboxing
+## Influencer Outreach
 
-### Influencer Partnerships
+### Tier Strategy
 
-Target influencer categories (in priority order):
-1. **3D printing enthusiasts** — Hobbyist channels on YouTube/TikTok, mid-size (10k–200k), high authenticity
-2. **Collectibles & figure collectors** — Niche but highly engaged; prioritize review-style content
-3. **Gaming & tabletop RPG communities** — Strong gift buyer overlap; D&D, miniatures, Warhammer adjacent
-4. **Cosplay creators** — Aspirational fit for character-specific figurines
+| Tier | Follower Range | Approach | Goal |
+|---|---|---|---|
+| Nano | 2K–10K | Gifted product only | UGC volume, authenticity |
+| Micro | 10K–100K | Gifted + small fee (€100–€300) | Niche reach (cosplay, tabletop, collectors) |
+| Mid | 100K–500K | Paid partnership (€500–€2K) | Broad awareness during peak campaigns |
 
-Partnership deliverables to request:
-- 1 dedicated post or video (unboxing or review preferred)
-- 1–2 story/short-form posts
-- Discount code for their audience (tracked per influencer)
-- Usage rights for Figurio to repost content
+Priority niches: cosplay creators, tabletop/RPG community, family/gift bloggers, 3D printing hobbyists.
 
-Avoid: generic lifestyle influencers, fashion-only accounts, any creator without a clear collector/maker/gamer audience.
+### Outreach Email Template
+
+```
+Subject: Collab with Figurio — a free custom figurine of you 🎁
+
+Hi [Name],
+
+I'm [Your name] from Figurio — we 3D-print full-color custom figurines from photos.
+Your content about [specific topic] is exactly the kind of thing our customers love.
+
+We'd love to send you a free figurine of yourself (or your character / pet / whatever you'd like).
+In return, we'd love an honest post/video if you like it — no script, no hard sell.
+
+If you're interested, I'll send a short brief with details.
+
+Figurio team
+figurio.cz
+```
+
+Customise the second paragraph for each creator — reference their specific content.
+
+### Gifted vs Paid Decision
+
+- Default to gifted (nano/micro) unless the creator asks or has a media kit
+- Offer paid partnership proactively for mid-tier creators during Christmas and Valentine's campaigns
+- Always include a unique discount code per creator to track conversions
+
+---
 
 ## Campaign Brief Template
 
-Every campaign starts with a brief covering:
+Every campaign must have a brief before content production starts. Minimum fields:
 
 ```
 Campaign name:
-Type: [launch / seasonal / always-on / influencer]
-Goal: [awareness / conversions / UGC / email list growth]
-Target audience:
+Window (dates):
+Primary goal: [awareness / conversions / UGC volume]
+Target audience segment:
 Key message (one sentence):
-Channels: [Instagram / TikTok / Email / Paid / Influencer]
-Timeline: [start date → end date]
+Offer / CTA:
 Budget:
-Success metrics: [CTR, conversion rate, revenue, follower growth, etc.]
+Channels:
+Creative assets needed:
+KPIs:
 ```
 
-## Channel-Specific Notes
+---
 
-- **Instagram** — Visual showcase of finished figurines; use Reels for process videos, carousels for product detail
-- **TikTok** — Hook-first short video; print process, reveal moments, meme-adjacent figurine humor
-- **Email** — Segmented by purchase history; new subscribers get welcome + product intro; existing customers get early access and loyalty offers
-- **Paid social** — Retargeting cart abandoners, lookalike audiences based on past buyers; stop campaigns if ROAS drops below 2.0
+## KPIs by Campaign Goal
 
-## Anti-patterns
-
-- Launching a campaign without a clear single CTA
-- Running seasonal campaigns that start less than 3 weeks before the event
-- Using influencers with no visible interest in collectibles, gaming, or 3D printing
-- Sending more than 3 promotional emails per week (exception: Black Friday week only)
+| Goal | Primary KPI | Secondary KPI |
+|---|---|---|
+| Awareness | Reach, Video views | Story impressions |
+| Conversions | ROAS, Orders | CAC, Add-to-cart rate |
+| UGC volume | Tagged posts | Story mentions |
+| Email list growth | New subscribers | Open rate on welcome flow |

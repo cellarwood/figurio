@@ -1,233 +1,156 @@
 ---
 name: deployment-runbook
 description: >
-  Step-by-step deployment procedures for Figurio services on microk8s — backend
-  FastAPI API, React frontend, PostgreSQL database migrations, Helm chart upgrades,
-  Traefik ingress updates, TLS certificate management, and rollback procedures.
-  Use this whenever deploying, upgrading, or rolling back any Figurio service.
+  Figurio deployment procedures for the microk8s-local Kubernetes cluster.
+  Covers Helm chart rollouts for backend/frontend/worker services, PostgreSQL
+  Alembic migrations, rollback procedures, and post-deploy health checks.
 allowed-tools:
   - Bash
   - Read
-  - Write
-  - Glob
   - Grep
 metadata:
   paperclip:
     tags:
-      - engineering
       - devops
       - deployment
+      - kubernetes
 ---
 
 # Deployment Runbook
 
-## When to Use
+Figurio runs on a single-node microk8s cluster (`microk8s-local`). All services
+are deployed via Helm charts. Docker images are hosted on Docker Hub under
+`lukekelle00`. CI/CD is managed through GitHub Actions (`cellarwood/figurio`).
 
-Use this skill for any production or staging deployment of Figurio services:
-backend API updates, frontend releases, database migrations, Helm chart changes,
-ingress/TLS config changes, and rollback operations.
+## Kubectl / Helm Context
 
-## Cluster Context
-
-- **Runtime:** microk8s (local K8s cluster)
-- **Namespaces:** `figurio-prod`, `figurio-staging`
-- **Ingress:** Traefik (via microk8s add-on or Helm release)
-- **Registry:** Docker Hub — `lukekelle00/<service>:<tag>`
-- **CI/CD:** GitHub Actions — builds, pushes image, triggers Helm upgrade
-- **Observability:** Sentry (errors), Prometheus (metrics)
-- **Secrets management:** K8s Secrets (created manually or via Terraform)
-
-## Pre-Deployment Checklist
-
-Before any deployment:
-
-1. Confirm GitHub Actions CI pipeline passed on the target commit (all tests green).
-2. Check current cluster state: `microk8s kubectl get pods -n figurio-prod`
-3. Note the currently running image tag for the service being deployed (for rollback).
-4. For DB migrations: ensure a database backup exists or `pg_dump` is run manually.
-5. Confirm Sentry is reachable and error rate baseline is known.
-
-## Backend API Deployment (FastAPI)
-
-The backend runs as a Deployment in `figurio-prod`. Image: `lukekelle00/figurio-backend:<tag>`.
-
-### Standard Deploy
+Always confirm the correct context before any operation:
 
 ```bash
-# 1. Pull the new image tag from CI output or git SHA
-IMAGE_TAG=<git-sha-or-semver>
+kubectl config use-context microk8s-local
+kubectl config current-context   # verify
+```
 
-# 2. Update image via Helm upgrade
-microk8s helm upgrade figurio-backend ./helm/backend \
+Namespace convention: `figurio-prod` for production, `figurio-staging` for staging.
+
+## Services
+
+| Service    | Helm chart path          | Docker image                    |
+|------------|--------------------------|---------------------------------|
+| backend    | `helm/backend`           | `lukekelle00/figurio-backend`   |
+| frontend   | `helm/frontend`          | `lukekelle00/figurio-frontend`  |
+| worker     | `helm/worker`            | `lukekelle00/figurio-worker`    |
+
+## Standard Rollout
+
+### 1. Build and push image (CI does this automatically on merge to main)
+
+```bash
+docker build --target production -t lukekelle00/figurio-<service>:<tag> .
+docker push lukekelle00/figurio-<service>:<tag>
+```
+
+### 2. Run Alembic migrations (backend only — do this BEFORE deploying backend)
+
+```bash
+kubectl -n figurio-prod run alembic-migrate \
+  --image=lukekelle00/figurio-backend:<tag> \
+  --restart=Never \
+  --env="DATABASE_URL=$(kubectl -n figurio-prod get secret figurio-db-secret -o jsonpath='{.data.url}' | base64 -d)" \
+  -- alembic upgrade head
+
+# Wait for completion, then check logs
+kubectl -n figurio-prod logs alembic-migrate
+kubectl -n figurio-prod delete pod alembic-migrate
+```
+
+Migrations must complete successfully before the backend Deployment is updated.
+If migration fails, stop — do not proceed with the Helm upgrade.
+
+### 3. Helm upgrade
+
+```bash
+helm upgrade --install figurio-<service> helm/<service> \
   --namespace figurio-prod \
-  --set image.tag=$IMAGE_TAG \
-  --set image.repository=lukekelle00/figurio-backend \
+  --set image.tag=<tag> \
   --atomic \
   --timeout 5m
-
-# 3. Verify rollout
-microk8s kubectl rollout status deployment/figurio-backend -n figurio-prod
-
-# 4. Tail logs briefly to confirm healthy startup
-microk8s kubectl logs -l app=figurio-backend -n figurio-prod --tail=50 -f
 ```
 
-### Verify Health
+`--atomic` rolls back automatically if the rollout fails within the timeout.
+Deploy services in order: **backend → worker → frontend**.
+
+### 4. Verify rollout
 
 ```bash
-# Hit the health endpoint through ingress
-curl -sf https://api.figurio.com/health | jq .
-
-# Expected: {"status": "ok", "version": "<tag>"}
+kubectl -n figurio-prod rollout status deployment/figurio-<service>
+kubectl -n figurio-prod get pods -l app=figurio-<service>
 ```
 
-## Frontend Deployment (React)
+## Health Check Endpoints
 
-The frontend is a static build served via Nginx in a Docker container.
-Image: `lukekelle00/figurio-frontend:<tag>`.
+After each service deploy, verify:
+
+| Service  | Endpoint                        | Expected        |
+|----------|---------------------------------|-----------------|
+| backend  | `GET /api/v1/health`            | `200 {"status":"ok"}` |
+| frontend | `GET /healthz`                  | `200`           |
+| worker   | `GET /worker/health`            | `200 {"status":"ok"}` |
+
+Traefik ingress is the entry point. Check that TLS is terminating correctly:
 
 ```bash
-IMAGE_TAG=<git-sha-or-semver>
-
-microk8s helm upgrade figurio-frontend ./helm/frontend \
-  --namespace figurio-prod \
-  --set image.tag=$IMAGE_TAG \
-  --set image.repository=lukekelle00/figurio-frontend \
-  --atomic \
-  --timeout 3m
-
-microk8s kubectl rollout status deployment/figurio-frontend -n figurio-prod
+curl -sf https://figurio.cz/api/v1/health
+curl -sf https://figurio.cz/healthz
 ```
 
-Verify by loading `https://figurio.com` and checking the page title / version footer.
+## Rollback
 
-## Database Migrations
-
-Migrations run as a Kubernetes Job before the backend Deployment is updated.
-Migration tool: Alembic (invoked inside the backend container).
+### Helm rollback (no schema changes)
 
 ```bash
-# 1. Apply the migration job manifest
-microk8s kubectl apply -f k8s/jobs/migrate.yaml -n figurio-prod
-
-# 2. Wait for job completion (timeout 10m)
-microk8s kubectl wait --for=condition=complete job/figurio-migrate \
-  -n figurio-prod --timeout=600s
-
-# 3. Check migration logs
-microk8s kubectl logs job/figurio-migrate -n figurio-prod
-
-# 4. If job failed, do NOT proceed with backend deploy — investigate first
-microk8s kubectl describe job/figurio-migrate -n figurio-prod
-
-# 5. Clean up completed job after verification
-microk8s kubectl delete job figurio-migrate -n figurio-prod
+helm rollback figurio-<service> 0 --namespace figurio-prod
+# 0 = previous release; use `helm history figurio-<service> -n figurio-prod` to pick a specific revision
 ```
 
-Migration failures are P1 incidents — see `incident-response` skill.
+### Alembic downgrade (if migration was applied)
 
-## Traefik Ingress Updates
-
-Figurio uses Traefik as the ingress controller. Ingress rules live in
-`helm/ingress/` or as standalone `IngressRoute` manifests.
+Identify the previous revision from migration history:
 
 ```bash
-# Apply updated ingress config
-microk8s kubectl apply -f k8s/ingress/figurio-ingressroute.yaml -n figurio-prod
+kubectl -n figurio-prod run alembic-downgrade \
+  --image=lukekelle00/figurio-backend:<previous-tag> \
+  --restart=Never \
+  --env="DATABASE_URL=..." \
+  -- alembic downgrade -1
 
-# Verify routes are accepted
-microk8s kubectl get ingressroute -n figurio-prod
-
-# Check Traefik dashboard (port-forward if needed)
-microk8s kubectl port-forward svc/traefik 9000:9000 -n kube-system
-# Open http://localhost:9000/dashboard/
+kubectl -n figurio-prod logs alembic-downgrade
+kubectl -n figurio-prod delete pod alembic-downgrade
 ```
 
-When adding a new route:
-- Confirm the backend/frontend service name and port match.
-- Test the route with `curl -H "Host: <domain>" http://localhost` if DNS not yet live.
+Then roll back the backend Helm release to the previous tag.
 
-## TLS Certificate Management
+**Rule:** Never downgrade the database while the newer backend version is still running.
+Order: roll back backend deploy first (to old image), then run `alembic downgrade`.
 
-TLS is managed via cert-manager with Let's Encrypt (ACME). Certificates are
-stored as K8s Secrets.
+## Redis
 
-```bash
-# List current certificates and expiry
-microk8s kubectl get certificate -n figurio-prod
+Redis is not versioned with Alembic. Cache keys are namespaced by service version.
+On backend rollback, Redis keys from the new version may persist but are non-destructive —
+the old backend ignores unknown key schemas.
 
-# Check a specific cert status
-microk8s kubectl describe certificate figurio-tls -n figurio-prod
+## CI/CD Pipeline
 
-# Force renewal if expiring within 7 days
-microk8s kubectl annotate certificate figurio-tls \
-  cert-manager.io/force-renewal=true -n figurio-prod --overwrite
+GitHub Actions runs `.github/workflows/deploy.yml` on push to `main`.
+Stages: build → push → migrate → helm-upgrade (per service).
+Sentry release tracking is triggered at the end of a successful deploy.
 
-# Watch renewal progress
-microk8s kubectl get certificaterequest -n figurio-prod -w
-```
+Check pipeline status at: `https://github.com/cellarwood/figurio/actions`
 
-Certificates auto-renew at 60 days. Alert fires at 14 days remaining via
-Prometheus rule. If renewal fails, escalate — ACME challenge failures often
-indicate DNS or ingress misconfiguration.
+## Post-Deploy Checklist
 
-## Rollback Procedures
-
-### Helm Rollback (preferred)
-
-```bash
-# View release history
-microk8s helm history figurio-backend -n figurio-prod
-
-# Roll back to previous revision
-microk8s helm rollback figurio-backend -n figurio-prod
-
-# Or to a specific revision
-microk8s helm rollback figurio-backend <revision> -n figurio-prod
-
-# Confirm rollout
-microk8s kubectl rollout status deployment/figurio-backend -n figurio-prod
-```
-
-### Image Tag Rollback (manual override)
-
-```bash
-microk8s kubectl set image deployment/figurio-backend \
-  backend=lukekelle00/figurio-backend:<previous-tag> \
-  -n figurio-prod
-
-microk8s kubectl rollout status deployment/figurio-backend -n figurio-prod
-```
-
-### Database Migration Rollback
-
-Alembic downgrade — run inside a backend pod or migration job:
-
-```bash
-microk8s kubectl exec -it deploy/figurio-backend -n figurio-prod -- \
-  alembic downgrade -1
-```
-
-Only downgrade if the migration is reversible and data integrity is confirmed.
-When in doubt, restore from backup.
-
-## Post-Deployment Verification
-
-After any deployment:
-
-1. `microk8s kubectl get pods -n figurio-prod` — all pods Running, no CrashLoopBackOff.
-2. Check Sentry — no new error spike in the 5 minutes post-deploy.
-3. Check Prometheus — `http_request_duration_seconds` and `http_requests_total` normal.
-4. Smoke test critical paths:
-   - `GET /health` — 200 OK
-   - `GET /api/v1/products` — returns product list
-   - Stripe checkout flow (staging only, or use test mode).
-5. Record the deployed image tag in the deployment log (team doc or Git tag).
-
-## Anti-Patterns
-
-- Never deploy backend without running migrations first (if migration exists).
-- Never delete a running pod to "force restart" — use `rollout restart` instead.
-- Never edit K8s resources with `kubectl edit` in production — all changes go
-  through Helm or manifests in Git.
-- Never push directly to the Docker Hub image used by prod without a CI build.
+- [ ] All pods in `Running` state
+- [ ] Health check endpoints return `200`
+- [ ] Sentry: no new error spike in the 5 minutes after deploy
+- [ ] Spot-check: place a test order through the storefront (staging only)
+- [ ] Confirm Traefik TLS certificate is valid (`curl -vI https://figurio.cz`)

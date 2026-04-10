@@ -1,10 +1,9 @@
 ---
 name: component-patterns
 description: >
-  React component patterns for the Figurio storefront — covers shadcn-ui usage
-  conventions, Tailwind styling patterns, Three.js 3D model viewer integration,
-  responsive product cards, cart state management with React context, and
-  Stripe Elements integration in the checkout flow.
+  React/shadcn-ui component patterns for the Figurio storefront (D2C 3D-printed figurines).
+  Covers catalog product grid, figurine detail cards with Three.js 3D preview, AI custom
+  figurine prompt builder, Stripe checkout flow components, and responsive layout conventions.
 allowed-tools:
   - Read
   - Grep
@@ -14,175 +13,185 @@ metadata:
     tags:
       - engineering
       - frontend
+      - components
 ---
 
 # Component Patterns
 
 ## When to Use
 
-Apply this skill when building, reviewing, or modifying any React component in the Figurio storefront — including catalog pages, the AI prompt interface, the 3D preview viewer, cart UI, or the checkout flow.
+Apply this skill when building or modifying any React component in the Figurio storefront — product catalog, figurine detail pages, AI prompt builder, or checkout flow.
 
-## General Conventions
+## Stack Conventions
 
-- All components are written in TypeScript with strict mode enabled.
-- Use named exports for all components — no default exports.
-- Keep components co-located with their page if used only once; move to `src/components/` when shared across two or more pages.
-- Props interfaces are declared above the component, named `<ComponentName>Props`.
-- Avoid prop drilling beyond two levels — use context or a dedicated hook instead.
+- **Components**: shadcn-ui primitives + Radix UI for headless behavior
+- **Styling**: Tailwind CSS utility classes only — no custom CSS files unless Three.js canvas requires it
+- **TypeScript**: strict mode; all props must be explicitly typed, no `any`
+- **Routing**: React Router v6 (`useNavigate`, `<Link>`)
+- **Animations**: GSAP for entrance/exit transitions; Tailwind `transition-*` for hover/focus states
 
-```tsx
-interface ProductCardProps {
-  sku: string;
-  name: string;
-  previewUrl: string;
-  priceInCents: number;
-}
+## Component File Structure
 
-export function ProductCard({ sku, name, previewUrl, priceInCents }: ProductCardProps) {
-  // ...
-}
+```
+src/
+└── components/
+    ├── catalog/
+    │   ├── ProductGrid.tsx
+    │   ├── ProductCard.tsx
+    │   └── FilterBar.tsx
+    ├── figurine/
+    │   ├── FigurineDetail.tsx
+    │   ├── FigurinePreview3D.tsx   # Three.js canvas wrapper
+    │   └── FigurinePromptBuilder.tsx
+    ├── checkout/
+    │   ├── CheckoutFlow.tsx
+    │   ├── PaymentStep.tsx         # Stripe Elements wrapper
+    │   └── OrderSummary.tsx
+    └── ui/                         # shadcn-ui generated components (do not edit)
 ```
 
-## shadcn-ui Usage
+Each component file exports one named component matching the filename.
 
-- Import shadcn-ui primitives from `@/components/ui/` (the local re-export layer), never directly from `@radix-ui/*`.
-- Do not modify files under `src/components/ui/` — extend behavior by wrapping, not editing.
-- Use the `cn()` utility from `@/lib/utils` for all conditional class merging.
-- Prefer shadcn-ui's `Button`, `Dialog`, `Sheet`, and `Tooltip` over custom equivalents.
+## Catalog Product Grid
+
+Use CSS Grid via Tailwind. The grid must be responsive across all breakpoints:
 
 ```tsx
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-export function AddToCartButton({ disabled, className }: { disabled?: boolean; className?: string }) {
-  return (
-    <Button
-      variant="default"
-      size="lg"
-      disabled={disabled}
-      className={cn("w-full", className)}
-    >
-      Add to Cart
-    </Button>
-  );
-}
+// ProductGrid.tsx
+<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+  {products.map((product) => (
+    <ProductCard key={product.id} product={product} />
+  ))}
+</div>
 ```
 
-## Tailwind Styling Patterns
+`ProductCard` renders a shadcn-ui `Card` with:
+- Figurine image (top, fixed aspect ratio `aspect-square`, `object-cover`)
+- Product name (`text-sm font-medium`)
+- Price in CZK (`text-sm text-muted-foreground`)
+- "Customize" CTA button using shadcn-ui `Button` variant `outline`
 
-- Use Tailwind utility classes directly — no custom CSS files unless absolutely necessary for Three.js canvas layering.
-- Figurio brand tokens are registered as Tailwind theme extensions:
-  - `bg-brand-clay` — primary warm tone
-  - `bg-brand-slate` — neutral dark
-  - `text-brand-gold` — accent / CTA highlights
-- Use `@apply` only inside `src/styles/globals.css` for base HTML element resets.
-- Responsive breakpoints follow Tailwind defaults: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px).
-- Product grid layout: `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6`.
+Cards link to `/figurines/{slug}` via `<Link>` — never `<a>`.
 
-## Responsive Product Cards
+## Figurine Detail Card with 3D Preview
 
-Product cards display a figurine thumbnail, name, price, and an add-to-cart affordance.
+The 3D preview is a Three.js canvas rendered inside a contained `div`. It must never stretch the layout:
 
 ```tsx
-export function ProductCard({ sku, name, previewUrl, priceInCents }: ProductCardProps) {
-  const { addItem } = useCart();
-
-  return (
-    <article className="group relative flex flex-col rounded-2xl border border-slate-200 bg-white overflow-hidden hover:shadow-lg transition-shadow">
-      <div className="aspect-square overflow-hidden bg-brand-slate">
-        <img
-          src={previewUrl}
-          alt={`3D figurine: ${name}`}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
-        />
-      </div>
-      <div className="flex flex-col gap-2 p-4">
-        <h3 className="text-sm font-semibold text-slate-900 truncate">{name}</h3>
-        <p className="text-brand-gold font-bold">{formatPrice(priceInCents)}</p>
-        <AddToCartButton onClick={() => addItem(sku)} />
-      </div>
-    </article>
-  );
-}
-```
-
-- Use `<article>` for product cards — it carries semantic meaning for screen readers.
-- Always include a descriptive `alt` attribute on product images.
-- GSAP-driven hover animations belong on the Three.js canvas layer, not on `<img>` tags.
-
-## Three.js 3D Model Viewer Integration
-
-The `ModelViewer` component wraps a Three.js scene inside a `<canvas>`. It is used on the product detail page and the AI prompt preview panel.
-
-- Mount/unmount the Three.js renderer inside `useEffect` with a cleanup return to dispose geometries and the WebGL context.
-- Canvas sizing must be driven by a `ResizeObserver` — never hardcoded pixel values.
-- Expose a `modelUrl` prop (GLTF/GLB path) and an optional `autoRotate` boolean.
-- Loading state is handled with a `Suspense`-compatible skeleton overlay (`<ModelViewerSkeleton />`).
-- GSAP animations (intro scale-in, AI prompt transition) are triggered via refs — do not mix GSAP timelines with React state updates.
-
-```tsx
-interface ModelViewerProps {
+// FigurinePreview3D.tsx
+interface FigurinePreview3DProps {
   modelUrl: string;
-  autoRotate?: boolean;
+  className?: string;
 }
 
-export function ModelViewer({ modelUrl, autoRotate = true }: ModelViewerProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export function FigurinePreview3D({ modelUrl, className }: FigurinePreview3DProps) {
+  const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const { scene, renderer, dispose } = initThreeScene(canvasRef.current, { modelUrl, autoRotate });
-    return () => dispose();
-  }, [modelUrl, autoRotate]);
+    // Three.js scene init here — renderer, camera, controls
+    // return cleanup fn to dispose renderer
+  }, [modelUrl]);
 
   return (
-    <div className="relative w-full aspect-square bg-brand-slate rounded-2xl overflow-hidden">
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-label="Interactive 3D figurine preview" />
-    </div>
+    <div
+      ref={canvasRef}
+      className={cn("w-full aspect-square rounded-lg overflow-hidden bg-muted", className)}
+      aria-label="Interactive 3D figurine preview"
+      role="img"
+    />
   );
 }
 ```
 
-- Provide `aria-label` on the `<canvas>` element — it is otherwise invisible to assistive technology.
-- Do not render `ModelViewer` server-side; wrap call sites with a dynamic import or `useIsClient` guard.
-
-## Cart State Management
-
-Cart state lives in `CartContext` (`src/context/cart-context.tsx`). Do not create local cart state — always consume the context.
+The parent `FigurineDetail` layout uses a two-column grid on desktop:
 
 ```tsx
-const { items, addItem, removeItem, totalInCents } = useCart();
+<div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+  <FigurinePreview3D modelUrl={figurine.modelUrl} />
+  <FigurineInfo figurine={figurine} />
+</div>
 ```
 
-- `addItem(sku: string, quantity?: number)` — defaults to quantity 1.
-- `removeItem(sku: string)` — removes all units of that SKU.
-- Cart is persisted to `localStorage` via a `useEffect` inside the provider — no extra persistence logic needed in consumers.
-- The cart `Sheet` (slide-over panel) is toggled via `useCartSheet()` — do not manage open/close state locally.
+Always clean up Three.js renderer in `useEffect` return to prevent memory leaks.
 
-## Stripe Elements Integration
+## AI Prompt Builder
 
-Stripe Elements are mounted inside the `/checkout` page (`src/pages/checkout/`).
+The prompt builder is a multi-step form using local `useState` — do not use a form library for this component. Steps: Subject → Style → Material → Review.
 
-- Initialize with `loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)` — store the promise at module level to avoid re-initialization on re-renders.
-- Wrap the payment form in `<Elements stripe={stripePromise} options={elementsOptions}>`.
-- Use the `PaymentElement` component for the payment method UI — do not build custom card inputs.
-- The `appearance` option must use Figurio's brand tokens:
-  ```ts
-  const elementsOptions = {
-    appearance: {
-      theme: "stripe" as const,
-      variables: { colorPrimary: "#C49A3C", borderRadius: "12px" },
-    },
-  };
-  ```
-- Submit via `stripe.confirmPayment()` — handle `error` and redirect in the same async handler.
-- Never log or render `paymentIntent.client_secret` to the DOM.
+```tsx
+// FigurinePromptBuilder.tsx
+type PromptStep = "subject" | "style" | "material" | "review";
+
+interface PromptState {
+  subject: string;
+  style: string;
+  material: string;
+}
+```
+
+Use shadcn-ui `Tabs` for step navigation when all steps are reachable, or a linear stepper with `Button` next/back controls when steps are sequential. Show step progress with shadcn-ui `Progress`.
+
+Controlled inputs use shadcn-ui `Input` and `Textarea`. Style/material selections use shadcn-ui `ToggleGroup` (Radix-backed).
+
+## Checkout Flow Components
+
+Checkout is a three-step flow: Cart → Shipping → Payment. Use React Router for step routing (`/checkout/cart`, `/checkout/shipping`, `/checkout/payment`).
+
+**Stripe Elements** must be wrapped in `<Elements stripe={stripePromise}>` at the `CheckoutFlow` level, not per-step:
+
+```tsx
+// CheckoutFlow.tsx
+<Elements stripe={stripePromise} options={elementsOptions}>
+  <Outlet />
+</Elements>
+```
+
+`PaymentStep` renders `<PaymentElement />` from `@stripe/react-stripe-js`. Never build custom card inputs — always use Stripe Elements.
+
+`OrderSummary` is a sticky sidebar on desktop (`lg:sticky lg:top-4`), stacked below the form on mobile.
+
+## Responsive Layout Patterns
+
+| Breakpoint | Behavior |
+|---|---|
+| default (mobile) | Single column, full-width cards, stacked checkout |
+| `sm` (640px) | 3-column product grid |
+| `lg` (1024px) | 4-column grid, 2-column figurine detail, sticky checkout sidebar |
+| `xl` (1280px) | 5-column product grid |
+
+Container max-width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` on all top-level page wrappers.
+
+## GSAP Animations
+
+Use GSAP for component entrance animations only. Register animations in `useLayoutEffect`, clean up with `gsap.context()`:
+
+```tsx
+useLayoutEffect(() => {
+  const ctx = gsap.context(() => {
+    gsap.from(".product-card", {
+      opacity: 0,
+      y: 20,
+      stagger: 0.05,
+      duration: 0.3,
+      ease: "power2.out",
+    });
+  }, containerRef);
+  return () => ctx.revert();
+}, [products]);
+```
+
+Never animate elements that are offscreen or hidden — check `prefers-reduced-motion` before applying GSAP:
+
+```tsx
+const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (!prefersReduced) { /* GSAP animation */ }
+```
 
 ## Anti-patterns
 
-- Do not import Radix UI primitives directly — always use the shadcn-ui wrapper from `@/components/ui/`.
-- Do not use inline `style={{}}` for colors or spacing — use Tailwind utilities or brand token classes.
-- Do not store cart items in component-level state (`useState`) — use `useCart()`.
-- Do not initialize Three.js outside of `useEffect` — it will throw on SSR and leak memory on unmount.
-- Do not place GSAP `gsap.to()` calls inside render — use refs and `useLayoutEffect`.
+- Do not use inline styles except for Three.js canvas sizing when unavoidable
+- Do not edit files under `src/components/ui/` — those are shadcn-ui managed
+- Do not use `React.FC` — use explicit function declarations with typed props interfaces
+- Do not put Three.js logic inside JSX render — always in `useEffect`/`useLayoutEffect`
+- Do not use `any` for Stripe or Three.js types — import their types from `@stripe/stripe-js` and `three`

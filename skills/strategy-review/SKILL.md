@@ -1,121 +1,154 @@
 ---
 name: strategy-review
 description: >
-  Weekly strategic review process for Figurio — a Czech D2C e-commerce company selling
-  3D-printed figurines. Covers how to evaluate progress against company goals, identify
-  blockers across engineering, marketing, and operations, and reprioritize work across
-  the 9-agent roster.
+  Weekly strategic review process for Figurio — evaluate progress against the five
+  company goals (MVP platform, AI pipeline, fulfillment ops, brand/acquisition,
+  scan-to-print Phase 2), identify cross-functional blockers, and reprioritize
+  work across the eight-agent org. Run when last review was more than five days ago.
+allowed-tools:
+  - Read
+  - Write
+  - Bash
 metadata:
   paperclip:
     tags:
       - strategy
       - leadership
-      - planning
+      - weekly
 ---
 
 # Strategy Review
 
-## When to Use
+## When to Run
 
-Run this skill every week (or when triggered by a significant business event such as a
-production outage, a spike/drop in conversion, or a new product line milestone). It
-structures how the CEO agent evaluates company health and sets priorities for the week
-ahead.
+Run a full strategic review when:
+- It has been more than 5 days since the last review (check `$AGENT_HOME/memory/` for last review date)
+- A blocker surfaces that touches more than one team
+- A major milestone is within 7 days
 
-## Review Structure
+Do NOT run on every heartbeat. This is a weekly cadence, not a daily one.
 
-Work through the following sections in order. Each section produces a concrete output
-(a status, a list of blockers, or a set of updated priorities).
+## The Five Company Goals
 
----
+Every review scores each goal on: **On Track / At Risk / Blocked**.
 
-### 1. Goal Scorecard
+| # | Goal | Owner | Key Signal |
+|---|------|-------|------------|
+| 1 | Launch MVP e-commerce platform | CTO | Platform issues in `in_progress` or `done` |
+| 2 | Launch AI prompt-to-print pipeline | CTO | AI pipeline issues; staging/prod deploy status |
+| 3 | Establish production and fulfillment with MCAE | Head of Operations | Open ops issues; MCAE coordination status |
+| 4 | Build brand and acquire first customers | CMO | Campaign issues; first-order milestone |
+| 5 | Research Phase 2 scan-to-print capability | CEO (business) + CTO (technical) | Research brief in Google Drive; open research issues |
 
-Evaluate Figurio's three core goals for the current quarter:
+## Step-by-Step Process
 
-| Goal | Leading Indicator | Source |
-|------|------------------|--------|
-| Revenue growth | Weekly orders, AOV, conversion rate | Stripe dashboard / backend analytics |
-| Product quality | Print defect rate, customer complaints, re-print requests | MCAE production logs, support tickets |
-| Custom figurine funnel | AI-prompt completion rate, scan-to-print Phase 2 readiness | CTO weekly report |
-
-Rate each goal: **On Track / At Risk / Off Track**. An "At Risk" rating requires a
-named owner and a corrective action within the same review.
-
----
-
-### 2. Agent Status Check
-
-Pull the latest heartbeat or status summary from each agent:
-
-- **CTO** — engineering velocity, open incidents, infrastructure stability (K8s/Docker)
-- **CMO** — campaign performance, content pipeline, CAC vs target
-- **Head of Operations** — MCAE order queue, delivery SLAs, Stripe payment issues
-- **Backend Engineer** — FastAPI service health, DB migrations, API reliability
-- **Frontend Engineer** — React/TS build status, shadcn-ui component work, UX bugs
-- **DevOps Engineer** — deployment pipeline, Docker image hygiene, K8s cluster alerts
-- **Content Creator** — figurine catalog photography, product copy, social assets
-- **Support Agent** — open ticket volume, CSAT, recurring complaint themes
-
-Flag any agent whose status is blocked or whose output has not arrived.
-
----
-
-### 3. Blocker Triage
-
-For each blocker identified in step 2, classify it:
-
-- **Engineering blocker** — route to CTO with a clear acceptance criterion and deadline
-- **Marketing blocker** — route to CMO with the business impact quantified
-- **Operations blocker** — route to Head of Operations; if it affects MCAE print queue,
-  mark as P0 and expect same-day response
-- **Cross-functional** — CEO handles directly or schedules a synchronous decision
-
-Do not carry a blocker into a second review week without escalation.
-
----
-
-### 4. Figurio Product Line Health
-
-Check the status of each product line separately:
-
-- **Catalog figurines** — in-stock SKUs, new designs in pipeline, any print quality issues
-- **AI-prompted custom figurines** — prompt-to-order conversion, AI model performance,
-  average turnaround time from order to MCAE submission
-- **Scan-to-print (Phase 2)** — milestone progress only; not yet revenue-generating
-
----
-
-### 5. Priority Reset
-
-Based on the scorecard and blockers, produce a ranked priority list for the coming week.
-Format:
+### 1. Pull Cross-Team Issue Data
 
 ```
-P0 — [action] | owner: [agent] | due: [date]
-P1 — [action] | owner: [agent] | due: [date]
-P2 — [action] | owner: [agent] | due: [date]
+GET /api/companies/{companyId}/issues?status=todo,in_progress,blocked
 ```
 
-Limit to 3 P0s. If more than 3 things feel like P0, something is wrong — escalate to
-a human stakeholder.
+Filter by each direct report's team. Look for:
+- Issues `in_progress` for more than 3 days with no comment update — these are stale
+- Issues with `status=blocked` — each needs an unblocking action before you exit
+- Issues without a `goalId` — these are unanchored work; evaluate whether they belong
 
----
+### 2. Score Each Goal
 
-## Output
+For each of the five goals, determine the status:
 
-The review produces:
-1. A goal scorecard (On Track / At Risk / Off Track per goal)
-2. A blocker list with owners
-3. A weekly priority list in P0/P1/P2 format
+- **On Track** — active progress, no blockers, milestone timeline intact
+- **At Risk** — slow progress, stale issues, dependency unclear, or timeline slipping
+- **Blocked** — hard blocker with no current owner or action
 
-Share the output with CTO, CMO, and Head of Operations as the week's operating brief.
+Write the score and one-sentence rationale. Do not pad.
 
-## Anti-patterns
+### 3. Identify Cross-Functional Blockers
 
-- Reviewing status without updating priorities — the review is only useful if it changes
-  something
-- Letting "At Risk" goals sit without a named owner and corrective action
-- Running the review without checking the MCAE production queue — operational delays are
-  the most common Figurio bottleneck and are easy to miss
-- Producing a priority list longer than ~7 items — focus is the point
+A cross-functional blocker exists when:
+- A CTO deliverable is required before CMO or Ops can proceed
+- MCAE fulfillment readiness blocks platform launch
+- AI pipeline completion blocks marketing launch materials
+- Phase 2 research has technical questions outstanding from CTO
+
+For each cross-functional blocker: name the issue, name the blocking dependency, name the two teams affected, and assign a resolution action.
+
+### 4. Comment on Stale and Blocked Issues
+
+For each stale `in_progress` issue (>3 days, no update):
+```
+Status check — this has been in_progress for X days without an update.
+- What is the current state?
+- Is there a blocker?
+- Expected completion?
+```
+
+For each `blocked` issue, comment with the specific unblocking action and a deadline.
+
+### 5. Reprioritize If Needed
+
+Reprioritize when:
+- A goal has moved from At Risk to Blocked
+- Two goals are competing for the same agent's bandwidth
+- A new dependency has emerged that changes sequencing
+
+When reprioritizing, create or update issues with revised `priority` and `goalId`. Do not reassign work silently — always comment the rationale on the affected issues.
+
+### 6. Update the Roadmap Document
+
+Open the strategic roadmap in Google Drive. Update:
+- Goal status badges (On Track / At Risk / Blocked)
+- Any milestones that have shifted
+- Next week's focus for each goal
+
+Keep the roadmap doc under two pages. It is an executive artifact, not a task board.
+
+### 7. Record the Review
+
+Write a brief review record to `$AGENT_HOME/memory/strategy-review-{YYYY-MM-DD}.md`:
+
+```
+# Strategy Review — {date}
+
+## Goal Statuses
+1. MVP Platform — On Track / At Risk / Blocked
+2. AI Pipeline — ...
+3. Fulfillment Ops — ...
+4. Brand/Acquisition — ...
+5. Phase 2 Research — ...
+
+## Cross-Functional Blockers
+- [list or "None"]
+
+## Reprioritization Actions
+- [list or "None"]
+
+## Next Review Trigger
+{date + 5 days}
+```
+
+## Output Format
+
+When reporting a review in an issue comment or digest, use this structure:
+
+```
+Weekly strategy review complete — {date}
+
+Goals:
+- MVP Platform: On Track — {one-line rationale}
+- AI Pipeline: At Risk — {one-line rationale}
+- Fulfillment Ops: On Track — {one-line rationale}
+- Brand/Acquisition: On Track — {one-line rationale}
+- Phase 2 Research: On Track — {one-line rationale}
+
+Blockers addressed: {N}
+Stale issues commented: {N}
+Roadmap updated: yes/no
+```
+
+## Anti-Patterns
+
+- Do not score a goal "On Track" because no one has complained — verify with issue data
+- Do not skip the roadmap update because it feels minor — the board reads it
+- Do not resolve a cross-functional blocker without leaving a comment on the affected issue
+- Do not run the review from memory — always pull fresh issue data from the API

@@ -1,19 +1,15 @@
 ---
 name: vendor-evaluation
 description: >
-  Framework for evaluating and scoring printing partners (MCAE and alternatives),
-  shipping providers (Zásilkovna, DHL), and material suppliers for Figurio's
-  3D-printed figurine business. Covers scoring criteria, cost comparison templates,
-  SLA requirements, and quality standards specific to PolyJet figurine production.
-allowed-tools:
-  - Read
-  - Write
-  - Grep
+  MCAE vendor management for Figurio's 3D-printed figurine production. Covers
+  Stratasys J55 PolyJet pricing negotiation across Small/Medium/Large size tiers,
+  SLA and quality metric tracking, volume discount trigger thresholds, and
+  evaluation criteria for alternative PolyJet printing partners.
 metadata:
   paperclip:
     tags:
       - operations
-      - vendors
+      - vendor
       - procurement
 ---
 
@@ -21,134 +17,117 @@ metadata:
 
 ## When to Use
 
-Use this skill when assessing current or prospective vendors — printing partners,
-shipping carriers, or material suppliers. Run a full evaluation annually for each
-active vendor, or ad hoc when a new vendor is being onboarded or a current vendor
-raises concerns.
-
-## Printing Partners
-
-### Current Primary Vendor: MCAE (mcae.cz)
-
-MCAE operates a Stratasys J55 PolyJet printer and is Figurio's sole production
-partner. All evaluation of alternatives must be benchmarked against MCAE's
-current baseline.
-
-### Scoring Criteria for Printing Partners
-
-Score each criterion 1–5. Minimum acceptable total: **32 / 50**.
-
-| Criterion | Weight | Notes |
-|-----------|--------|-------|
-| Print quality — surface finish (PolyJet or equivalent) | 5x | Must support multi-material/full-color at figurine scale |
-| Dimensional accuracy (±0.2 mm target) | 5x | Test with calibration figurine at each size tier |
-| Turnaround time — standard lead | 4x | Target: Small ≤3 BD, Medium ≤4 BD, Large ≤5 BD |
-| Turnaround time — rush capability | 3x | Can MCAE or alternative prioritise on short notice? |
-| Defect / rework rate | 5x | Track defects per 100 units; target <3% |
-| File format support (STL, OBJ, 3MF) | 3x | Must accept all three without surcharge |
-| Communication responsiveness | 3x | Response within 4 business hours |
-| Pricing per tier (CZK) | 5x | See cost comparison section below |
-| Capacity — peak headroom | 4x | Can handle 50-unit surges without SLA slip |
-| Location / logistics compatibility | 3x | CZ-based strongly preferred for shipping speed |
-
-### Cost Comparison Template — Printing
-
-Record actual quoted prices per unit for each size tier:
-
-| Size | Target Cost Ceiling | MCAE Current | Alternative A | Alternative B |
-|------|---------------------|--------------|---------------|---------------|
-| Small (~8 cm) | 350 CZK | | | |
-| Medium (~15 cm) | 750 CZK | | | |
-| Large (~25 cm) | 1 400 CZK | | | |
-
-Include setup fees, file-handling fees, and packaging surcharges in unit cost.
-
-### Quality Standards for Figurine Prints
-
-Any print vendor must meet all of the following before approval:
-
-- Layer lines not visible to the naked eye on exterior surfaces (PolyJet or SLA minimum)
-- Full-color capability without post-painting requirement
-- Support removal must not leave marks deeper than 0.3 mm on display faces
-- Color accuracy: Delta-E ≤ 5 vs. reference render (use provided test figurine)
-- Wall thickness ≥ 1.5 mm on all structural elements (enforced pre-submission)
-
-### SLA Requirements — Printing Partners
-
-| Metric | Minimum Acceptable |
-|--------|--------------------|
-| On-time delivery (vs. committed date) | ≥ 95% of orders |
-| Defect rate (print failures, color errors) | < 3% of units |
-| File rejection rate | < 2% (with actionable feedback within 1 BD) |
-| Emergency turnaround (48 h) availability | At least 2× per month |
+Use this skill when:
+- Reviewing or renegotiating the MCAE printing contract
+- Tracking MCAE's SLA compliance or quality scores over a period
+- Evaluating whether volume discount thresholds have been reached
+- Assessing alternative PolyJet printers as backup or replacement vendors
 
 ---
 
-## Shipping Providers
+## MCAE as Primary Vendor
 
-### Current Providers
-
-- **Zásilkovna** — CZ domestic, standard parcel delivery, pickup-point network
-- **DHL** — EU cross-border, tracked express service
-
-### Scoring Criteria for Shipping Providers
-
-Score each criterion 1–5. Minimum acceptable total: **24 / 35**.
-
-| Criterion | Weight | Notes |
-|-----------|--------|-------|
-| Delivery success rate (first attempt) | 5x | Target ≥ 97% CZ domestic, ≥ 94% EU |
-| Tracking granularity | 4x | Real-time scan events required |
-| Damage/loss rate for fragile parcels | 5x | Figurines are fragile — critical criterion |
-| Pricing per shipment (CZK) | 4x | See cost comparison below |
-| Integration (API / label generation) | 4x | Must support automated label creation |
-| Customer claim resolution speed | 3x | Target: < 5 BD for damage claims |
-| Coverage — CZ parcel points (Zásilkovna) | 5x | ≥ 3 000 pickup points required |
-| EU zone coverage (DHL) | 5x | All EU27 countries required |
-
-### Cost Comparison Template — Shipping
-
-| Route | Max Weight | Target Cost | Zásilkovna Current | DHL Current |
-|-------|------------|-------------|-------------------|-------------|
-| CZ domestic — Small | ≤ 0.5 kg | 90 CZK | | |
-| CZ domestic — Medium | ≤ 1.0 kg | 110 CZK | | |
-| CZ domestic — Large | ≤ 2.0 kg | 140 CZK | | |
-| EU standard — Small | ≤ 0.5 kg | 280 CZK | — | |
-| EU standard — Large | ≤ 2.0 kg | 520 CZK | — | |
-
-### SLA Requirements — Shipping Providers
-
-| Metric | Zásilkovna (CZ) | DHL (EU) |
-|--------|-----------------|----------|
-| Transit time | ≤ 3 business days | ≤ 5 business days |
-| Damage claim resolution | < 5 BD | < 7 BD |
-| Max acceptable damage rate | < 1.5% | < 2% |
-| Tracking update frequency | Every scan point | Every scan point |
+Figurio's exclusive printing partner is **MCAE Systems (mcae.cz)**, operating
+Stratasys J55 PolyJet printers. The J55 is required for full-color, high-detail
+figurine output — vendor alternatives must support PolyJet or equivalent
+full-color resin multi-material technology.
 
 ---
 
-## Material Suppliers
+## Size Tiers and Pricing Structure
 
-Figurio does not purchase materials directly — MCAE sources consumables. If
-in-house printing is ever considered, evaluate material suppliers on:
+Figurio uses three standard size tiers. Pricing is negotiated per tier:
 
-- VeroClear / VeroWhitePlus or certified Stratasys-compatible equivalents
-- Price per kg vs. Stratasys direct pricing (benchmark: Stratasys list price)
-- Shelf life certification and batch traceability
-- Compatibility certification for J55 or target printer
+| Tier   | Approx. Height | Key Cost Drivers                         |
+|--------|---------------|------------------------------------------|
+| Small  | ~8 cm         | Material volume, support material waste  |
+| Medium | ~15 cm        | Material volume, print time              |
+| Large  | ~25 cm        | Material volume, print time, tray usage  |
+
+When negotiating with MCAE:
+- Request itemized breakdown per tier (material cost, machine time, setup fee)
+- Benchmark against published Stratasys J55 material consumption rates
+- Push for fixed per-unit pricing per tier rather than time-based billing
+- Negotiate separate rates for standard catalog prints vs. AI custom/scan-to-print
+  jobs (custom jobs carry higher complexity and may require pre-flight review)
 
 ---
 
-## Evaluation Cadence
+## Volume Discount Triggers
 
-| Vendor Type | Full Evaluation | Spot Check |
-|-------------|----------------|------------|
-| Printing partner (MCAE) | Annually (Q1) | After any defect spike (>5% in a month) |
-| Zásilkovna | Annually (Q2) | After any damage claim cluster (3+ in a week) |
-| DHL | Annually (Q2) | After any damage claim cluster |
-| New candidate vendor | Before onboarding | After first 50-unit trial run |
+Track cumulative monthly unit volumes across all tiers. Proposed discount brackets:
 
-## Escalation Threshold
+| Monthly Units (all tiers combined) | Target Discount vs. Base Rate |
+|------------------------------------|-------------------------------|
+| 50–99                              | 5%                            |
+| 100–199                            | 10%                           |
+| 200+                               | 15–20% (negotiate annually)   |
 
-Flag for CTO/CEO review if any active vendor falls below minimum score or misses
-SLA thresholds for two consecutive months.
+- Review volume against thresholds at the end of each calendar month
+- Flag to MCAE when a new threshold is first crossed to trigger renegotiation
+- Document agreed discount rates and effective dates in the vendor contract log
+
+---
+
+## SLA Tracking
+
+Key SLAs to track per order batch submitted to MCAE:
+
+| Metric                        | Target                          |
+|-------------------------------|---------------------------------|
+| Print turnaround (Small)      | ≤ 3 business days from file approval |
+| Print turnaround (Medium)     | ≤ 4 business days               |
+| Print turnaround (Large)      | ≤ 5 business days               |
+| File rejection rate           | < 5% of submitted files         |
+| Reprint request rate          | < 3% of units shipped           |
+| On-time delivery to Figurio   | ≥ 95% of batches                |
+
+- Log each batch: submission date, file approval date, ship date from MCAE
+- Calculate rolling 30-day averages for all metrics
+- Escalate to MCAE account manager if any metric misses target for 2 consecutive weeks
+
+---
+
+## Quality Metrics
+
+Assess quality on received shipments using the QA checklist (see `fulfillment-sop`
+skill). Summarize vendor-facing quality data monthly:
+
+- **Color accuracy failures**: mismatch vs. approved render (log per unit)
+- **Surface defects**: visible layer lines, support scarring, incomplete cure
+- **Dimensional deviation**: measure against nominal height ± 2 mm tolerance
+- **Breakage on arrival**: packaging-related vs. print brittleness (distinguish cause)
+
+Report quality metrics to MCAE quarterly. Use failure rate trends as leverage
+in annual contract reviews.
+
+---
+
+## Alternative Vendor Evaluation
+
+Evaluate alternative vendors when:
+- MCAE on-time delivery drops below 90% for 4+ consecutive weeks
+- MCAE raises unit prices by more than 10% with less than 60 days notice
+- Order volume exceeds MCAE's stated capacity (currently ~400 units/month on J55)
+
+**Evaluation criteria for alternatives:**
+
+1. **Technology match**: Must support full-color PolyJet or equivalent (e.g.,
+   Stratasys J850, Mimaki 3DUJ series). FDM/SLA vendors are not suitable.
+2. **Geographic location**: Prefer CZ/SK/DE to maintain shipping SLAs
+3. **Minimum order**: Must accept single-unit custom orders (no MOQ)
+4. **Color profile support**: Must accept Figurio's color-calibrated 3MF/VRML files
+5. **Turnaround parity**: Must match or beat MCAE's turnaround targets above
+6. **Pricing**: Request per-tier unit quotes and compare against current MCAE rates
+
+Run a parallel test batch of 5–10 units across all three tiers before qualifying
+any alternative vendor.
+
+---
+
+## Contract Review Cadence
+
+- **Monthly**: Volume check, SLA metrics review, quality summary
+- **Quarterly**: Formal quality review with MCAE, share defect data
+- **Annually**: Full pricing renegotiation, update volume discount brackets,
+  reassess alternative vendor landscape

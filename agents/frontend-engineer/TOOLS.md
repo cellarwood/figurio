@@ -4,35 +4,32 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code execution, file system access, terminal commands, running npm scripts, linting, and test runners |
-| `design-plugin` | Design asset inspection, style extraction, and component reference lookup |
-| `web-design-plugin` | Browser-based visual testing and layout inspection via Playwright |
-| `media-plugin` | Image and media handling (dependency of web-design-plugin) |
-| `office-plugin` | Document and spreadsheet access for specs and requirement files (dependency) |
+| `dev-tools-plugin` | Code generation, file editing, terminal commands, dependency management, TypeScript/React development workflows |
+| `design-plugin` | Access to design assets, icon libraries, and visual specification files |
+| `web-design-plugin` | Web-focused design tooling including Playwright-based visual testing and layout inspection (includes media-plugin and office-plugin capabilities) |
+| `media-plugin` | Mermaid diagram rendering, media capture via Playwright, media MCP integration |
+| `office-plugin` | Document and spreadsheet handling (available via web-design-plugin chain) |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `chrome` | `mcp__chrome` | Chrome DevTools Protocol access — inspect the live DOM, console errors, network requests, performance traces, and layout issues directly in a running browser session |
+| `chrome` | `mcp__chrome` | Chrome DevTools MCP -- attaches to a running Chrome instance for live DOM inspection, JavaScript console access, network request monitoring, performance profiling, and accessibility tree inspection |
 
-## MCP Tool Permissions (plugin-provided)
+### Playwright (via plugins)
 
 | Permission | What it does |
 |-----------|-------------|
-| `mcp__plugin_media-plugin_mermaid` | Render Mermaid diagrams for architecture or flow documentation |
-| `mcp__plugin_media-plugin_media-playwright` | Playwright browser automation via the media plugin |
-| `mcp__plugin_media-plugin_media-mcp` | General media processing |
-| `mcp__plugin_media-plugin_ElevenLabs` | Audio/voice generation (available but rarely needed for frontend work) |
-| `mcp__plugin_web-design-plugin_webdesign-playwright` | Visual layout testing and screenshot comparison via Playwright |
+| `mcp__plugin_media-plugin_media-playwright` | Playwright automation via media-plugin -- browser control, screenshots, interaction scripting |
+| `mcp__plugin_web-design-plugin_webdesign-playwright` | Playwright automation via web-design-plugin -- visual regression captures, layout verification |
 
 ## Usage Guidelines
 
-- Use the `chrome` MCP during active development to verify Three.js scene memory disposal, Stripe Elements mounting, and mobile layout at real viewport sizes — do not rely solely on browser devtools in a separate session.
-- Run `npm run test` (Vitest) and `npm run lint` via `dev-tools-plugin` before marking any issue done. Never mark done without a passing test run.
-- Use `web-design-plugin` Playwright for E2E flows: catalog browse to cart to checkout, and the AI prompt submission to 3D preview flow. Run these against a local dev server (`npm run dev`).
-- When inspecting a visual regression, use the `chrome` MCP to capture a screenshot and compare against the last known-good state rather than describing the issue from memory.
-- Use `design-plugin` to cross-reference shadcn-ui component APIs and Tailwind design token values when implementing new surfaces — this keeps the implementation aligned with the design system without manual lookups.
+- Use **Chrome DevTools MCP** for live debugging sessions: inspect React component trees, audit accessibility labels, profile rendering performance on the catalog and 3D preview pages, and capture network payloads from Stripe or the AI generation polling endpoint.
+- Use **Playwright** (via web-design-plugin or media-plugin) for automated end-to-end tests and visual regression snapshots. Always run the full Playwright suite before marking a checkout or AI order flow issue as done.
+- Use **design-plugin** to inspect design assets and icon specifications before implementing a new component -- do not guess spacing or color values when the source of truth is available.
+- Use **dev-tools-plugin** for all file editing, running `tsc`, `vite build`, and `npx playwright test` commands. Keep the TypeScript compiler error count at zero before closing any issue.
+- When debugging a Three.js rendering problem or a GSAP animation glitch, use Chrome DevTools MCP Performance panel first -- measure before speculating.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

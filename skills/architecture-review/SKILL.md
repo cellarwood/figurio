@@ -1,9 +1,12 @@
 ---
 name: architecture-review
 description: >
-  Review system architecture decisions for the Figurio D2C figurine platform.
-  Covers FastAPI backend structure, React/TS frontend boundaries, AI text-to-3D
-  pipeline (Meshy/Tripo3D), Stripe prepay flow, and Docker/K8s deployment on microk8s.
+  Technical architecture review for the Figurio platform — FastAPI backend,
+  React/TypeScript frontend, 3D mesh processing pipeline, Stripe payment
+  integration, microk8s/K8s infrastructure, and PostgreSQL schema decisions.
+  Use when evaluating new services, reviewing pull requests with structural
+  changes, or assessing whether a design fits Figurio's tech stack and
+  pipeline constraints.
 allowed-tools:
   - Read
   - Grep
@@ -18,98 +21,87 @@ metadata:
 
 # Architecture Review
 
-Use this skill when evaluating a proposed system design, reviewing a PR that crosses service boundaries, or assessing whether a new component fits the existing Figurio platform.
+## When to Use
 
-## Platform Map
+Invoke this skill when:
+- A new service, endpoint group, or pipeline stage is being designed
+- A PR introduces structural changes (new DB tables, new Celery task types, new API contracts)
+- The team is evaluating whether to add a new dependency or external integration
+- A post-incident review uncovers a structural failure mode
 
+## Core Platform Components
+
+### Backend — FastAPI + Celery + Redis
+
+- All synchronous CRUD lives in FastAPI routers under `/api/v1/`
+- All long-running or async work (AI generation, mesh repair, MCAE file dispatch, preview rendering) runs as **Celery tasks** backed by Redis
+- Task results are stored in PostgreSQL via a `jobs` table, not in Redis — Redis is ephemeral
+- Worker containers are separate Deployments from the API container; never run Celery inside the API pod
+
+### Frontend — React + TypeScript
+
+- React strict mode enabled; no `any` casts without a comment explaining why
+- shadcn-ui / Radix UI primitives only — do not introduce a second component library
+- State that spans the order funnel (cart, preview approval, deposit status) lives in a React context or Zustand store — not in component-local state
+- No direct API calls inside components — all network requests go through a typed API client layer
+
+### 3D Mesh Pipeline
+
+The pipeline is the core product moat. Every stage must be:
+- **Instrumented** — emit structured logs and metrics at entry/exit of each stage
+- **Resumable** — a Celery task failure must not lose the original prompt or input mesh
+- **Auditable** — store the input, output, and repair diff for every model in object storage (S3-compatible bucket), keyed by `order_id`
+
+Pipeline stages and their ownership:
 ```
-Browser (React/TS + shadcn-ui/Tailwind)
-        │  REST + WebSocket
-        ▼
-FastAPI backend  ──── PostgreSQL
-        │
-        ├── Stripe webhook handler (prepay gate)
-        ├── AI pipeline coordinator
-        │       ├── Meshy API
-        │       └── Tripo3D API
-        └── MCAE production handoff (file delivery)
-
-Infrastructure: microk8s, Traefik ingress, Terraform, GitHub Actions CI/CD
-```
-
-## Review Dimensions
-
-### 1. Separation of Concerns
-
-- FastAPI routes must not contain business logic. Logic lives in service modules (`services/`), routes call services.
-- React components must not fetch data directly. All API calls go through a typed client layer (`src/api/`).
-- The AI pipeline coordinator is the single point that decides which model (Meshy vs. Tripo3D) handles a request. No other service calls AI providers directly.
-
-### 2. Vendor Coupling Risk
-
-Figurio's AI provider landscape is unstable — both Meshy and Tripo3D are early-stage vendors. Any architecture that deeply couples to one provider's response schema is a liability.
-
-Ask:
-- Can the AI provider be swapped with one config change and a new adapter module?
-- Are provider-specific response formats translated at the adapter boundary, not leaked into domain models?
-- Is the mesh repair / post-processing step decoupled from the generation step?
-
-Flag as a concern if: provider-specific field names appear outside of `integrations/` or `adapters/`.
-
-### 3. Payment Flow Integrity
-
-Figurio operates prepaid — no order is fulfilled without Stripe payment confirmed.
-
-Review checklist for any change touching order flow:
-- Stripe webhook signature verification is present and tested.
-- Order status transitions are gated: `pending → paid → in_production → shipped`. No skips.
-- Fulfillment (MCAE handoff) is only triggered from the `paid` state, never from the API request directly.
-- Failed webhook delivery is handled with idempotency (Stripe event ID stored, duplicate webhooks ignored).
-
-### 4. K8s Deployment Fit
-
-Figurio runs microk8s on a small cluster. Proposals must fit this constraint.
-
-Flag as a concern if:
-- A component requires a StatefulSet with complex PVC management when a managed cloud service would cost less.
-- A new service is added without a liveness/readiness probe.
-- Resource requests/limits are missing — unset limits on a small cluster cascade to OOM kills.
-- A new service bypasses Traefik ingress and exposes a port directly.
-
-### 5. Operational Cost at Current Scale
-
-At Figurio's current stage (pre-revenue, small team), operational complexity is a real cost.
-
-Reject or flag for redesign if a proposal:
-- Adds a new stateful component (Redis, RabbitMQ, etc.) when PostgreSQL + async FastAPI background tasks suffice.
-- Requires a dedicated operator or custom controller on the K8s cluster.
-- Introduces a second language runtime to the backend (Python is the constraint — not negotiable without CTO sign-off).
-
-## Review Output Format
-
-When completing an architecture review, write:
-
-```
-## Architecture Review: [component/PR/proposal name]
-
-**Decision:** [Approve / Approve with conditions / Reject]
-
-**Rationale:** [1-2 paragraphs — what fits, what doesn't, why]
-
-**Conditions / Required changes:**
-- [specific change 1]
-- [specific change 2]
-
-**Open questions:**
-- [anything that needs more information before proceeding]
+prompt → AI generation API (external) → raw mesh (OBJ/GLB)
+      → mesh validation (automated, Python) → repair (NetFabb/Blender script)
+      → human QA flag (optional) → rendered preview (PNG/GLTF)
+      → customer approval → print file (STL/3MF) → MCAE dispatch
 ```
 
-Keep it under one page. If you cannot summarize the issue in one page, the design is not clear enough to approve.
+A design is acceptable if and only if each stage can fail independently without corrupting downstream stages.
 
-## Anti-patterns to Reject
+### Stripe Integration
 
-- Business logic in FastAPI route handlers
-- Direct AI provider calls from frontend or from non-coordinator backend services
-- Order fulfillment triggered before Stripe `payment_intent.succeeded` webhook
-- New services with no resource limits in K8s manifests
-- Synchronous HTTP calls to Meshy/Tripo3D inside a request cycle (must be async/background)
+- Use Stripe's `PaymentIntent` flow — not legacy Charges API
+- For AI custom orders: two `PaymentIntent` objects per order (50% deposit, 50% balance) linked by metadata `order_id`
+- Webhook handler must be idempotent — duplicate events must not double-charge or double-dispatch
+- Store `stripe_payment_intent_id` on the `orders` table; never store raw card data anywhere
+
+### PostgreSQL Schema
+
+- Every table has `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`, `created_at`, `updated_at`
+- No polymorphic FK columns (e.g., `resource_id` + `resource_type`) — use separate FK columns per related type
+- Migrations via Alembic; every migration must be reversible (downgrade defined)
+- JSON columns are permitted for model metadata and mesh repair reports, but not for fields that are queried or indexed
+
+### Infrastructure — microk8s + Traefik
+
+- Kubernetes context for local dev: `microk8s-local`; production targets GKE
+- Traefik is the ingress; do not expose services directly via NodePort in production
+- Each service has its own Namespace: `figurio-api`, `figurio-worker`, `figurio-frontend`
+- Resource requests and limits are required on every container spec — no unbounded pods
+- Secrets managed via Kubernetes Secrets, injected as env vars — never hardcoded in manifests or images
+
+## Review Checklist
+
+When reviewing a design or PR, check:
+
+- [ ] No synchronous blocking I/O in FastAPI request handlers (offload to Celery)
+- [ ] Celery tasks are idempotent — safe to retry on failure
+- [ ] New DB tables follow schema conventions (UUID PK, timestamps, reversible migration)
+- [ ] Stripe flows use PaymentIntent and webhook idempotency
+- [ ] Pipeline stage stores input + output in object storage before marking success
+- [ ] No secrets in code or Docker image layers
+- [ ] New dependencies justified — package added via `uv add`, not `pip install`
+- [ ] Container has resource requests/limits defined
+
+## Anti-patterns
+
+- Running mesh repair or AI generation synchronously inside an API request handler
+- Storing Celery task state as the sole source of truth (Redis evicts data)
+- Polymorphic FK columns in PostgreSQL
+- Adding a second component library to the frontend
+- Hardcoding environment-specific URLs or credentials in source code
+- Defining a Kubernetes Deployment without resource limits

@@ -1,211 +1,184 @@
 ---
 name: fulfillment-sop
 description: >
-  Standard operating procedures for Figurio's end-to-end order fulfillment —
-  from Stripe payment confirmation through print file preparation, MCAE submission,
-  quality inspection of received prints, branded packaging, and shipping dispatch
-  via Zásilkovna (CZ) or DHL (EU) with tracking updates to the customer.
-allowed-tools:
-  - Read
-  - Write
-  - Grep
+  Figurio order fulfillment standard operating procedures. Covers print file
+  preparation and submission to MCAE, QA checklist for received figurines across
+  Small/Medium/Large tiers, shipping label generation for Zasilkovna (CZ/SK)
+  and DHL (EU), branded packaging standards, and exception handling for damaged
+  or defective prints.
 metadata:
   paperclip:
     tags:
       - operations
       - fulfillment
       - shipping
+      - quality
 ---
 
 # Fulfillment SOP
 
 ## Overview
 
-All Figurio orders are prepaid via Stripe. No order enters production until
-payment is confirmed. The fulfillment pipeline has six stages:
+Figurio's fulfillment flow has four stages:
 
-1. Order Intake
-2. Print File Preparation
-3. MCAE Submission
-4. Quality Inspection
-5. Packaging
-6. Shipping & Tracking
+1. **File prep** — prepare and submit print-ready files to MCAE
+2. **QA** — inspect received figurines before packaging
+3. **Packaging** — apply branded packaging standards
+4. **Shipping** — generate labels and dispatch via Zasilkovna or DHL
 
 ---
 
-## Stage 1 — Order Intake
+## Stage 1: Print File Preparation for MCAE
 
-**Trigger:** Stripe `payment_intent.succeeded` or `checkout.session.completed` event.
+### File Format Requirements
 
-**Steps:**
+- Export format: **3MF** (preferred) or **VRML 2.0 (.wrl)** with embedded textures
+- Color space: **sRGB**, ICC profile embedded
+- Resolution: texture maps at minimum **1024×1024 px** per 8 cm of height
+- Units: millimeters
+- Orientation: upright (base flat on Z=0), supports minimal-contact side facing up
 
-1. Confirm Stripe payment status is `succeeded`. Do not proceed on `processing`.
-2. Pull order details: customer name, delivery address, figurine size tier
-   (Small / Medium / Large), and any customisation notes.
-3. Log order in the fulfillment tracker (Google Sheet: *Orders Master*) with status `INTAKE`.
-4. Retrieve the customer's uploaded 3D model file (STL, OBJ, or 3MF) from the
-   order record.
-5. Send automated order confirmation email to customer with estimated dispatch date:
-   - Small: +4 business days
-   - Medium: +5 business days
-   - Large: +6 business days
+### Pre-submission Checklist
 
-**Blockers:** If payment status is ambiguous, hold the order and notify the
-Head of Operations immediately — do not guess.
+- [ ] Geometry is manifold (watertight mesh, no open edges)
+- [ ] Scale verified: Small = 80 mm ±1 mm, Medium = 150 mm ±1 mm, Large = 250 mm ±1 mm
+- [ ] Color file matches approved customer render (for AI custom / scan-to-print orders)
+- [ ] File named with order ID: `FIG-{order_id}-{tier}-{version}.3mf`
+- [ ] No metadata or customer PII embedded in file
+- [ ] File size under 150 MB (MCAE portal limit); decimate mesh if over
 
----
+### Submission
 
-## Stage 2 — Print File Preparation
-
-**Owner:** Operations (file checks) — no external tooling required for checks.
-
-### Mandatory Checks (run in order)
-
-| Check | Requirement | Action if Failed |
-|-------|-------------|-----------------|
-| File format | STL, OBJ, or 3MF only | Request re-upload from customer |
-| Manifold (watertight) | Zero non-manifold edges | Auto-repair with Meshmixer; if repair fails, contact customer |
-| Wall thickness | ≥ 1.5 mm on all faces | Notify customer; offer paid repair service |
-| Minimum feature size | ≥ 0.8 mm (PolyJet limit) | Flag thin features; customer approval required before continuing |
-| Print volume fits tier | Small: ≤ 8 cm tall, Medium: ≤ 15 cm, Large: ≤ 25 cm | Confirm actual bounding box matches ordered tier |
-| Support accessibility | No fully enclosed cavities > 5 mm | Flag to customer; may affect surface finish |
-
-### Orientation
-
-Orient the model to minimise support contact on display surfaces (typically
-the figurine face and front torso). Document the chosen orientation in the
-order record.
-
-### File Naming Convention
-
-```
-FIGURIO-{ORDER_ID}-{SIZE}-v{N}.{ext}
-```
-
-Example: `FIGURIO-10482-MED-v1.stl`
-
-Increment `v{N}` for each revision. Always send the latest version to MCAE.
-
-Update order status to `FILE_READY`.
+- Upload via MCAE client portal at mcae.cz
+- Select job type: **Catalog** or **Custom** (custom jobs trigger manual review at MCAE)
+- Note submission timestamp in the order management system
+- Expected file approval notification: within 1 business day
 
 ---
 
-## Stage 3 — MCAE Submission
+## Stage 2: QA Checklist for Received Figurines
 
-**Contact:** MCAE (mcae.cz) — use the designated account manager contact.
+Perform QA on every unit before packaging. Log pass/fail per item in the order system.
 
-**Steps:**
+### Visual Inspection
 
-1. Email the prepared file to MCAE using the subject line format:
-   `[FIGURIO] Order {ORDER_ID} — {SIZE} — {QUANTITY}x`
-2. Confirm the committed completion date in writing (email reply).
-3. Log confirmed completion date in *Orders Master* under column `MCAE_COMMIT`.
-4. Update order status to `IN_PRODUCTION`.
-5. If MCAE does not confirm within 4 business hours, follow up once; escalate to
-   Head of Operations if no response by end of day.
+- [ ] Color matches the approved render — no major hue shift or missing texture regions
+- [ ] No visible support scarring on primary-view surfaces (face, front torso)
+- [ ] No surface cracking, delamination, or incomplete cure patches
+- [ ] No white/gray bleed where colored areas should be solid
 
-**Rush Orders:** Notify MCAE at least 24 hours before end-of-day cutoff (17:00 CET).
-Rush surcharge applies — confirm cost before committing to customer.
+### Dimensional Check (sample 1 in 10, all Large tier)
 
----
+- [ ] Height within ±2 mm of nominal for tier
+- [ ] Base is flat — figurine stands without rocking
 
-## Stage 4 — Quality Inspection
+### Structural Check
 
-**Trigger:** Figurines received from MCAE.
+- [ ] No broken or cracked thin features (fingers, weapons, accessories)
+- [ ] Joints/connectors (if applicable) fit correctly
 
-**Inspect every unit before packaging.** Do not skip even if MCAE confirms
-their own QC.
+### Packaging Readiness
 
-### Inspection Checklist
+- [ ] Surface is clean — no support material residue, dust, or fingerprints
+- [ ] UV-resistant clear coat applied (MCAE applies by default; verify it is present)
 
-| Item | Pass Criteria |
-|------|--------------|
-| Surface finish | No visible layer lines; smooth on display faces |
-| Color accuracy | Visually matches reference render (customer-supplied or generated preview) |
-| Support marks | No marks deeper than 0.3 mm on display faces |
-| Dimensional integrity | No warping; base sits flat on a level surface |
-| Structural completeness | No broken parts, missing features, or voids |
-| Wall integrity | No cracks along thin features |
+**QA outcome codes:**
 
-**Outcomes:**
-
-- **Pass:** Proceed to packaging. Log `QC_PASS` in *Orders Master*.
-- **Fail — reprint required:** Photograph defect(s). Email MCAE with photos and
-  defect description. Request priority reprint at no charge if defect is
-  production-side. Update status to `QC_FAIL_REPRINT`. Notify customer of delay.
-- **Fail — acceptable with customer consent:** For minor cosmetic issues that
-  do not affect display quality, contact customer with photos and offer
-  acceptance at discount or free reprint. Document outcome.
+| Code | Meaning                          | Action                        |
+|------|----------------------------------|-------------------------------|
+| PASS | All checks passed                | Proceed to packaging          |
+| MINR | Minor cosmetic defect            | Ops discretion; document      |
+| FAIL | Structural or major color defect | Initiate reprint (see Exceptions) |
 
 ---
 
-## Stage 5 — Packaging
+## Stage 3: Branded Packaging Standards
 
-### Materials
+### Box Selection by Tier
 
-- Figurio-branded outer box (size-matched: S / M / L)
-- Foam insert cut to figurine profile
-- Tissue paper wrap (branded)
-- Thank-you card (pre-printed, signed by operations)
-- Certificate of authenticity insert (for custom orders)
+| Tier   | Box Dimensions (mm) | Insert Type         |
+|--------|---------------------|---------------------|
+| Small  | 120 × 120 × 120     | Die-cut foam inlay  |
+| Medium | 200 × 200 × 200     | Die-cut foam inlay  |
+| Large  | 320 × 320 × 320     | Double-wall + foam  |
 
-### Steps
+### Packaging Contents
 
-1. Wrap figurine in tissue paper; place in foam insert.
-2. Place foam insert in branded box; close and seal with Figurio sticker.
-3. Print shipping label (see Stage 6) and attach to outer box.
-4. Log `PACKED` in *Orders Master*.
+1. Figurine in foam inlay, base centered and secured
+2. **Figurio branded tissue paper** — wrap figurine before placing in inlay
+3. **Thank-you card** — include correct language variant (CZ for CZ/SK orders, EN for EU)
+4. **Care card** — UV sensitivity warning, cleaning instructions (pre-printed insert)
+5. Seal box with Figurio branded tape
 
-**Fragile sticker:** Always apply a FRAGILE sticker on all four vertical faces
-of the outer box for Medium and Large tiers.
+### Do Not Include
+
+- No loose packing peanuts (customer complaint risk, brand inconsistency)
+- No promotional flyers unless a campaign insert has been approved by marketing
+- No invoice with pricing — order confirmation is sent digitally only
 
 ---
 
-## Stage 6 — Shipping and Tracking
+## Stage 4: Shipping Label Generation
 
 ### Carrier Selection
 
-| Destination | Carrier | Service |
-|-------------|---------|---------|
-| Czech Republic | Zásilkovna | Standard parcel (pickup point or home delivery per customer preference) |
-| EU countries | DHL | Standard tracked export |
+| Destination       | Carrier      | Service Level                    |
+|-------------------|-------------|----------------------------------|
+| Czech Republic    | Zasilkovna  | Standard (2–3 business days)     |
+| Slovakia          | Zasilkovna  | Standard (3–4 business days)     |
+| EU (excl. CZ/SK)  | DHL         | Express Worldwide (2–4 bus. days)|
 
-### Steps
+### Zasilkovna (CZ/SK)
 
-1. Generate shipping label via carrier portal:
-   - Zásilkovna: use the Zásilkovna Sender portal; select the customer's chosen
-     pickup point if applicable.
-   - DHL: use DHL business account; select "DHL Paket International".
-2. Record tracking number in *Orders Master* under `TRACKING_NUMBER`.
-3. Send dispatch confirmation email to customer with:
-   - Tracking number and carrier tracking URL
-   - Estimated delivery window
-4. Update order status to `SHIPPED`.
-5. Monitor tracking for delivery confirmation. If no delivery scan within:
-   - Zásilkovna: 5 business days — initiate inquiry
-   - DHL: 8 business days — initiate inquiry
+- Generate label via Zasilkovna API or Packeta client portal
+- Select pickup point from customer's chosen branch at checkout (stored on order)
+- Package weight: use tier defaults unless actual weight deviates by >50 g
+  - Small: 200 g | Medium: 500 g | Large: 1 200 g
+- Print label, affix to top of box — do not cover seams
 
-### Delivery Confirmation
+### DHL (EU)
 
-Once carrier marks `Delivered`, update *Orders Master* status to `COMPLETE`.
-No follow-up email is sent unless the customer contacts support.
+- Generate label via DHL Express API (business account)
+- Declare contents: "Decorative figurine — 3D printed resin" — value as per order
+- Select DHL Express Worldwide; enable delivery notification SMS/email
+- Affix DHL label and customs invoice (CN22 for non-EU if applicable) to top of box
 
----
+### Dispatch
 
-## Status Flow Summary
-
-```
-INTAKE → FILE_READY → IN_PRODUCTION → QC_PASS → PACKED → SHIPPED → COMPLETE
-                                    ↘ QC_FAIL_REPRINT → IN_PRODUCTION (loop)
-```
+- Hand off to carrier pickup by **14:00 local time** for same-day dispatch
+- Log tracking number against order ID in the order management system
+- Tracking number is auto-emailed to customer on label generation (verify integration)
 
 ---
 
-## Escalation Contacts
+## Exception Handling
 
-| Issue | Escalate To |
-|-------|-------------|
-| Payment anomaly | Head of Operations + Finance |
-| MCAE unresponsive > 4 h | Head of Operations |
-| QC failure rate > 5% in one batch | Head of Operations + CTO |
-| Carrier damage claim | Head of Operations; file claim within 48 h of receipt |
+### Damaged or Defective Prints (FAIL QA)
+
+1. Photograph defect before any handling (for MCAE claim)
+2. Log in order system: order ID, defect code, defect description, photo attached
+3. Submit reprint request to MCAE via portal — reference original order ID and attach photos
+4. Notify customer proactively: estimated reprint + re-ship date
+5. MCAE reprint SLA: same as original (3/4/5 business days by tier)
+6. If reprint also fails QA, escalate to MCAE account manager and issue customer refund
+
+### Lost in Transit
+
+- Zasilkovna: open claim after 7 business days past expected delivery; Zasilkovna
+  compensates up to 1 000 CZK unless additional insurance was added at label creation
+- DHL: open claim after 5 business days; DHL Express covers declared value up to €100
+- Issue replacement shipment to customer once claim is opened (do not wait for resolution)
+
+### Customer-Reported Damage on Arrival
+
+- Request photo evidence within 48 hours of delivery
+- If confirmed: issue reprint or refund per customer preference
+- Use photo evidence for carrier claim if packaging failure is the cause
+- Log all damage claims to track packaging adequacy by tier
+
+### File Rejection by MCAE
+
+- MCAE will notify via portal with rejection reason
+- Fix the flagged issue (geometry, scale, file size) and resubmit within 1 business day
+- If rejection reason is unclear, contact MCAE technical support directly
+- Log rejection reason to identify recurring file prep issues

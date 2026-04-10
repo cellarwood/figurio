@@ -4,16 +4,16 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code and config linting, shell command execution, file system operations, Git operations within the `cellarwood/figurio` repo |
-| `infra-plugin` | Docker build and push, Kubernetes manifest apply and status checks, Helm operations, Terraform plan and apply, Traefik config validation |
+| `dev-tools-plugin` | Run shell commands, execute scripts, read and write files, interact with the local development environment and CI toolchain |
+| `infra-plugin` | Interact with Kubernetes (microk8s), Helm, Docker, and infrastructure configuration — apply manifests, inspect pod state, manage releases |
 
 ## Usage Guidelines
 
-- Always use `infra-plugin` for any command that touches the cluster or Docker daemon -- do not construct raw `kubectl` or `docker` shell commands via `dev-tools-plugin` when a typed infra operation is available.
-- Before applying any Kubernetes change with `infra-plugin`, use the dry-run option first and review the diff output. Only proceed to a live apply after confirming the diff is exactly what you intend.
-- When pushing a Docker image, always provide an explicit tag that includes the Git SHA (e.g., `lukekelle00/figurio-backend:abc1234`). Never push or reference `latest` as the sole tag in a Kubernetes manifest.
-- Use `dev-tools-plugin` for YAML and Dockerfile linting before committing CI/CD workflow changes. A syntax error in a workflow file can silently break the entire delivery pipeline.
-- Scope `infra-plugin` Terraform operations to a single module at a time. Run `plan` and review output completely before calling `apply`. Treat `apply` on shared infrastructure the same as a production deployment -- it requires a known rollback path.
+- Always run `helm diff` before `helm upgrade` on any production release. Never apply a Helm change blind.
+- Use `dev-tools-plugin` for all CI/CD work: inspecting GitHub Actions logs, running build scripts locally, and writing or validating Dockerfiles.
+- Use `infra-plugin` for cluster operations: checking pod status, scaling deployments, inspecting ingress rules, and rolling back releases.
+- Treat every `kubectl delete` or destructive Helm operation as requiring explicit confirmation from the board. Document the command and its expected effect before running it.
+- When diagnosing incidents, pull Sentry error details and pod logs together — correlate timestamps before drawing conclusions.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

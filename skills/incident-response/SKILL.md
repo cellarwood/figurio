@@ -1,11 +1,10 @@
 ---
 name: incident-response
 description: >
-  Incident response procedures for the Figurio e-commerce platform — severity
-  levels P1-P4, escalation paths, communication templates, and post-mortem process.
-  Covers Stripe payment failures, backend API downtime, PostgreSQL issues, and
-  production K8s/infrastructure problems. Use when detecting or responding to
-  any service degradation.
+  Figurio incident response playbook for the devops-engineer agent.
+  Defines severity levels (P1: payments broken, P2: orders stuck, P3: degraded
+  performance), Sentry alert triage, MCAE API outage handling, and database
+  recovery procedures on microk8s-local.
 allowed-tools:
   - Bash
   - Read
@@ -13,227 +12,201 @@ allowed-tools:
 metadata:
   paperclip:
     tags:
-      - engineering
       - devops
-      - operations
+      - incident
+      - on-call
 ---
 
 # Incident Response
 
-## When to Use
-
-Use this skill when:
-- A Sentry alert fires with an elevated error rate
-- Prometheus alert triggers (pod down, high latency, certificate expiry)
-- A Stripe webhook fails or payment processing stops
-- The API or storefront is unreachable
-- A database migration fails or PostgreSQL is unavailable
-- Any production anomaly is reported by the CEO, CMO, or Head of Operations
+Figurio is a D2C e-commerce platform selling 3D-printed figurines. Incidents
+affecting checkout, order processing, or print-job dispatch have direct revenue
+impact. This playbook covers triage, severity classification, and resolution steps.
 
 ## Severity Levels
 
-| Level | Name | Criteria | Response SLA |
-|-------|------|----------|--------------|
-| P1 | Critical | Full site/API down, Stripe payments failing, data loss risk | Immediate — 15 min |
-| P2 | High | Partial outage (checkout broken, AI pipeline down, >50% error rate) | 30 min |
-| P3 | Medium | Degraded performance, non-critical feature broken, elevated errors | 2 hours |
-| P4 | Low | Cosmetic issues, minor bugs, non-user-facing degradation | Next business day |
+| Level | Definition | Examples | Response SLA |
+|-------|-----------|----------|--------------|
+| P1 | Payments broken — customers cannot complete purchases | Payment gateway 5xx, checkout API down, Stripe webhook failures | Immediate — fix or rollback within 30 min |
+| P2 | Orders stuck — purchases succeed but fulfillment halted | Worker not dispatching print jobs, MCAE API unreachable, queue backlog > 100 | Within 2 hours |
+| P3 | Degraded performance — site slow or partial errors | High latency, elevated error rate < 10%, non-critical API failures | Within 8 hours |
 
-## Escalation Paths
+## First Steps for Any Incident
 
-```
-DevOps Engineer
-  └─ P1/P2: escalate immediately to CTO
-       └─ CTO: determines if CEO/operations comms needed
-            └─ P1 Stripe failure: also notify Head of Operations
-                 (orders may need to be held until payment confirmed)
-```
-
-- **DevOps Engineer** owns: K8s/infra, deployments, database ops, CI/CD
-- **Backend Engineer** owns: application bugs, API errors, Stripe integration code
-- **CTO** owns: cross-team coordination, architectural decisions during incident
-- **Head of Operations** owns: customer-facing impact, MCAE print hold decisions
-
-## P1 Response Procedure
-
-### Step 1 — Detect & Declare (0-5 min)
-
-```bash
-# Check pod health
-microk8s kubectl get pods -n figurio-prod
-
-# Check recent events
-microk8s kubectl get events -n figurio-prod --sort-by='.lastTimestamp' | tail -20
-
-# Check ingress
-microk8s kubectl get ingressroute -n figurio-prod
-
-# Quick API probe
-curl -sf https://api.figurio.com/health || echo "API DOWN"
-curl -sf https://figurio.com || echo "FRONTEND DOWN"
-```
-
-Declare a P1 by notifying the CTO immediately. Do not wait to fully diagnose first.
-
-### Step 2 — Contain (5-15 min)
-
-Depending on the failure:
-
-**API is down (CrashLoopBackOff or ImagePullBackOff):**
-```bash
-# Roll back to last known good revision
-microk8s helm rollback figurio-backend -n figurio-prod
-microk8s kubectl rollout status deployment/figurio-backend -n figurio-prod
-```
-
-**Stripe payments failing:**
-- Check Stripe Dashboard → Developers → Events for webhook errors.
-- Check backend logs for `stripe` errors:
-  ```bash
-  microk8s kubectl logs -l app=figurio-backend -n figurio-prod --tail=100 | grep -i stripe
-  ```
-- If a bad deploy caused it, roll back backend (see `deployment-runbook` skill).
-- If Stripe-side, check `https://status.stripe.com` and hold new orders.
-
-**Database unreachable:**
-```bash
-# Check PostgreSQL pod
-microk8s kubectl get pods -n figurio-prod -l app=postgresql
-microk8s kubectl describe pod -l app=postgresql -n figurio-prod
-
-# Check logs
-microk8s kubectl logs -l app=postgresql -n figurio-prod --tail=50
-
-# If pod crashed, restart
-microk8s kubectl rollout restart deployment/postgresql -n figurio-prod
-```
-If data is at risk (disk full, corruption), stop writes immediately — scale backend to 0:
-```bash
-microk8s kubectl scale deployment figurio-backend --replicas=0 -n figurio-prod
-```
-
-### Step 3 — Communicate
-
-Use these templates. Send via Google Chat or email to CTO (and CEO if P1).
-
-**Initial Alert (P1):**
-```
-[INCIDENT P1] <short description>
-Time detected: <HH:MM UTC>
-Impact: <what users cannot do>
-Status: Investigating
-Owner: DevOps Engineer
-```
-
-**Update (every 15 min for P1, 30 min for P2):**
-```
-[INCIDENT UPDATE] <title>
-Time: <HH:MM UTC>
-Status: <Investigating | Mitigating | Monitoring>
-Latest: <what was tried, what was found>
-ETA to resolve: <estimate or "unknown">
-```
-
-**Resolution:**
-```
-[INCIDENT RESOLVED] <title>
-Time resolved: <HH:MM UTC>
-Duration: <X min>
-Root cause: <1 sentence>
-Fix applied: <1 sentence>
-Post-mortem: scheduled / not required (P3/P4)
-```
-
-## Failure-Specific Playbooks
-
-### Stripe Payment Failure
-
-1. Check Stripe dashboard for webhook delivery failures.
-2. Check `figurio-backend` logs for 4xx/5xx on `/webhooks/stripe`.
-3. Verify `STRIPE_WEBHOOK_SECRET` K8s Secret is intact:
+1. Check Sentry for active issues: `https://sentry.io/organizations/figurio`
+2. Check pod health on the cluster:
    ```bash
-   microk8s kubectl get secret figurio-secrets -n figurio-prod -o jsonpath='{.data.STRIPE_WEBHOOK_SECRET}' | base64 -d | wc -c
+   kubectl config use-context microk8s-local
+   kubectl -n figurio-prod get pods
+   kubectl -n figurio-prod get events --sort-by='.lastTimestamp' | tail -30
    ```
-4. If webhook endpoint is unreachable (ingress issue), fix ingress first.
-5. Replay failed webhook events from Stripe Dashboard → Developers → Webhooks.
-6. Notify Head of Operations if any orders were placed during the window —
-   payment status must be manually verified before print jobs are submitted to MCAE.
+3. Check recent deployments — was there a deploy in the last 30 minutes?
+   ```bash
+   helm history figurio-backend -n figurio-prod | tail -5
+   helm history figurio-worker -n figurio-prod | tail -5
+   ```
+4. If a deploy is the likely cause, **roll back immediately** before further diagnosis.
+   See the `deployment-runbook` skill for rollback steps.
 
-### API Downtime
+## P1 — Payments Broken
 
-1. Check pod state (CrashLoop → check logs, ImagePullBackOff → check image tag/registry).
-2. Check if a bad deploy triggered it → roll back via Helm.
-3. Check if a failed DB migration left the schema in a broken state →
-   check migration logs, consider downgrade.
-4. Check Sentry for the first error after the outage began.
+### Symptoms
+- Sentry: `PaymentError`, `CheckoutFailure`, or `StripeWebhookError` alerts
+- `POST /api/v1/orders` returning 5xx
+- Customer reports of failed purchases
 
-### Database Issues
+### Diagnosis
 
-- **Disk full:** expand PVC or delete old data. Do not restart PostgreSQL while disk is full.
-- **Connection pool exhausted:** check `max_connections`, restart backend pods to reset pool.
-- **Failed migration:** do NOT deploy backend with new code — roll back migration:
-  ```bash
-  microk8s kubectl exec -it deploy/figurio-backend -n figurio-prod -- alembic downgrade -1
-  ```
-- **Corruption suspicion:** stop all writes, restore from latest `pg_dump` backup.
+```bash
+# Check backend pod logs for payment errors
+kubectl -n figurio-prod logs -l app=figurio-backend --tail=100 | grep -i "payment\|stripe\|checkout"
 
-### Sentry Error Spike (No Full Outage)
+# Verify backend is up and responding
+curl -sf https://figurio.cz/api/v1/health
 
-1. Open Sentry, filter to `figurio-backend` or `figurio-frontend`, sort by frequency.
-2. Identify the new error — correlate with last deploy time.
-3. If caused by a deploy: roll back. If pre-existing but newly surfaced: create bug ticket.
-4. Downgrade to P3 if user impact is limited.
-
-## Post-Mortem Process
-
-Required for all P1 incidents. Optional for P2 (use judgment).
-
-**Timeline:** Draft within 24 hours, finalize within 72 hours.
-
-**Post-Mortem Structure:**
-
-```
-Title: <Incident title>
-Date: <YYYY-MM-DD>
-Severity: P1 / P2
-Duration: <X min>
-Author: DevOps Engineer
-
-## Summary
-One paragraph describing what happened and its business impact.
-
-## Timeline (UTC)
-HH:MM — first alert / detection
-HH:MM — escalation
-HH:MM — root cause identified
-HH:MM — fix applied
-HH:MM — resolved
-
-## Root Cause
-Technical description of the root cause.
-
-## Impact
-- Users affected: <estimate>
-- Orders blocked: <count or "unknown">
-- Revenue impact: <estimate or N/A>
-
-## Contributing Factors
-- [What made this more likely or harder to detect?]
-
-## Action Items
-| Action | Owner | Due Date |
-|--------|-------|----------|
-| Add alert for X | DevOps | YYYY-MM-DD |
-| Fix Y in code | Backend Engineer | YYYY-MM-DD |
+# Check if Stripe webhook endpoint is reachable
+curl -sf https://figurio.cz/api/v1/webhooks/stripe
 ```
 
-Share the completed post-mortem with the CTO. Store in Google Drive under
-`Engineering / Incidents / <YYYY-MM-DD>-<slug>.md`.
+### Resolution Steps
 
-## Anti-Patterns
+1. If backend pods are crashing — rollback the last backend deploy.
+2. If Stripe is returning errors — check Stripe status page; this is an external
+   dependency. Set site to maintenance mode until Stripe recovers.
+3. If webhook signature validation is failing — verify the `STRIPE_WEBHOOK_SECRET`
+   environment variable in the backend deployment:
+   ```bash
+   kubectl -n figurio-prod get deployment figurio-backend -o jsonpath='{.spec.template.spec.containers[0].env}'
+   ```
+4. After fix: place a test order end-to-end in staging before declaring resolved.
 
-- Do not chase root cause before containing the blast radius — restore service first.
-- Do not restart PostgreSQL without checking for in-flight transactions.
-- Do not replay Stripe webhooks blindly — verify idempotency keys to avoid duplicate orders.
-- Do not delete K8s resources to "fix" them — use rollout/rollback commands.
-- Do not skip the post-mortem for P1 incidents, even if the fix was simple.
+## P2 — Orders Stuck
+
+### Symptoms
+- New orders in the database with status `pending` or `submitted` for > 15 minutes
+- Worker pod logs show connection errors or retry loops
+- Sentry: `PrintJobDispatchError`, `McaeApiError`
+
+### Diagnosis
+
+```bash
+# Check worker pod status and logs
+kubectl -n figurio-prod get pods -l app=figurio-worker
+kubectl -n figurio-prod logs -l app=figurio-worker --tail=100
+
+# Check Redis queue depth
+kubectl -n figurio-prod exec -it deploy/figurio-worker -- redis-cli -h redis LLEN figurio:jobs:pending
+
+# Check PostgreSQL connectivity from worker
+kubectl -n figurio-prod exec -it deploy/figurio-worker -- python -c "import psycopg2; print('db ok')"
+```
+
+### MCAE API Outage
+
+MCAE (the 3D print fulfillment API) is an external dependency. When it is unreachable:
+
+1. Worker will retry with exponential backoff — check if retries are actually happening:
+   ```bash
+   kubectl -n figurio-prod logs -l app=figurio-worker --tail=200 | grep -i "mcae\|retry\|backoff"
+   ```
+2. If MCAE is confirmed down (not a local network issue), jobs queue up in Redis.
+   This is tolerable for up to 4 hours — Redis and worker will drain automatically
+   when MCAE recovers.
+3. If Redis queue grows beyond 500 jobs, escalate — manual intervention may be needed
+   to prevent memory pressure on the single-node cluster.
+4. Notify the business: orders will be fulfilled once MCAE recovers. No data is lost.
+
+### Resolution Steps
+
+1. If worker pods are crash-looping — check for a bad deploy; roll back if needed.
+2. If MCAE is up but rejecting requests — check API credentials:
+   ```bash
+   kubectl -n figurio-prod get secret figurio-mcae-secret -o jsonpath='{.data.api_key}' | base64 -d
+   ```
+3. If Redis is the problem — restart the worker after confirming Redis is healthy:
+   ```bash
+   kubectl -n figurio-prod rollout restart deployment/figurio-worker
+   ```
+
+## P3 — Degraded Performance
+
+### Symptoms
+- Sentry: elevated error rate, slow transaction traces
+- Traefik dashboard showing high latency on backend routes
+- CPU or memory pressure on the microk8s node
+
+### Diagnosis
+
+```bash
+# Node resource usage
+kubectl top nodes
+kubectl top pods -n figurio-prod
+
+# Check for OOMKilled pods
+kubectl -n figurio-prod get pods -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.containerStatuses[0].lastState.terminated.reason}{"\n"}{end}'
+
+# PostgreSQL slow queries — connect via port-forward
+kubectl -n figurio-prod port-forward svc/figurio-postgres 5432:5432 &
+psql $DATABASE_URL -c "SELECT pid, now() - query_start AS duration, query FROM pg_stat_activity WHERE state = 'active' ORDER BY duration DESC LIMIT 10;"
+```
+
+### Resolution Steps
+
+1. OOMKilled pods — increase memory limits in the Helm values and redeploy, or
+   identify the memory leak via Sentry performance traces.
+2. Slow PostgreSQL queries — identify the offending query, add an index or optimize
+   via a new Alembic migration.
+3. Redis cache miss spike — check if cache keys were invalidated by a recent deploy;
+   warm the cache by triggering a few product page loads.
+
+## Database Recovery
+
+### Alembic migration failure mid-deploy
+
+If a migration partially applied and the backend is in a broken state:
+
+1. **Do not restart the backend** — keep traffic away by scaling to 0:
+   ```bash
+   kubectl -n figurio-prod scale deployment/figurio-backend --replicas=0
+   ```
+2. Inspect migration state:
+   ```bash
+   kubectl -n figurio-prod run alembic-check \
+     --image=lukekelle00/figurio-backend:<tag> \
+     --restart=Never \
+     --env="DATABASE_URL=..." \
+     -- alembic current
+   ```
+3. Attempt `alembic downgrade -1` if the previous revision is safe to return to.
+4. If downgrade is not safe, restore from the most recent PostgreSQL backup.
+5. Scale backend back up only after migrations are in a clean state.
+
+### PostgreSQL pod crash
+
+```bash
+# Check pod status and events
+kubectl -n figurio-prod describe pod -l app=figurio-postgres
+
+# If PVC is healthy but pod crashed, restart
+kubectl -n figurio-prod rollout restart statefulset/figurio-postgres
+```
+
+If the PV/PVC is corrupted, restore from the latest backup snapshot before attempting
+any data repair.
+
+## Sentry Alert Triage
+
+- **New issue spike immediately after deploy** — likely regression, roll back.
+- **Recurring known issue** — check if there is an open GitHub issue; tag it.
+- **MCAE-related errors** — correlate with MCAE status; mute the alert if it is a
+  known external outage with an ETA.
+- **Payment errors** — always P1 regardless of volume. Do not mute.
+
+Sentry project slugs: `figurio-backend`, `figurio-frontend`, `figurio-worker`.
+
+## Post-Incident
+
+After every P1 or P2 resolution:
+1. Document what broke, why, and how it was fixed in a GitHub issue tagged `incident`.
+2. Add a Sentry alert rule if the failure mode was not already monitored.
+3. Update this runbook if a new resolution pattern was discovered.

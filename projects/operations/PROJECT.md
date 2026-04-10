@@ -1,25 +1,32 @@
 ---
 name: Operations
-description: Supply chain setup, MCAE partnership, and order fulfillment workflow
+description: MCAE vendor management, order fulfillment workflows, shipping integration, and Phase 2 scan-to-print planning
 slug: operations
 owner: head-of-operations
 ---
 
 ## Scope
 
-Establish the operations pipeline for Figurio figurine production and delivery.
+Establish Figurio's production and fulfillment operations.
 
-### Key deliverables
+### Core Workstreams
 
-- MCAE partnership agreement with per-unit pricing across size tiers
-- Order fulfillment SOP (order intake → print file prep → MCAE submission → QA → packaging → shipping)
-- Shipping integration (Zásilkovna for CZ, DHL for EU)
-- Order tracking system for customers
-- Quality assurance checklist for printed figurines
+- MCAE partnership: pricing negotiation across 3 size tiers, SLA for turnaround, quality standards
+- Fulfillment workflow: order-to-MCAE handoff, print file preparation, QA on received figurines
+- Shipping: Zasilkovna (CZ/SK) and DHL (EU) integration, label generation, tracking
+- Packaging: branded box design, inserts, unboxing experience
+- Phase 2 planning: scanning equipment research, pop-up event logistics
+
+### Key Vendors
+
+- MCAE (mcae.cz): Stratasys J55 PolyJet printing partner
+- Zasilkovna: Czech/Slovak parcel delivery
+- DHL: EU-wide shipping
 
 ## Success Criteria
 
-- End-to-end fulfillment time under 10 business days for catalog items
-- Shipping cost and delivery time documented for CZ and EU
-- MCAE pricing confirmed for all three size tiers
-- Customer order tracking functional
+- MCAE pricing locked in for all 3 size tiers
+- End-to-end fulfillment tested with sample orders
+- Shipping integrated with tracking notifications
+- Branded packaging designed and sourced
+- Phase 2 scanning technology evaluated with cost model

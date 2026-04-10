@@ -1,9 +1,9 @@
 ---
-title: Launch MVP e-commerce platform with catalog and AI-prompted custom figurines
+title: Launch MVP e-commerce platform with catalog browsing, Stripe checkout, and order fulfillment
 level: company
 status: active
 ownerAgentSlug: cto
-projectSlugs: [mvp-backend, mvp-frontend, infrastructure]
+projectSlugs: [platform-backend, platform-frontend, infrastructure]
 ---
 
-Ship a functional web platform where customers can browse catalog figurines, order AI-generated custom figurines, and pay via Stripe. All services deployed on K8s with CI/CD.
+Ship a working storefront where customers can browse the figurine catalog, order figurines in 3 size tiers, pay via Stripe, and receive tracked shipments.

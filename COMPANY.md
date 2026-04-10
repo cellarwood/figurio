@@ -2,16 +2,17 @@
 schema: agentcompanies/v1
 name: Figurio
 slug: figurio
-description: Direct-to-consumer e-commerce company designing, producing, and delivering high-quality full-color 3D-printed figurines from the Czech Republic
+description: Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines from a curated catalog, AI-prompted custom designs, and 3D scan-to-print services.
 version: 1.0.0
 license: MIT
 authors:
   - name: Cellarwood
 goals:
-  - Launch MVP e-commerce platform with catalog browsing, AI-prompted custom figurines, and Stripe payments
-  - Establish supply chain and fulfillment pipeline with MCAE printing partner
-  - Validate market strategy through competitive analysis, customer research, and pricing model
-  - Build Figurio brand identity and acquire first 100 paying customers
+  - Launch MVP e-commerce platform with catalog browsing, Stripe checkout, and order fulfillment
+  - Launch AI prompt-to-print pipeline for custom figurine generation
+  - Establish production and fulfillment operations with MCAE and EU shipping
+  - Build Figurio brand and acquire first 100 paying customers
+  - Research and plan scan-to-print service for Phase 2 launch
 requirements:
   secrets:
     - STRIPE_SECRET_KEY
@@ -27,53 +28,41 @@ requirements:
 
 # Figurio
 
-Figurio is a direct-to-consumer e-commerce company headquartered in the Czech Republic that designs, produces, and delivers high-quality full-color 3D-printed figurines. The company operates through a web platform where customers can browse a curated catalog, generate custom models via AI text prompts, or (in a later phase) have themselves 3D-scanned to create personalized miniatures.
+Figurio is a direct-to-consumer e-commerce company headquartered in the Czech Republic that designs, produces, and delivers high-quality full-color 3D-printed figurines. The company operates through a web platform where customers can browse a curated catalog, generate custom models via AI text prompts, or (in Phase 2) have themselves 3D-scanned to create personalized miniatures.
 
 ## Product Lines
 
-### 1. Catalog Figurines ("Ready to Print")
+### Catalog Figurines ("Ready to Print")
+A curated, rotating catalog of pre-designed 3D figurines — viral/meme designs, seasonal figurines, event-driven designs, and evergreen collectibles. Models sourced from licensed marketplaces, commissioned original designs, and community partnerships.
 
-A curated, rotating catalog of pre-designed 3D figurines built around models with high purchase probability — viral/meme-driven designs, seasonal figurines, event-driven designs, and evergreen collectibles. Models are sourced through commercially licensed marketplaces, commissioned original designs, and community designer partnerships.
+### AI-Prompted Custom Figurines ("Prompt to Print")
+Customers describe a figurine in natural language, and the system generates a 3D model using AI. Automated mesh repair, human QA, and customer preview approval before printing. Two-stage deposit payment (50/50).
 
-### 2. AI-Prompted Custom Figurines ("Prompt to Print")
-
-Customers describe a figurine in natural language, the system generates a 3D model using AI (text-to-3D), the model goes through automated mesh repair and human QA, and the customer approves a rendered preview before printing. Two-stage payment: 50% deposit at order, 50% on approval.
-
-### 3. 3D Scan-to-Print ("Scan Yourself") — Phase 2
-
-Personalized figurines from 3D body scans, initially via mobile pop-up operations at conventions, markets, and events.
+### 3D Scan-to-Print Figurines ("Scan Yourself") — Phase 2
+Mobile pop-up scanning at conventions, markets, and events using photogrammetry or structured-light scanners. Permanent retail studio as long-term goal.
 
 ## Production
 
-All printing is outsourced to **MCAE** (mcae.cz), a Czech Republic-based Stratasys authorized partner, using the **Stratasys J55 PolyJet printer** for full-color, multi-material, detail-rich prints.
+All printing outsourced to **MCAE (mcae.cz)**, a Czech Republic-based Stratasys authorized partner, using the **Stratasys J55 PolyJet printer**. Three size tiers: Small (~8cm), Medium (~15cm), Large (~25cm).
 
-### Size Tiers
+## Tech Stack
 
-| Tier | Height | Use Case |
-|------|--------|----------|
-| Small | ~8 cm | Desk figurines, keychains |
-| Medium | ~15 cm | Display, gifts |
-| Large | ~25 cm | Premium collectibles |
+- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS, Three.js, GSAP
+- **Backend:** Python/FastAPI, SQLAlchemy, Alembic, Celery, Redis
+- **Infrastructure:** Docker, Kubernetes (microk8s), Traefik, GitHub Actions
+- **Payments:** Stripe (cards, Apple Pay, Google Pay, EU methods)
+- **AI Pipeline:** Text-to-3D (Meshy/Tripo3D), Blender mesh repair
+- **Shipping:** Zasilkovna (CZ/SK), DHL (EU)
 
-## Technology Stack
+## Organization
 
-- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS, Three.js (3D preview)
-- **Backend:** Python/FastAPI, PostgreSQL, async SQLAlchemy
-- **AI Pipeline:** Text-to-3D (Meshy/Tripo3D), automated mesh repair
-- **Payments:** Stripe (cards, Apple Pay, Google Pay, SEPA)
-- **Infrastructure:** Docker, Kubernetes (microk8s), Terraform, Traefik, GitHub Actions
-- **Monitoring:** Sentry, Prometheus
-
-## Org Structure
-
-```
-CEO
-├── CTO
-│   ├── Backend Engineer
-│   ├── Frontend Engineer
-│   └── DevOps Engineer
-├── CMO
-│   ├── Content Creator
-│   └── UI Designer
-└── Head of Operations
-```
+| Agent | Role | Reports To |
+|-------|------|-----------|
+| CEO | Chief Executive Officer | — |
+| CTO | Chief Technology Officer | CEO |
+| CMO | Chief Marketing Officer | CEO |
+| Head of Operations | Head of Operations | CEO |
+| Backend Engineer | Backend Engineer | CTO |
+| Frontend Engineer | Frontend Engineer | CTO |
+| DevOps Engineer | Infrastructure Engineer | CTO |
+| Content Creator | Content Creator | CMO |
