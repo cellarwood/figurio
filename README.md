@@ -1,96 +1,80 @@
-# Figurio — Agent Company Package
+# Figurio
 
-Figurio is a direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. This package defines the complete Paperclip agent organization following the Agent Companies spec (`agentcompanies/v1`).
+A Paperclip Agent Company package for **Figurio** — a Czech Republic-based direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines.
+
+## Product Lines
+
+- **Catalog Figurines** — curated, rotating collection of pre-designed 3D figurines (viral, seasonal, collectible)
+- **AI-Prompted Custom Figurines** — customers describe a figurine in natural language, AI generates a 3D model for approval
+- **Scan-to-Print** (Phase 2) — personalized figurines from 3D body scans at events and pop-ups
 
 ## Org Chart
 
 ```
-Board Operator (Human)
-  │
-  CEO
-  │
-  ├── CTO
-  │    ├── Frontend Engineer
-  │    ├── Backend Engineer
-  │    └── DevOps Engineer
-  │
-  ├── CMO
-  │    └── Content Creator
-  │
-  └── Head of Operations
+CEO
+├── CTO
+│   ├── Backend Engineer
+│   ├── Frontend Engineer
+│   └── DevOps Engineer
+├── CMO
+│   ├── Content Creator
+│   └── UI Designer
+└── Head of Operations
 ```
 
-**8 agents | ~$380/month total budget**
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, Three.js |
+| Backend | Python, FastAPI, PostgreSQL, async SQLAlchemy |
+| AI Pipeline | Text-to-3D (Meshy/Tripo3D), automated mesh repair |
+| Payments | Stripe (cards, Apple Pay, Google Pay, SEPA) |
+| Infrastructure | Docker, Kubernetes (microk8s), Terraform, Traefik |
+| CI/CD | GitHub Actions, Docker Hub |
+| Monitoring | Sentry, Prometheus |
+
+## Company Goals
+
+1. Launch MVP e-commerce platform with catalog and AI-prompted custom figurines
+2. Establish supply chain and fulfillment pipeline with MCAE printing partner
+3. Validate market strategy through competitive analysis and pricing model
+4. Build Figurio brand and acquire first 100 paying customers
+
+## Projects
+
+| Project | Owner | Description |
+|---------|-------|-------------|
+| `mvp-backend` | Backend Engineer | FastAPI backend with catalog, orders, AI generation, Stripe |
+| `mvp-frontend` | Frontend Engineer | React storefront with catalog, AI prompt, checkout |
+| `infrastructure` | DevOps Engineer | Docker, K8s, CI/CD, monitoring |
+| `operations` | Head of Operations | MCAE partnership, fulfillment, shipping |
+| `brand-launch` | Content Creator | Brand identity, content, marketing channels |
 
 ## Importing Into Paperclip
 
-### Before `docker compose up`
+### Via Paperclip UI/API
 
-**Step 1: Global Config**
-```bash
-cp global/settings.json <paperclip-repo>/.company/claude/settings.json
-cp global/plugins.json <paperclip-repo>/.company/claude/plugins.json
-```
+1. Push this package to a GitHub repo
+2. Import via Paperclip UI (Company Import page) or API: `POST /companies/import` with `source.type: "github"`
+3. The import handles all files: COMPANY.md, agent bundles, projects, tasks, skills, .paperclip.yaml
 
-**Step 2: Google Workspace Credentials**
-```bash
-cp <your-gws-credentials>.json <paperclip-repo>/.company/gws/figurio.json
-```
+### Global Config (manual)
 
-**Step 3: Start Paperclip**
-```bash
-cd <paperclip-repo>/docker && docker compose up -d
-```
+1. Copy `global/settings.json` and `global/plugins.json` into `.company/claude/` in the Paperclip repo root
+2. Rebuild/restart the container
 
-### After Paperclip is running
+## Infrastructure
 
-**Step 4: Company Import**
-```bash
-# Push this package to GitHub first
-git push origin main
-
-# Import via API
-curl -X POST http://localhost:3100/api/companies/import \
-  -H "Authorization: Bearer $AUTH_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"source": {"type": "github", "url": "https://github.com/cellarwood/figurio"}, "target": {"mode": "new_company"}}'
-```
-
-**Step 5: Secrets**
-```bash
-# Edit scripts/setup-secrets.sh with your COMPANY_ID, AUTH_TOKEN, and secret values
-vim scripts/setup-secrets.sh
-bash scripts/setup-secrets.sh
-```
-
-## Credentials Needed
-
-| Secret | Where to Get |
-|--------|-------------|
-| `GH_TOKEN` | GitHub personal access token |
-| `DOCKER_HUB_TOKEN` | Docker Hub access token (user: lukekelle00) |
-| `STRIPE_SECRET_KEY` | Stripe dashboard (test mode: sk_test_...) |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `GEMINI_API_KEY` | Google AI Studio |
-| `ELEVENLABS_API_KEY` | ElevenLabs dashboard |
-| `DATABASE_URL` | PostgreSQL connection string |
-| GWS credentials JSON | Google Cloud Console (service account) |
-
-## Project Structure
-
-```
-figurio/
-├── COMPANY.md              # Company definition
-├── .paperclip.yaml         # Adapter config, budgets, env
-├── agents/                 # 8 agent instruction bundles
-├── goals/                  # Goal hierarchy (4 company goals)
-├── projects/               # 2 projects (mvp-storefront, marketing-launch)
-├── tasks/                  # 3 company-level strategic tasks
-├── skills/                 # 16 custom + 95 GWS skills
-├── teams/                  # 3 teams (engineering, marketing, operations)
-├── global/                 # Global Claude Code settings
-└── scripts/                # Setup automation
-```
+| Service | Value |
+|---------|-------|
+| Domain | cellarwood.org |
+| Google Workspace | cellarwood.org |
+| GitHub | cellarwood/figurio |
+| Docker Hub | lukekelle00 |
+| Slack | 00aiworkspace.slack.com |
+| Stripe | Cellarwood |
+| K8s | microk8s-local |
 
 ## License
 
