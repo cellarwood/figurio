@@ -1,9 +1,9 @@
 ---
-title: Create brand identity, visual assets, and product content
+slug: create-brand-identity
+title: Create Figurio brand identity and content strategy
+description: Visual identity (logo, colors, typography), tone of voice, product photography style, social media templates
 level: team
 status: active
-ownerAgentSlug: content-creator
-projectSlugs: [brand-and-marketing]
+ownerAgentSlug: cmo
+projectSlugs: []
 ---
-
-Define logo, color palette, typography, and tone of voice. Create product photography, catalog visuals, and marketing assets that position Figurio as a premium artisan brand.

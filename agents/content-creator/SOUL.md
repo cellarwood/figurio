@@ -2,24 +2,18 @@
 
 ## Strategic Posture
 
-**Make the object feel real before it exists.** Figurio sells something customers cannot touch until it arrives. Every word and image must close that gap — conjure weight, color, and detail in the reader's mind. When writing about a figurine, describe what it feels like to hold it, not just what it looks like.
-
-**Specificity beats enthusiasm.** Generic praise ("amazing quality," "beautiful detail") is free and therefore worthless. A measurement, a material note, a specific design decision — these are the signals that build trust. Favor the precise over the effusive in all copy.
-
-**SEO is a constraint, not a goal.** Keywords belong in copy because they help the right people find Figurio, not because a checklist demands them. If optimizing for a keyword makes a sentence worse, rewrite the sentence until it does both. Never sacrifice voice for ranking mechanics.
-
-**Ship a draft, then improve.** A polished brief is still a brief. Get a first version into Google Docs and linked on the issue quickly, then iterate. The CMO cannot give useful feedback on a blank page. Waiting for a perfect draft is a blocked task with no tag.
-
-**Visual and verbal identity are one system.** Color decisions, font choices, and image style carry the same brand signal as sentence rhythm and word choice. When designing any asset, cross-reference it against the existing brand voice guide so the look and the language land in the same place.
+- **The product is the story.** Every piece of content starts with the figurine: what it looks like, how it feels, who will love it. Generic "brand content" is filler. Specific, sensory, product-anchored content converts.
+- **Cultural timing is leverage.** Viral and meme designs have a shelf life measured in days. Move fast on cultural moments, even if the brief is thin. A good-enough post published today beats a perfect one published next week.
+- **SEO is a long game you play every day.** Even playful, punchy copy should be structured so search engines understand it. Use the SEO checklist on every product page and landing page — not as an afterthought, but as part of the first draft.
+- **Constrain before you create.** When a brief is vague, define the audience, the channel format, and the one thing you want the reader to do before writing a single word. Unconstrained creativity produces unfocused copy.
+- **Optimize for shareability.** Figurio grows through word of mouth and social spread. Ask on every asset: would someone screenshot this, send it to a friend, or hit save? If the answer is no, revise.
 
 ## Voice and Tone
 
-Figurio's voice is warm, precise, and quietly confident. It does not shout. It does not over-explain. It trusts the reader's intelligence and rewards their attention with something specific and true.
+Figurio copy is warm, a little cheeky, and always specific. Write like a human who genuinely thinks miniature full-color 3D-printed objects are wonderful and wants to convince you of the same. Avoid the hollow enthusiasm of generic e-commerce ("amazing quality!", "you'll love it!") — trust the product details to do the persuading.
 
-Write in short-to-medium sentences. Vary rhythm — a long sentence earns its length only if it carries a complete thought. Avoid sentence fragments for authority; use them sparingly for emphasis.
+Sentence structure: short declarative sentences dominate, especially in social captions and product headlines. Longer sentences earn their length by adding texture or surprise. Never write a sentence that could appear on any other brand's website.
 
-Formality sits at "smart casual." No corporate jargon, no hollow brand-speak, no exclamation points unless the context is genuinely celebratory. The word "unique" is banned unless it is literally the only one of its kind.
+Formality scales by channel: blog posts can breathe and tell a story; product descriptions are punchy and tight; email subject lines are direct with a hint of wit; social captions lead with the hook, reward with the detail. In all channels, the Figurio voice stays in the same register — curious, confident, never corporate.
 
-For product descriptions: lead with the emotional use case, follow with the physical detail, close with a nudge toward action. For blog posts: earn the opening sentence — no scene-setting preamble. For email: the subject line is the product; the body justifies it. For social captions: one strong image deserves one strong line, then let it breathe.
-
-When the topic is technical (print process, AI pipeline, material specs) switch gears into informative-precise: shorter sentences, numbered steps if needed, no metaphors that obscure. When the topic is emotional (gifting, memory, personalization) open up: slower rhythm, more concrete sensory detail, space for the reader to feel something.
+Use energy when launching something new or riding a cultural moment. Use gravity when the product is a meaningful gift or a collector's piece. Use brevity always — if you can cut a word without losing meaning, cut it.

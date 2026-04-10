@@ -1,10 +1,10 @@
 ---
 name: architecture-review
 description: >
-  Review system architecture decisions for Figurio's D2C 3D-figurine platform.
-  Covers API design and versioning, PostgreSQL schema design, service boundary
-  definitions between catalog/order/AI-pipeline services, and build-vs-buy
-  evaluation for 3D model processing and AI generation workflows.
+  Review system architecture decisions for Figurio — a D2C e-commerce platform
+  for 3D-printed figurines. Covers the FastAPI backend, React/TS frontend,
+  text-to-3D AI pipeline (Meshy/Tripo3D), Stripe payments, PostgreSQL data
+  model, and Docker/K8s (microk8s) deployment topology.
 allowed-tools:
   - Read
   - Grep
@@ -19,75 +19,113 @@ metadata:
 
 # Architecture Review
 
-Use this skill when evaluating or challenging design decisions across Figurio's
-backend services, database schema, API surface, or infrastructure topology.
+Use this skill when evaluating proposed or existing architecture changes across
+the Figurio platform — new services, integration patterns, data model changes,
+AI pipeline adjustments, or infrastructure topology shifts.
 
-## Service Boundaries
+## When to Use
 
-Figurio's backend is split into three primary service domains. Keep these
-boundaries explicit — cross-service calls must go through defined API contracts,
-not shared database tables.
+- A new feature requires a decision that spans multiple layers (frontend, API,
+  DB, AI pipeline, infra)
+- A service boundary is being added, split, or merged
+- An external API or vendor is being introduced or replaced
+- Performance, reliability, or cost concerns require structural changes
+- A PR introduces architectural drift from established patterns
 
-### Catalog Service
-- Owns product definitions: SKU, name, thumbnail, material options, price tiers
-- Read-heavy; data changes only when ops team updates the figurine lineup
-- Exposes: `GET /api/v1/products`, `GET /api/v1/products/{sku}`
-- No writes from order or AI-pipeline services into catalog tables
+## System Map
 
-### Order Service
-- Owns the full order lifecycle: cart → Stripe prepayment → fulfillment handoff
-- Holds references to catalog SKUs (foreign key by SKU string, not catalog DB row ID)
-- Communicates MCAE production status via webhook receiver — does not poll
-- Exposes: `POST /api/v1/orders`, `GET /api/v1/orders/{order_id}`, fulfillment webhook
+```
+Browser (React/TS + shadcn)
+  │
+  ▼
+Traefik (ingress, TLS termination)
+  │
+  ├─▶ FastAPI (Python, uv) — REST API + background tasks
+  │       │
+  │       ├─▶ PostgreSQL  (primary datastore)
+  │       ├─▶ Stripe      (payments, webhooks)
+  │       └─▶ AI Pipeline (text-to-3D)
+  │               ├─▶ Meshy API   (primary)
+  │               └─▶ Tripo3D API (fallback / comparison)
+  │                       │
+  │                       └─▶ Mesh Repair (post-process)
+  │
+microk8s cluster — Docker containers, GitHub Actions CI/CD
+Sentry — error monitoring (frontend + backend)
+```
 
-### AI-Pipeline Service
-- Owns the "Prompt to Print" workflow: prompt intake → model generation → review → STL handoff
-- Calls external vendor API (Meshy or Tripo3D) asynchronously; never blocks the HTTP response
-- Stores generation job state (pending/processing/approved/rejected) in its own schema
-- On approval, pushes STL reference into order service via internal API call — does not write to order tables directly
+## Review Dimensions
 
-## API Design Conventions
+### 1. Layering and Service Boundaries
 
-- All public endpoints: `/api/v1/{resource}` (collections) and `/api/v1/{resource}/{id}` (single item)
-- Internal service-to-service endpoints: `/internal/v1/{resource}` — not exposed through Traefik ingress
-- Error responses always return `{ "error": { "code": "SNAKE_CASE_CODE", "message": "..." } }`
-- Pagination via `?page=` and `?per_page=` (default 20, max 100) on all collection endpoints
-- Stripe webhook handler lives at `/webhooks/stripe` — validate signature before processing
+- FastAPI is the single backend — avoid introducing a second Python service
+  unless the workload is clearly separate (e.g., a long-running mesh repair
+  worker).
+- React/TS is the single frontend — no micro-frontends.
+- Background tasks (AI job polling, mesh repair) belong in FastAPI background
+  tasks or a dedicated worker pod, not in request handlers.
 
-## Database Schema Principles
+### 2. Data Model (PostgreSQL)
 
-- Each service domain has its own PostgreSQL schema (`catalog`, `orders`, `ai_pipeline`) in the shared cluster
-- No cross-schema foreign key constraints — reference by business key (e.g., `sku`, `order_id` UUID)
-- Use `TIMESTAMPTZ` for all timestamps; store in UTC
-- Soft-delete pattern (`deleted_at TIMESTAMPTZ`) for catalog items and orders — never hard delete
-- AI generation jobs: index on `(status, created_at)` for queue polling queries
+- Migrations must be versioned (Alembic). No schema changes outside migrations.
+- Orders, figurines, mesh assets, and Stripe objects are the core entities.
+  New entities must justify foreign key relationships to these four.
+- Avoid storing raw mesh binary in PostgreSQL — use object storage; store only
+  the reference URL.
 
-## Build vs. Buy Evaluation Framework
+### 3. AI Pipeline
 
-When assessing whether to build a component or use an external vendor, apply these criteria in order:
+- Text-to-3D requests are async — never block the HTTP response waiting for
+  Meshy/Tripo3D to complete.
+- The pipeline must handle provider failure gracefully: queue the job, expose
+  status polling, and support retry.
+- Mesh repair runs after generation; failures here should not fail the order —
+  flag for manual review instead.
+- New providers must implement the same job-status interface before being
+  merged into the pipeline.
 
-1. **Core differentiator?** If yes, build it. Figurio's differentiator is the AI customization UX and order experience — not rendering pipelines or payment infrastructure.
-2. **3D processing and model generation** — buy. Meshy/Tripo3D are external vendors. Integration cost is low; switching cost is manageable if the AI-pipeline service wraps the vendor behind a stable internal interface.
-3. **Payments** — buy (Stripe). Never implement payment processing in-house.
-4. **Production/print handoff to MCAE** — thin integration layer only. MCAE operates Stratasys J55 PolyJet hardware; Figurio's responsibility ends at delivering a validated STL file and order manifest.
-5. **Auth/identity** — evaluate managed solutions before building. Figurio is a small team; a custom auth service is not worth the maintenance burden.
+### 4. Payments (Stripe)
+
+- All Stripe state changes are driven by webhooks, not by API response alone.
+- Idempotency keys are required on all Stripe API calls.
+- Order fulfillment (triggering the AI pipeline) only starts after a
+  `payment_intent.succeeded` webhook is confirmed.
+
+### 5. Deployment (microk8s)
+
+- Every service ships as a Docker image built by GitHub Actions.
+- Config and secrets are injected via Kubernetes Secrets/ConfigMaps — never
+  baked into images.
+- Traefik handles routing; do not expose new ports directly — add Ingress rules.
+- New workloads must include resource requests/limits and a liveness probe.
+
+### 6. Observability
+
+- Sentry is the error sink for both React (frontend SDK) and FastAPI
+  (Sentry Python SDK). New services must initialise Sentry on startup.
+- Structured logging (JSON) to stdout — no custom log aggregators.
 
 ## Review Checklist
 
-When reviewing a proposed architecture change, confirm:
+When evaluating a proposal, work through these questions:
 
-- [ ] Service boundary is respected — no cross-domain direct DB access
-- [ ] New endpoints follow `/api/v1/` naming and error response format
-- [ ] Async operations (AI generation, MCAE handoff) are non-blocking
-- [ ] Vendor integrations are wrapped behind an internal interface (not called directly from business logic)
-- [ ] Schema changes include migration scripts and are backward compatible
-- [ ] No synchronous calls from AI-pipeline to external vendor inside an HTTP request cycle
-- [ ] Internal endpoints are excluded from Traefik public ingress rules
+- [ ] Does this fit within the existing service boundary, or does it require a
+      new service? If new, is the justification clear?
+- [ ] What is the failure mode? Is it recoverable without human intervention?
+- [ ] Does it introduce a new external dependency? What is the fallback?
+- [ ] Are database changes backwards-compatible during a rolling deploy?
+- [ ] Does the AI pipeline change preserve the async/status-poll contract?
+- [ ] Are secrets managed via Kubernetes Secrets?
+- [ ] Is Sentry instrumented for new error paths?
+- [ ] Are there resource implications (DB connections, memory for mesh files)?
 
-## Anti-patterns
+## Common Anti-patterns
 
-- Calling the Meshy/Tripo3D API synchronously inside a FastAPI route handler — use a background task or job queue
-- Sharing a PostgreSQL table between two service domains
-- Storing Stripe payment method details in Figurio's own database (use Stripe customer/payment intent IDs only)
-- Exposing internal service endpoints through the public Traefik ingress
-- Hardcoding vendor-specific model generation parameters in order or catalog logic
+- Synchronous waits on Meshy/Tripo3D in an HTTP handler — pipeline jobs take
+  10–120 seconds.
+- Direct Stripe charge on frontend — all payment intent creation must go
+  through the FastAPI backend.
+- Storing 3D mesh files (`.glb`, `.obj`) in PostgreSQL as bytea.
+- Hardcoded provider choice (Meshy-only) — the pipeline must remain
+  provider-agnostic at the interface level.
+- Skipping Alembic for "quick" schema additions.

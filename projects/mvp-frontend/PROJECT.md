@@ -1,31 +1,27 @@
 ---
 name: MVP Frontend
-description: React/TypeScript storefront with product browsing, cart, checkout, 3D preview, and order tracking
 slug: mvp-frontend
+description: React/TypeScript storefront with product browsing, cart, Stripe checkout, order tracking, and user accounts
 owner: frontend-engineer
 ---
 
 ## Scope
 
-Build the customer-facing web storefront for Figurio using React/TypeScript.
+Build the customer-facing Figurio web store using React/TypeScript with shadcn-ui components. Covers product discovery, shopping cart, Stripe checkout, order tracking, and user account management.
 
-### Key Pages
-- Product catalog with filtering and search
-- Product detail with size tier selection and 3D model viewer
-- Shopping cart and Stripe checkout
-- Order tracking dashboard
-- AI custom figurine page (prompt input, 3D preview, approval flow)
+## Tech Stack
 
-### Tech Stack
-- TypeScript with strict mode
-- React with shadcn-ui and Radix UI
+- React with TypeScript (strict mode)
+- shadcn-ui + Radix UI primitives
 - Tailwind CSS for styling
-- GSAP for animations
-- Three.js or similar for 3D model preview
 - npm for package management
+- Vite for build tooling
 
 ## Success Criteria
-- Responsive design working across desktop and mobile
+
+- Product catalog with filtering and search is functional
+- Cart and Stripe checkout flow works end-to-end
+- Order tracking page shows real-time status updates
+- Responsive design works on mobile and desktop
 - WCAG 2.1 AA accessibility compliance
-- Smooth checkout flow with Stripe Elements
-- 3D preview viewer rendering AI-generated models
+- E2E tests pass for checkout flow

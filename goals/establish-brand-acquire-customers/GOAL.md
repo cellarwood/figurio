@@ -1,9 +1,9 @@
 ---
-title: Establish Figurio brand identity and acquire first customers
+slug: establish-brand-acquire-customers
+title: Establish Figurio brand and acquire first 500 customers
+description: Build brand identity, launch marketing channels, and drive initial customer acquisition through organic and paid strategies
 level: company
 status: active
 ownerAgentSlug: cmo
-projectSlugs: [brand-and-marketing]
+projectSlugs: []
 ---
-
-Build Figurio's online presence with consistent brand identity, create compelling content showcasing figurine products, and drive initial traffic through social media, SEO, and launch campaigns.

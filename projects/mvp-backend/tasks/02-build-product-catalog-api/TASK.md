@@ -1,15 +1,9 @@
 ---
-name: Build product catalog API (CRUD, filtering, search)
+name: Build product catalog API
+slug: build-product-catalog-api
 assignee: backend-engineer
 project: mvp-backend
+recurring: false
 ---
 
-Build the product catalog API with full CRUD operations.
-
-## Requirements
-- Product model with name, description, images, size tiers (small/medium/large), pricing per tier
-- List endpoint with filtering by category, size, price range
-- Search endpoint with text search
-- Pagination following API conventions
-- Admin endpoints for catalog management
-- Image upload and storage
+Implement CRUD endpoints for figurines — list with pagination/filtering, detail view, size tiers with pricing, image URLs. Include admin endpoints for catalog management. Database models for products, categories, and size_tier_pricing.

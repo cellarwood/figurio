@@ -1,16 +1,9 @@
 ---
-name: Set up FastAPI project structure with Docker
+name: Set up FastAPI project structure
+slug: setup-fastapi-project
 assignee: backend-engineer
 project: mvp-backend
+recurring: false
 ---
 
-Initialize the FastAPI project with proper directory structure, Docker setup, and development environment.
-
-## Requirements
-- Python 3.10+ project with `uv` for package management
-- FastAPI with Uvicorn server
-- Docker multi-stage build for minimal image
-- PostgreSQL connection with async driver
-- Alembic for database migrations
-- Basic health check endpoint
-- `.env` configuration pattern
+Initialize the FastAPI project with uv, create directory structure (routers, models, schemas, services), configure PostgreSQL connection with SQLAlchemy/Alembic, set up Docker development environment.

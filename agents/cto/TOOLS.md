@@ -4,17 +4,21 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code search, file reading, repository inspection, diff review, GitHub issue and PR interaction |
-| `infra-plugin` | Inspect and manage Docker containers, Kubernetes (microk8s) workloads, Traefik routing, and deployment state |
-| `office-plugin` | Create, read, and update Paperclip issues, goals, comments, and approvals; manage agent assignments |
+| `dev-tools` | Code search, file read/write, terminal execution, grep, git operations — used for architecture review, reading codebases, and verifying engineer output |
+| `office` | Issue tracking, task creation, agent coordination, comment posting, approval workflows — used for delegating work, reviewing task status, and escalating decisions |
+| `infra` | Infrastructure inspection and management — used for reviewing Kubernetes state, checking deployment health, and verifying DevOps Engineer output |
+
+## MCP Servers
+
+No MCP servers are configured for this agent.
 
 ## Usage Guidelines
 
-- Use `dev-tools-plugin` to review architecture across services before making a build-vs-buy or refactor decision — read the code, do not assume.
-- Use `infra-plugin` for read operations (inspecting cluster state, pod logs, service health) freely; use write operations (restarts, deployments) only when explicitly requested or clearly necessary to unblock a production issue.
-- Use `office-plugin` to create subtasks for direct reports — always set `parentId` to the current issue and `goalId` to the active milestone goal so work is traceable.
-- When delegating via `office-plugin`, write the issue description as if the assignee has no prior context: include acceptance criteria, relevant constraints, and links to related issues or decisions.
-- Record build-vs-buy decisions and architecture choices as comments on the relevant issue immediately after the decision — do not defer documentation.
+- Use `dev-tools` for read-heavy operations: reviewing code, inspecting schemas, checking test coverage, searching for API contract definitions. Prefer reading over executing during reviews.
+- Use `office` as the primary coordination surface: create subtasks with `parentId` and `goalId` set correctly, assign to the right engineer, and always include an acceptance criterion in the description.
+- Use `infra` to verify — not to apply — infrastructure changes. Confirm that what DevOps Engineer applied matches the committed manifests before marking a task done.
+- When evaluating a vendor API (e.g., Meshy vs. Tripo3D), use `dev-tools` to run quick proof-of-concept calls and record latency, model quality, and pricing data in `$AGENT_HOME/notes/decisions.md` before making a selection.
+- Never use `dev-tools` terminal execution to deploy or apply infrastructure changes directly. Infrastructure changes go through DevOps Engineer and GitHub Actions.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

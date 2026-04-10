@@ -1,29 +1,14 @@
 ---
 schema: agentcompanies/v1
-kind: company
 name: Figurio
 slug: figurio
-description: Direct-to-consumer e-commerce company designing, producing, and delivering high-quality full-color 3D-printed figurines from Czech Republic
 version: 1.0.0
-license: MIT
-authors:
-  - name: Cellarwood
 goals:
-  - Launch MVP e-commerce platform with catalog browsing, ordering, and Stripe payments
-  - Build AI custom figurine pipeline enabling Prompt to Print product line
-  - Establish Figurio brand identity and acquire first customers
-  - Establish production and fulfillment operations via MCAE partnership
-requirements:
-  secrets:
-    - STRIPE_SECRET_KEY
-    - STRIPE_WEBHOOK_SECRET
-    - GH_TOKEN
-    - DOCKER_HUB_USERNAME
-    - DOCKER_HUB_TOKEN
-    - DATABASE_URL
-    - GEMINI_API_KEY
-    - ELEVENLABS_API_KEY
-    - GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE
+  - Launch MVP e-commerce platform with catalog browsing, Stripe payments, and order tracking
+  - Build AI-powered custom figurine pipeline (Prompt to Print)
+  - Establish Figurio brand and acquire first 500 customers
+  - Operationalize production and fulfillment with MCAE and shipping partners
+  - Validate unit economics and establish path to profitability
 ---
 
 # Figurio
@@ -33,49 +18,30 @@ Figurio is a direct-to-consumer e-commerce company headquartered in the Czech Re
 ## Product Lines
 
 ### Catalog Figurines ("Ready to Print")
-A curated, rotating catalog of pre-designed 3D figurines — viral and meme-driven designs, seasonal figurines, event-driven designs, and evergreen collectibles. Models are sourced through commercially licensed marketplaces, commissioned original designs, and community partnerships. All models are pre-validated for printability.
+A curated, rotating catalog of pre-designed 3D figurines — viral/meme-driven designs, seasonal figurines, event-driven designs, and evergreen collectibles. Models sourced from commercially licensed marketplaces, commissioned original designs, and community partnerships.
 
 ### AI-Prompted Custom Figurines ("Prompt to Print")
-Customers describe a figurine in natural language, and the system generates a 3D model using AI. The customer reviews a rendered preview, approves or requests adjustments, and upon approval the model enters the print queue. Uses a deposit-based payment model (50% at order, 50% on approval).
+Customers describe a figurine in natural language, the system generates a 3D model using AI (text-to-3D), the customer reviews a rendered preview, and upon approval the model enters the print queue. Two-stage payment: 50% deposit at order, 50% on preview approval.
+
+### 3D Scan-to-Print ("Scan Yourself") — Phase 2
+Mobile pop-up photogrammetry scanning at conventions, markets, and events. Personalized figurines from real people.
 
 ## Production
 
-All printing is outsourced to **MCAE (mcae.cz)**, a Czech Republic-based Stratasys authorized partner, using the **Stratasys J55 PolyJet printer**. Full-color, multi-material prints with fine detail resolution.
-
-### Size Tiers
-- **Small** (~8 cm) — Desk figurines, keychains
-- **Medium** (~15 cm) — Display, gifts
-- **Large** (~25 cm) — Premium collectibles
+All printing outsourced to **MCAE** (mcae.cz), a Czech Stratasys authorized partner, using the **Stratasys J55 PolyJet** printer. Three size tiers: small (~8cm), medium (~15cm), large (~25cm). All orders are prepaid via Stripe.
 
 ## Tech Stack
 
-- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS, GSAP
-- **Backend:** Python/FastAPI, PostgreSQL, uv package manager
-- **AI Pipeline:** Meshy/Tripo3D APIs, Blender scripting for mesh repair, PyTorch
-- **Infrastructure:** Docker, Kubernetes (microk8s-local), Traefik, GitHub Actions
-- **Payments:** Stripe
-- **Shipping:** Zasilkovna (CZ), DHL (EU)
-
-## Org Chart
-
-```
-CEO
-├── CTO
-│   ├── Backend Engineer
-│   ├── Frontend Engineer
-│   ├── ML/AI Engineer
-│   └── DevOps Engineer
-├── CMO
-│   └── Content Creator
-└── Head of Operations
-```
+- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS, Vite
+- **Backend:** Python/FastAPI, PostgreSQL, Stripe SDK, uv
+- **Infrastructure:** Docker, Kubernetes (microk8s), Traefik, GitHub Actions, Sentry
+- **AI:** Text-to-3D APIs (Meshy, Tripo3D), automated mesh repair
 
 ## Infrastructure
 
-- **GitHub:** cellarwood/figurio
+- **GitHub:** github.com/cellarwood/figurio
 - **Docker Hub:** lukekelle00
-- **K8s Cluster:** microk8s-local
-- **Domain:** cellarwood.org
-- **GWS Domain:** cellarwood.org
+- **Kubernetes:** microk8s-local
+- **Payments:** Stripe
 - **Slack:** 00aiworkspace.slack.com
-- **Stripe Account:** Cellarwood
+- **Google Workspace:** cellarwood.org

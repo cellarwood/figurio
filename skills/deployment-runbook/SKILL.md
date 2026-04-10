@@ -1,190 +1,213 @@
 ---
 name: deployment-runbook
 description: >
-  Figurio deployment procedure for all services: Docker multi-stage build,
-  push to lukekelle00 on Docker Hub, K8s rollout on microk8s-local via Helm,
-  Traefik ingress configuration, and rollback steps for failed deployments.
+  Step-by-step deployment procedures for the Figurio platform on microk8s.
+  Covers Traefik IngressRoute and SSL certificate setup, GitHub Actions CI/CD
+  pipeline, rolling updates via Helm, rollback procedures, and PostgreSQL
+  migration sequencing.
 allowed-tools:
-  - Bash
   - Read
   - Write
+  - Bash
   - Grep
 metadata:
   paperclip:
     tags:
+      - engineering
       - devops
       - deployment
-      - infrastructure
 ---
 
 # Deployment Runbook
 
-## When to Use
+Standard deployment procedures for Figurio's microk8s cluster. Follow these
+steps in order. Default to rollback when in doubt — see the Rollback section.
 
-Use this runbook when deploying any Figurio service — backend (FastAPI), frontend
-(React), ML pipeline, or supporting services — to the microk8s-local K8s cluster.
+## Services Overview
 
----
+| Service | Image | Registry |
+|---------|-------|----------|
+| frontend | `lukekelle00/figurio-frontend:<tag>` | Docker Hub |
+| backend | `lukekelle00/figurio-backend:<tag>` | Docker Hub |
+| postgres | in-cluster StatefulSet | — |
 
-## 1. Docker Multi-Stage Build
-
-All Figurio images use multi-stage builds to minimize final image size.
-
-```bash
-# Build from the repo root (context must include the service directory)
-docker build \
-  --target production \
-  -t lukekelle00/<service>:<git-sha> \
-  -t lukekelle00/<service>:latest \
-  -f services/<service>/Dockerfile \
-  .
-```
-
-Services: `figurio-api`, `figurio-frontend`, `figurio-ml-pipeline`
-
-Build targets:
-- `builder` — dependency install + compile step
-- `production` — minimal runtime image (no dev deps, no build tools)
-
-Always tag with the short Git SHA (`git rev-parse --short HEAD`) in addition to `latest`.
+Image tags use the short Git SHA (`git rev-parse --short HEAD`). The CI/CD
+pipeline tags and pushes on every successful merge to `main`.
 
 ---
 
-## 2. Push to Docker Hub
+## 1. Pre-Deployment Checklist
 
-Registry: `lukekelle00` on Docker Hub.
+Before any production deploy:
 
-```bash
-docker push lukekelle00/<service>:<git-sha>
-docker push lukekelle00/<service>:latest
-```
-
-Ensure `docker login` is active for `lukekelle00` before pushing. In CI
-(GitHub Actions) this uses the `DOCKERHUB_TOKEN` secret stored in the
-`cellarwood/figurio` repository settings.
+- [ ] GitHub Actions build job passed on `main` (green check on commit)
+- [ ] New image exists on Docker Hub: `docker pull lukekelle00/figurio-{service}:<sha>`
+- [ ] No active incidents open in Sentry for the affected service
+- [ ] PostgreSQL migrations (if any) reviewed — see section 4
+- [ ] Helm diff reviewed: `helm diff upgrade figurio ./helm/figurio -f helm/figurio/values.prod.yaml`
 
 ---
 
-## 3. K8s Rollout on microk8s-local
+## 2. CI/CD Pipeline (GitHub Actions)
 
-Figurio services are deployed via Helm charts located at `infra/helm/<service>/`.
+Pipeline file: `.github/workflows/deploy.yml`
 
-```bash
-# Set context to microk8s-local
-kubectl config use-context microk8s
+On merge to `main`:
+1. **Build** — Docker multi-stage build for `frontend` and `backend`
+2. **Push** — Tag as `<sha>` and `latest`, push both to Docker Hub (`lukekelle00`)
+3. **Deploy** — `helm upgrade` against the microk8s cluster via `kubectl` configured with the cluster kubeconfig secret
 
-# Helm upgrade (creates if not exists)
-helm upgrade --install <service> infra/helm/<service>/ \
-  --namespace figurio \
-  --set image.tag=<git-sha> \
-  --values infra/helm/<service>/values.yaml \
-  --wait \
-  --timeout 5m
-```
-
-Verify the rollout:
+The deploy step runs a rolling update. Monitor rollout:
 
 ```bash
-kubectl rollout status deployment/<service> -n figurio
-kubectl get pods -n figurio -l app=<service>
+kubectl rollout status deployment/figurio-backend -n figurio
+kubectl rollout status deployment/figurio-frontend -n figurio
 ```
+
+A rollout is complete when all pods show `Running` and ready counts match
+desired. If it stalls for more than 5 minutes, proceed to the Rollback section.
 
 ---
 
-## 4. Traefik Ingress Configuration
+## 3. Traefik IngressRoute and SSL
 
-Figurio uses Traefik (deployed via microk8s addon or Helm) as the ingress controller.
+IngressRoute manifests live under `helm/figurio/templates/ingress.yaml`.
 
-Ingress resources live at `infra/helm/<service>/templates/ingress.yaml`.
-
-Key conventions:
-- Host: `api.figurio.cz`, `figurio.cz`, `ml.figurio.cz`
-- TLS termination at Traefik using Let's Encrypt (cert-manager or Traefik's ACME)
-- Middleware: rate limiting on API routes, redirect HTTP→HTTPS on all routes
-- IngressRoute kind (Traefik CRD) preferred over standard Ingress for middleware support
-
-```yaml
-# Example IngressRoute snippet
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: figurio-api
-  namespace: figurio
-spec:
-  entryPoints:
-    - websecure
-  routes:
-    - match: Host(`api.figurio.cz`)
-      kind: Rule
-      services:
-        - name: figurio-api
-          port: 8000
-  tls:
-    certResolver: letsencrypt
-```
-
-Apply manually if not managed by Helm:
+Traefik uses ACME (Let's Encrypt) for automatic TLS. Certificate state:
 
 ```bash
-kubectl apply -f infra/k8s/ingressroutes/ -n figurio
+# Check cert-manager or Traefik ACME certificate status
+kubectl get certificate -n figurio
+kubectl describe certificate figurio-tls -n figurio
 ```
+
+If a certificate is not Ready after a fresh cluster setup:
+
+1. Confirm Traefik ACME resolver is configured in `traefik.yaml` (or Helm
+   values for the Traefik addon).
+2. Confirm DNS A records for `figurio.cz` (and subdomains) point to the
+   cluster's public IP.
+3. Check Traefik pod logs: `kubectl logs -n kube-system -l app=traefik`
+4. ACME challenges require port 80 to be reachable from the internet.
+
+**To add a new IngressRoute** for a service, update
+`helm/figurio/templates/ingress.yaml` and apply with `helm upgrade`.
 
 ---
 
-## 5. GitHub Actions CI/CD
+## 4. Database Migrations
 
-The pipeline is defined at `.github/workflows/deploy.yml`. On push to `main`:
+Migrations run **before** the new application pods are deployed.
 
-1. Run tests (pytest, Jest)
-2. Docker build + push (using `DOCKERHUB_TOKEN` secret)
-3. `helm upgrade --install` against microk8s-local via self-hosted runner
-4. Sentry release notification (`sentry-cli releases new`)
+### Migration Sequence
 
-To trigger a manual deployment without a push, use the `workflow_dispatch` trigger
-in the Actions UI on `cellarwood/figurio`.
+1. Take a PostgreSQL backup (see section 5).
+2. Run the migration job:
+
+```bash
+kubectl apply -f k8s/jobs/migrate.yaml -n figurio
+kubectl wait --for=condition=complete job/figurio-migrate -n figurio --timeout=120s
+kubectl logs job/figurio-migrate -n figurio
+```
+
+3. Confirm exit code 0 and no error lines in logs.
+4. Proceed with the Helm rolling update only after migration confirms success.
+5. If migration fails, **do not deploy** the new image. Investigate logs,
+   restore from backup if data was mutated, then fix and re-run.
 
 ---
 
-## 6. Rollback Steps
+## 5. PostgreSQL Backup
 
-### Helm rollback (preferred)
-
-```bash
-# List Helm release history
-helm history <service> -n figurio
-
-# Roll back to previous revision
-helm rollback <service> <revision> -n figurio --wait
-```
-
-### Image rollback
+A CronJob runs automated backups. To take a manual backup before a risky
+change:
 
 ```bash
-# Pin to previous SHA
-helm upgrade <service> infra/helm/<service>/ \
-  --namespace figurio \
-  --set image.tag=<previous-git-sha> \
-  --reuse-values \
-  --wait
+kubectl create job --from=cronjob/figurio-pg-backup manual-backup-$(date +%Y%m%d) -n figurio
+kubectl wait --for=condition=complete job/manual-backup-$(date +%Y%m%d) -n figurio --timeout=300s
 ```
 
-### Kubectl rollout undo (emergency)
-
-```bash
-kubectl rollout undo deployment/<service> -n figurio
-kubectl rollout status deployment/<service> -n figurio
-```
-
-After any rollback, file an incident (see `incident-response` skill) and
-notify the CTO.
+Confirm backup file appears in the configured backup destination (PVC or
+object storage bucket).
 
 ---
 
-## Checklist
+## 6. Rolling Update (Helm)
 
-- [ ] Tests pass in CI before merge to `main`
-- [ ] Image tagged with Git SHA (not just `latest`)
-- [ ] `helm upgrade` used `--wait` flag
-- [ ] Pod readiness confirmed after rollout
-- [ ] Sentry release created for traceability
-- [ ] Traefik ingress routes healthy (check Traefik dashboard)
+Standard production deploy after CI pipeline has pushed images:
+
+```bash
+# Dry run first — always
+helm upgrade figurio ./helm/figurio \
+  -f helm/figurio/values.prod.yaml \
+  --set backend.image.tag=<sha> \
+  --set frontend.image.tag=<sha> \
+  --dry-run
+
+# Apply
+helm upgrade figurio ./helm/figurio \
+  -f helm/figurio/values.prod.yaml \
+  --set backend.image.tag=<sha> \
+  --set frontend.image.tag=<sha>
+```
+
+Watch rollout:
+
+```bash
+kubectl rollout status deployment/figurio-backend -n figurio --timeout=5m
+kubectl rollout status deployment/figurio-frontend -n figurio --timeout=5m
+```
+
+Post-deploy smoke checks:
+- `curl -I https://figurio.cz` returns `200`
+- Stripe webhook endpoint `/api/webhooks/stripe` returns `200` on GET health
+- Sentry shows no new error spike in the 5 minutes after deploy
+
+---
+
+## 7. Rollback
+
+**Default: roll back first, investigate after.**
+
+### Option A — Helm rollback (preferred)
+
+```bash
+helm history figurio -n figurio          # find last known good revision
+helm rollback figurio <revision> -n figurio
+kubectl rollout status deployment/figurio-backend -n figurio
+kubectl rollout status deployment/figurio-frontend -n figurio
+```
+
+### Option B — kubectl image rollback (emergency only)
+
+```bash
+kubectl rollout undo deployment/figurio-backend -n figurio
+kubectl rollout undo deployment/figurio-frontend -n figurio
+```
+
+### Database rollback
+
+If migrations ran and must be reverted:
+
+1. Stop the backend deployment: `kubectl scale deployment/figurio-backend --replicas=0 -n figurio`
+2. Restore from the pre-deploy backup (see restore procedure in the PostgreSQL
+   runbook).
+3. Roll back the Helm release to the previous revision.
+4. Scale backend back up: `kubectl scale deployment/figurio-backend --replicas=<n> -n figurio`
+
+Always document the rollback decision in the relevant GitHub issue or Slack
+`#ops` channel with: what was rolled back, why, and what revision is now running.
+
+---
+
+## 8. Cluster Health Checks
+
+Run after any deployment or incident to confirm cluster state:
+
+```bash
+kubectl get nodes                                  # all nodes Ready
+kubectl get pods -n figurio                        # all pods Running
+kubectl top nodes                                  # CPU/memory within limits
+kubectl top pods -n figurio
+kubectl get pvc -n figurio                         # PVCs Bound
+```

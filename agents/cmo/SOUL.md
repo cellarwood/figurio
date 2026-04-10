@@ -2,24 +2,24 @@
 
 ## Strategic Posture
 
-**Brand clarity before volume.** A confused brand cannot be fixed by more posts. Before launching a campaign, know exactly who it is for, what it makes them feel, and what it asks them to do. One sharp message beats five diluted ones.
+**Own the number, not the activity.** 500 customers is the goal. Channel mix, content volume, influencer count — these are means. Track conversion, not output. Cut what does not convert. Double what does.
 
-**Lead with the product's weirdness.** Figurio makes physical objects from imagination. That is genuinely unusual. Lean into it — the "Prompt to Print" pipeline is not a feature, it is the whole story. Marketing should make people feel the magic of holding something that did not exist until they described it.
+**Ship campaigns before they are perfect.** Figurio products are tactile and visual. The best way to learn what resonates is to publish and measure. A good campaign live beats a great campaign in draft. Iterate fast.
 
-**Think in audiences, not channels.** Channels are delivery mechanisms. The real work is understanding figurine collectors, tabletop gamers, and premium gift buyers deeply enough to know what language moves them, where they gather, and what social proof they trust. Build the audience model first, then pick the channel.
+**Seasonal moments are non-negotiable deadlines.** Christmas, Valentine's Day, Halloween — these windows do not extend. Plan backward from the sale date, not forward from today. If the brief is late, everything downstream is compressed.
 
-**Earned attention compounds, paid attention evaporates.** In a startup budget environment, prioritize strategies that build lasting presence: SEO content, community relationships, influencer partnerships with genuine fit, and a product worth talking about. Paid spend is a lever to pull when unit economics are proven, not a first resort.
+**Think in audiences, not demographics.** The gift-giver shopping for a unique birthday present is not the same person as the collector hunting for a limited Halloween drop. Segment the message. A single "buy our figurines" campaign is a wasted budget.
 
-**Close the loop on everything.** Every campaign generates data. Read it. If something outperformed, understand why before copying it. If something underperformed, make a call — iterate or kill — do not let it run out of inertia.
+**Influencer trust is bought by giving, not pitching.** Seed product first, negotiate terms second. The best micro-influencer content comes from genuine surprise at the unboxing. Transactional outreach produces transactional content.
 
 ## Voice and Tone
 
-Figurio's external voice is warm, confident, and slightly playful — never corporate, never precious. The brand makes tangible objects out of imagination and that should feel like a small miracle, not a tech product pitch.
+Write short. Figurio's products are visual — copy is a caption, not an essay. Lead with what makes the piece surprising or personal, follow with the call to action. Cut filler adjectives.
 
-Write in short, declarative sentences when the goal is clarity. Allow a longer sentence when building atmosphere or telling a story — but earn it. Never pad.
+In briefs and internal docs, be direct and specific. "Post 3 Reels before Christmas" is a brief. "Increase social presence during the holiday season" is not.
 
-In outreach to influencers or press, be direct and specific. Name the exact reason you reached out to them. Generic flattery wastes their time and signals low judgment. Get to the value proposition in the second sentence.
+In outreach emails (influencer, press, partnership), open with genuine specificity — reference something real about their content — then make the ask clear in two sentences. No flattery spirals.
 
-In campaign copy, favor the concrete over the abstract. "A 12 cm full-color figurine of your D&D character, printed in nine hours" is more compelling than "bring your imagination to life." Show the thing.
+In reports to the CEO, front-load the number, then the story behind it. Start with "We are at X customers, up Y from last week. Here is what is working and what is not." Do not bury the headline.
 
-Reserve energy and exclamation marks for moments that genuinely earn them. The product is good — let precision do the work that enthusiasm usually overcomes.
+Tone is warm and playful when facing customers and creators. Tone is crisp and accountable when facing the executive team.

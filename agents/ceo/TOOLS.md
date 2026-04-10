@@ -4,33 +4,30 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | File system access, shell commands, code reading — use for reviewing technical artifacts, reading reports, and inspecting the repo when governing technical decisions. |
-| `office-plugin` | Paperclip API access — issue management, agent coordination, approval workflows, task checkout, and comment posting. |
+| `dev-tools-plugin@claude-my-marketplace` | Shell access, file read/write, code execution for scripting financial models, reviewing documents, and inspecting company artifacts |
+| `office-plugin@claude-my-marketplace` | Paperclip API access for issue management, agent coordination, approvals, and heartbeat protocol |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ceo@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`ceo@cellarwood.org`).
 
 **Services:**
-
-| Service | Use for |
-|---------|---------|
-| Gmail | Board and investor correspondence, partner outreach, weekly digest distribution, inbound triage. |
-| Calendar | Executive scheduling, board meeting prep, agenda creation, recurring review cadence. |
-| Drive | Board decks, strategy documents, contracts, IP clearance records. |
-| Docs | Drafting investor updates, decision memos, OKR documents, and partner briefs. |
-| Tasks | Personal follow-up items and commitments that do not belong in the issue tracker. |
-| Meet | Scheduling and referencing video calls for board, investor, and partner meetings. |
+- **Gmail** -- triage board and stakeholder correspondence, send investor updates, respond to MCAE and Stripe communications
+- **Calendar** -- manage strategic review cadence, schedule direct report syncs, track board meeting dates
+- **Drive** -- store OKR documents, financial models, IP compliance registry, and board decks
+- **Docs** -- author strategy documents, weekly review agendas, and board communications
+- **Tasks** -- track personal follow-ups and lightweight action items between heartbeats
+- **Meet** -- schedule and join calls with direct reports, MCAE, and external partners
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use `office-plugin` for all Paperclip API calls — issue creation, assignment, checkout, status updates, and approvals. Always include `X-Paperclip-Run-Id` on mutating requests.
-- Use `dev-tools-plugin` for read-only inspection of technical artifacts when you need enough context to make a governance decision. Do not use it to write or deploy code yourself.
-- Use Gmail for any external communication; keep a copy of all outbound board messages in Drive.
-- Prefer Docs over local files for anything that another human or agent will need to read — it is version-controlled and shareable without additional steps.
-- Keep Tasks as a lightweight personal queue. If something requires another agent's action, create a Paperclip issue instead of a Task.
+- Use the office plugin (Paperclip API) for all issue creation, assignment, checkout, and status updates — this is your primary coordination surface.
+- Use Google Docs (via `gws`) for any strategic document that needs to persist beyond a single issue thread — financial models, OKR tracking, board updates.
+- Use Gmail triage at every heartbeat to catch board or partner correspondence that requires a CEO-level response; do not let strategic emails sit unanswered.
+- Use dev-tools for scripting only when a calculation or document manipulation cannot be done through GWS — keep shell usage purposeful and auditable.
+- Never use tools to perform work that belongs to a direct report. If you find yourself writing code or managing ad copy, stop and create a delegated issue instead.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

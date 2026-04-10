@@ -1,9 +1,14 @@
 ---
 name: database-patterns
 description: >
-  Database schema patterns for Figurio's PostgreSQL backend using SQLAlchemy async
-  and Alembic. Covers product catalog with size tiers, order lifecycle, custom
-  figurine workflow states, Stripe payment records, and customer accounts.
+  PostgreSQL schema and SQLAlchemy patterns for Figurio — product catalog with
+  size tier pricing, order lifecycle state machine, payment records, user
+  accounts, and 3D model metadata. Covers Alembic migration conventions and
+  ORM best practices.
+allowed-tools:
+  - Read
+  - Grep
+  - Write
 metadata:
   paperclip:
     tags:
@@ -14,172 +19,214 @@ metadata:
 
 # Database Patterns
 
-## General Conventions
+PostgreSQL schema design and SQLAlchemy conventions for the Figurio backend.
 
-- All tables use UUID primary keys (`uuid` type, default `gen_random_uuid()`). Never use serial integer PKs on domain entities.
-- Every table has `created_at` and `updated_at` columns (`TIMESTAMPTZ`, default `now()`). `updated_at` is maintained by a trigger or SQLAlchemy `onupdate`.
-- All monetary values stored as `INTEGER` in CZK halers (smallest unit). Never use `FLOAT` or `NUMERIC` for money.
-- Enum columns use PostgreSQL native `ENUM` types, mirrored as Python `enum.Enum` classes.
-- Soft deletes with `deleted_at TIMESTAMPTZ NULL` on catalog entities (products). Hard deletes are used for transient data only.
+## Base Model
 
-## SQLAlchemy Async Setup
-
-Use `AsyncSession` from `sqlalchemy.ext.asyncio` everywhere. Session lifecycle is managed via a `get_db` FastAPI dependency. Never use synchronous sessions.
+All tables inherit from a shared base that provides `id`, `created_at`, and `updated_at`:
 
 ```python
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import func
 import uuid
+from datetime import datetime
+from sqlalchemy import DateTime, func
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import UUID
 
 class Base(DeclarativeBase):
     pass
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(default=func.now(), onupdate=func.now())
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 ```
 
-All models inherit from `Base` and `TimestampMixin`.
+Use `UUID` primary keys everywhere. Never use integer auto-increment IDs for entities exposed in the API.
+
+## User Accounts
+
+```python
+class User(TimestampMixin, Base):
+    __tablename__ = "users"
+
+    email: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
+    hashed_password: Mapped[str] = mapped_column(nullable=False)
+    role: Mapped[str] = mapped_column(nullable=False, default="customer")  # "customer" | "admin"
+    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
+    stripe_customer_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
+```
+
+Index `email` and `stripe_customer_id`. Store only `hashed_password` — never plaintext.
 
 ## Product Catalog
 
-Products represent physical figurine variants. Each product has one or more size tiers.
+```python
+class Product(TimestampMixin, Base):
+    __tablename__ = "products"
 
-**`products` table**
+    slug: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str | None]
+    category: Mapped[str] = mapped_column(nullable=False)  # "catalog" | "custom"
+    is_available: Mapped[bool] = mapped_column(nullable=False, default=True)
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `sku` | VARCHAR UNIQUE NOT NULL | e.g., `"FIG-DRAGON-S"` |
-| `name` | VARCHAR NOT NULL | Display name |
-| `description` | TEXT | |
-| `category` | product_category ENUM | e.g., `FANTASY`, `PORTRAIT`, `ANIMAL` |
-| `is_active` | BOOLEAN DEFAULT true | Controls storefront visibility |
-| `deleted_at` | TIMESTAMPTZ NULL | Soft delete |
+    variants: Mapped[list["ProductVariant"]] = relationship(back_populates="product")
 
-**`product_size_tiers` table**
 
-Each product has multiple size tiers (S, M, L, XL). Prices are per-tier, per-product.
+class ProductVariant(TimestampMixin, Base):
+    __tablename__ = "product_variants"
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `product_id` | UUID FK → products.id | |
-| `size` | size_tier ENUM | `S`, `M`, `L`, `XL` |
-| `price_halers` | INTEGER NOT NULL | Price in CZK halers |
-| `weight_grams` | INTEGER | Approximate print weight |
-| `print_time_hours` | NUMERIC(5,2) | Estimated MCAE production time |
+    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
+    size_tier: Mapped[str] = mapped_column(nullable=False)   # "small" | "medium" | "large" | "xl"
+    price_cents: Mapped[int] = mapped_column(nullable=False) # always integer cents
+    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
+    sku: Mapped[str] = mapped_column(unique=True, nullable=False)
+    is_available: Mapped[bool] = mapped_column(nullable=False, default=True)
 
-Unique constraint on `(product_id, size)`.
+    product: Mapped["Product"] = relationship(back_populates="variants")
+```
 
-## Customer Accounts
+Size tier pricing lives on `ProductVariant`, not on `Product`. Each variant has its own `price_cents` and `sku`.
 
-**`customers` table**
+## 3D Model Metadata
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `email` | VARCHAR UNIQUE NOT NULL | |
-| `full_name` | VARCHAR | |
-| `stripe_customer_id` | VARCHAR UNIQUE | Set on first Stripe interaction |
-| `role` | customer_role ENUM | `CUSTOMER`, `ADMIN` |
-| `deleted_at` | TIMESTAMPTZ NULL | Soft delete |
+Custom figurine orders carry a reference to a generated mesh. Store metadata — not the file — in Postgres; actual mesh files live in object storage.
 
-Do not store passwords directly — use hashed passwords with bcrypt in a separate `customer_credentials` table, or rely on Stripe Identity / external auth. Store `stripe_customer_id` as soon as a Stripe Customer object is created, to support saved payment methods.
+```python
+class FigurineModel(TimestampMixin, Base):
+    __tablename__ = "figurine_models"
+
+    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, unique=True)
+    prompt_text: Mapped[str] = mapped_column(nullable=False)
+    storage_key: Mapped[str] = mapped_column(nullable=False)      # S3/GCS object key
+    file_format: Mapped[str] = mapped_column(nullable=False)      # "stl" | "obj" | "3mf"
+    mesh_repair_status: Mapped[str] = mapped_column(nullable=False, default="pending")
+    # "pending" | "passed" | "failed"
+    moderation_status: Mapped[str] = mapped_column(nullable=False, default="pending")
+    # "pending" | "approved" | "rejected"
+    moderation_reason: Mapped[str | None]
+    polygon_count: Mapped[int | None]
+```
 
 ## Orders
 
-**`orders` table**
+```python
+class Order(TimestampMixin, Base):
+    __tablename__ = "orders"
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `customer_id` | UUID FK → customers.id | |
-| `status` | order_status ENUM | See state machine in `api-design` skill |
-| `type` | order_type ENUM | `CATALOG`, `CUSTOM` |
-| `total_halers` | INTEGER NOT NULL | Sum of line items at time of checkout |
-| `shipping_address_id` | UUID FK → addresses.id | |
-| `stripe_payment_intent_id` | VARCHAR UNIQUE NULL | Set on PaymentIntent creation |
-| `stripe_refund_id` | VARCHAR NULL | Set if refunded |
-| `notes` | TEXT NULL | Internal admin notes |
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(nullable=False, default="placed", index=True)
+    total_amount_cents: Mapped[int] = mapped_column(nullable=False)
+    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
+    stripe_checkout_session_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
 
-**`order_items` table**
+    line_items: Mapped[list["OrderLineItem"]] = relationship(back_populates="order")
+    payments: Mapped[list["PaymentRecord"]] = relationship(back_populates="order")
+    audit_logs: Mapped[list["OrderAuditLog"]] = relationship(back_populates="order")
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `order_id` | UUID FK → orders.id | |
-| `product_id` | UUID FK → products.id NULL | NULL for custom figurine items |
-| `custom_figurine_id` | UUID FK → custom_figurines.id NULL | NULL for catalog items |
-| `size` | size_tier ENUM | |
-| `quantity` | SMALLINT NOT NULL DEFAULT 1 | |
-| `unit_price_halers` | INTEGER NOT NULL | Snapshot price at checkout — never recalculate from product |
 
-Exactly one of `product_id` or `custom_figurine_id` must be non-NULL per row (enforce with a CHECK constraint).
+class OrderLineItem(TimestampMixin, Base):
+    __tablename__ = "order_line_items"
 
-## Custom Figurine Workflow
+    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
+    variant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("product_variants.id"), nullable=False)
+    quantity: Mapped[int] = mapped_column(nullable=False)
+    unit_price_cents: Mapped[int] = mapped_column(nullable=False)  # snapshot at time of order
+    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
+```
 
-**`custom_figurines` table**
+`unit_price_cents` is snapshotted at order creation — do not join to `product_variants.price_cents` to reconstruct historical totals.
 
-Tracks the full "Prompt to Print" lifecycle from prompt submission through render approval to production.
+## Order State Machine
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `customer_id` | UUID FK → customers.id | |
-| `prompt` | TEXT NOT NULL | Customer's original text prompt |
-| `status` | figurine_status ENUM | `PROMPT_RECEIVED`, `RENDER_IN_PROGRESS`, `RENDER_COMPLETE`, `RENDER_REJECTED`, `PENDING_PAYMENT`, etc. |
-| `size` | size_tier ENUM | Chosen by customer at prompt submission |
-| `render_url` | VARCHAR NULL | URL of generated preview image (stored in S3/GCS) |
-| `render_completed_at` | TIMESTAMPTZ NULL | |
-| `rejection_reason` | TEXT NULL | Customer's reason when rejecting a render |
-| `rejection_count` | SMALLINT DEFAULT 0 | Incremented on each rejection |
-| `order_id` | UUID FK → orders.id NULL | Set when customer approves render and proceeds to payment |
+Valid transitions (enforced in the service layer, not in the DB):
 
-**`figurine_status` ENUM values:**
-`PROMPT_RECEIVED`, `RENDER_IN_PROGRESS`, `RENDER_COMPLETE`, `RENDER_REJECTED`, `PENDING_PAYMENT`, `PAID`, `IN_PRODUCTION`, `SHIPPED`, `DELIVERED`, `CANCELLED`
+```
+placed       → paid | payment_failed | cancelled
+paid         → preparing | cancelled
+preparing    → printing
+printing     → shipped
+shipped      → delivered
+payment_failed → (terminal)
+cancelled    → (terminal)
+```
 
-## Stripe Payment Records
+Every transition writes an `OrderAuditLog` row atomically in the same transaction:
 
-**`stripe_events` table**
+```python
+class OrderAuditLog(Base):
+    __tablename__ = "order_audit_logs"
 
-Log all inbound Stripe webhook events to support idempotency and debugging.
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
+    from_status: Mapped[str] = mapped_column(nullable=False)
+    to_status: Mapped[str] = mapped_column(nullable=False)
+    actor: Mapped[str] = mapped_column(nullable=False)    # "system" | "admin:{user_id}" | "webhook"
+    reason: Mapped[str | None]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `stripe_event_id` | VARCHAR UNIQUE NOT NULL | Stripe's `evt_xxx` ID — idempotency key |
-| `event_type` | VARCHAR NOT NULL | e.g., `payment_intent.succeeded` |
-| `payload` | JSONB NOT NULL | Full raw event body |
-| `processed_at` | TIMESTAMPTZ NULL | NULL = not yet processed or failed |
-| `error` | TEXT NULL | Set if processing raised an exception |
+    order: Mapped["Order"] = relationship(back_populates="audit_logs")
+```
 
-Always check for an existing `stripe_event_id` before processing — Stripe may deliver the same event more than once.
+`OrderAuditLog` has no `updated_at` — audit rows are immutable.
 
-## Addresses
+## Payment Records
 
-**`addresses` table**
+```python
+class PaymentRecord(TimestampMixin, Base):
+    __tablename__ = "payment_records"
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | UUID PK | |
-| `customer_id` | UUID FK → customers.id | |
-| `line1` | VARCHAR NOT NULL | |
-| `line2` | VARCHAR NULL | |
-| `city` | VARCHAR NOT NULL | |
-| `postal_code` | VARCHAR NOT NULL | |
-| `country_code` | CHAR(2) NOT NULL | ISO 3166-1 alpha-2, default `'CZ'` |
+    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
+    stripe_event_id: Mapped[str] = mapped_column(unique=True, nullable=False)  # idempotency key
+    stripe_payment_intent_id: Mapped[str | None] = mapped_column(nullable=True)
+    event_type: Mapped[str] = mapped_column(nullable=False)  # e.g. "checkout.session.completed"
+    amount_cents: Mapped[int] = mapped_column(nullable=False)
+    currency: Mapped[str] = mapped_column(nullable=False)
+    status: Mapped[str] = mapped_column(nullable=False)  # "succeeded" | "failed" | "refunded"
+
+    order: Mapped["Order"] = relationship(back_populates="payments")
+```
+
+`stripe_event_id` has a unique constraint — use it to detect duplicate webhook deliveries before processing.
 
 ## Alembic Conventions
 
-- One migration per logical schema change. Never combine unrelated changes in a single migration.
-- Migration filenames: `{rev}_{short_description}.py` — keep descriptions under 6 words.
-- Always test `downgrade()` — every migration must be reversible unless there is an explicit documented reason it cannot be.
-- Use `op.execute` with raw SQL for enum type creation/alteration (`ALTER TYPE ... ADD VALUE` cannot run inside a transaction — use `with op.get_context().autocommit_block()`).
+- One migration per logical change. Do not bundle unrelated schema changes.
+- Migration filenames: Alembic's default timestamp prefix is fine.
+- Always provide a `downgrade()` that fully reverses the `upgrade()`.
+- For data migrations, use raw SQL via `op.execute()` — do not import ORM models inside migration files (they may not exist at downgrade time).
+- New columns on existing tables: add as `nullable=True` or with a server default so the migration runs without locking the table.
+- Index creation: use `op.create_index(..., postgresql_concurrently=True)` for large tables in production migrations.
 
 ## Query Patterns
 
-- Use `select()` + `scalars()` for ORM queries. Avoid `session.query()` (legacy style).
-- Eager-load relationships needed in the same request using `selectinload` or `joinedload` to avoid N+1 queries.
-- For list endpoints, always apply `WHERE deleted_at IS NULL` on soft-deleted tables.
-- Index foreign keys and frequently filtered columns (`status`, `customer_id`, `stripe_payment_intent_id`).
+Async sessions everywhere:
+
+```python
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+async def get_order(db: AsyncSession, order_id: uuid.UUID) -> Order | None:
+    result = await db.execute(select(Order).where(Order.id == order_id))
+    return result.scalar_one_or_none()
+```
+
+Avoid N+1 queries — use `selectinload` or `joinedload` when you know you need relationships:
+
+```python
+result = await db.execute(
+    select(Order)
+    .options(selectinload(Order.line_items))
+    .where(Order.id == order_id)
+)
+```
+
+Never call `db.commit()` inside a route handler directly — commit in the service layer or use a dependency that commits on success.
+
+## Anti-patterns
+
+- Do not use `Float` or `Numeric` for money columns — use `Integer` (cents).
+- Do not import ORM models inside Alembic migration files.
+- Do not store raw Stripe webhook payloads — store only the verified event fields.
+- Do not add business logic to SQLAlchemy event hooks — keep transitions in the service layer.
+- Do not skip the unique constraint on `stripe_event_id` — it is the idempotency guard.

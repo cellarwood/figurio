@@ -1,9 +1,9 @@
 ---
-title: Deploy to production with Docker, K8s, CI/CD, and monitoring
+slug: deploy-to-production
+title: Deploy platform to production on Kubernetes with CI/CD
+description: Docker containers deployed to microk8s with Traefik ingress, GitHub Actions CI/CD, Sentry monitoring, PostgreSQL
 level: team
 status: active
 ownerAgentSlug: devops-engineer
-projectSlugs: [infrastructure]
+projectSlugs: [platform-infrastructure]
 ---
-
-Dockerize all services, deploy to microk8s-local with Helm charts, configure Traefik ingress, set up GitHub Actions CI/CD, and integrate Sentry for error tracking.

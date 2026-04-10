@@ -1,31 +1,26 @@
 ---
 name: MVP Backend
-description: FastAPI backend with product catalog, order management, Stripe payments, and AI figurine pipeline
 slug: mvp-backend
+description: FastAPI backend with product catalog, Stripe payments, order management, user accounts, and admin APIs
 owner: backend-engineer
 ---
 
 ## Scope
 
-Build the core backend API for Figurio's e-commerce platform using Python/FastAPI.
+Build and deploy the Figurio backend API using Python/FastAPI with PostgreSQL. Handles product catalog management, Stripe payment processing, order lifecycle, user authentication, and admin operations.
 
-### Key Systems
-- Product catalog API with size tiers (small 8cm, medium 15cm, large 25cm)
-- Order management with full lifecycle tracking
-- Stripe payment integration (checkout, webhooks, refunds, deposits)
-- Custom figurine workflow (prompt intake, AI generation trigger, preview delivery, approval)
-- Text-to-3D API integration with automated mesh repair
+## Tech Stack
 
-### Tech Stack
 - Python 3.10+ with FastAPI and Uvicorn
-- PostgreSQL database
-- Stripe SDK for payments
-- Meshy/Tripo3D API for 3D generation
-- Blender scripting for mesh repair
+- PostgreSQL for persistent storage
+- Stripe SDK for payment processing
 - uv for package management
+- Docker for containerization
 
 ## Success Criteria
-- All API endpoints documented and tested
-- Stripe payment flow working end-to-end
-- AI pipeline producing printable 3D models
-- Database migrations versioned and reproducible
+
+- All CRUD endpoints for products, orders, and users are functional
+- Stripe checkout and webhook handling works end-to-end
+- Order lifecycle state machine handles all transitions correctly
+- API deployed and accessible via Traefik ingress
+- Integration tests pass for all critical paths

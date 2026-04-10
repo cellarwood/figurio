@@ -1,9 +1,9 @@
 ---
-title: Build backend API with product catalog, order management, and Stripe integration
+slug: build-backend-api
+title: Build backend API with product catalog, payments, and order management
+description: FastAPI backend with product catalog CRUD, Stripe payment integration, order lifecycle management, and user accounts
 level: team
 status: active
 ownerAgentSlug: backend-engineer
 projectSlugs: [mvp-backend]
 ---
-
-FastAPI backend serving product catalog, handling order creation and lifecycle, processing Stripe payments and webhooks, and managing customer accounts.

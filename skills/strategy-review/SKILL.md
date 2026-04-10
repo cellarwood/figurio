@@ -1,139 +1,109 @@
 ---
 name: strategy-review
 description: >
-  Weekly strategic review process for Figurio — evaluate progress against the
-  four active company goals (MVP platform launch, AI custom figurine pipeline,
-  brand building and first customer acquisition, production and fulfillment ops),
-  identify blockers, and reprioritize work across agents. Run at every heartbeat
-  and in full on Mondays.
+  Weekly strategic review process for Figurio's CEO agent. Evaluates progress
+  against the 5 company goals (MVP launch, AI pipeline, brand/500 customers,
+  fulfillment operations, unit economics), surfaces blockers across the 9-agent
+  team, and reprioritizes work for the coming week.
 metadata:
   paperclip:
     tags:
       - strategy
       - leadership
+      - planning
 ---
 
 # Strategy Review
 
-The weekly strategic review is the CEO's primary mechanism for keeping Figurio on track. It surfaces risk early, keeps direct reports unblocked, and ensures priorities reflect current reality rather than last week's assumptions.
+## When to Use
 
-## When to Run
+Run this skill every week (Monday or start of sprint) to assess company health,
+align agent priorities, and decide what changes — if any — need to be made to
+the current plan.
 
-- **Full review:** Every Monday (or the start of the work week).
-- **Abbreviated sweep:** Every heartbeat cycle — check for goal drift and stale issues even when not doing the full review.
+Also invoke it when a significant event occurs mid-week: a major blocker is
+escalated, a goal milestone is hit, or external conditions shift (e.g., a
+supplier issue, a spike in ad spend, a technical incident).
 
-## The Four Active Goals
+## Figurio's 5 Company Goals
 
-Always evaluate in this order — sequenced by dependency risk:
+Evaluate each goal in order — they are roughly sequential but run in parallel:
 
-| # | Goal | Owner | Existential risk if late? |
-|---|------|--------|--------------------------|
-| 1 | Launch MVP e-commerce platform | CTO | Yes — nothing sells without it |
-| 2 | Build AI custom figurine pipeline end to end | CTO / ML Engineer | Yes — "Prompt to Print" is the differentiator |
-| 3 | Brand identity and first paying customer acquisition | CMO | High — cash flow depends on first orders |
-| 4 | Stand up reliable production and fulfillment operations | Head of Operations | Yes — a fulfillment failure destroys trust |
+1. **Launch MVP** — React/TS storefront + FastAPI backend live, Stripe checkout
+   functional, at least one product SKU orderable end-to-end.
+2. **AI Pipeline** — Automated 3D model generation pipeline operational;
+   customer upload → render → fulfillment without manual intervention.
+3. **Brand & 500 Customers** — 500 paying customers acquired; brand identity
+   established (visual system, tone, social presence).
+4. **Operationalize Fulfillment** — Print-to-ship SLA defined and met
+   consistently; packaging, quality checks, and returns process documented.
+5. **Unit Economics** — CAC, LTV, COGS, and contribution margin tracked weekly;
+   path to profitability clear.
 
-## Full Weekly Review Process
+## Review Process
 
-### Step 1 — Goal Status Sweep
+### 1. Collect Status (before the session)
 
-For each of the four goals:
+Pull updates from each agent's last output or heartbeat:
+- CTO / Backend Engineer / Frontend Engineer → engineering progress
+- CMO / Content Creator → marketing metrics, campaign status
+- DevOps Engineer → infrastructure health, deployment status
+- Product Manager → feature backlog, sprint completion rate
+- COO / Operations → fulfillment SLA, supplier status
 
-1. Pull open issues tagged to the goal: `GET /api/companies/{id}/issues?goalId={goal-id}&status=todo,in_progress,blocked`
-2. Identify the most at-risk goal (most blocked, most overdue, highest downstream impact).
-3. Write a one-line status for each goal. Use this format:
+### 2. Score Each Goal
 
-```
-Goal: MVP Platform
-Status: ON TRACK | AT RISK | BLOCKED
-Last milestone: [what completed]
-Next milestone: [what is due and by when]
-Blocker (if any): [specific blocker + owner]
-```
+For each of the 5 goals assign a traffic-light status:
 
-### Step 2 — Direct Report Queue Scan
+| Status | Meaning |
+|--------|---------|
+| Green | On track, no intervention needed |
+| Yellow | At risk — needs attention this week |
+| Red | Blocked or significantly behind — requires immediate reprioritization |
 
-- Pull all open issues assigned to CTO, CMO, and Head of Operations.
-- Flag any issue that has been `in_progress` with no update for more than **two days** — post a comment requesting a status or explicit blocker.
-- Flag any `blocked` issue where the block is external (MCAE, vendor, legal) — CEO must personally intervene or escalate to board.
+### 3. Identify Blockers
 
-### Step 3 — Blocker Triage
+A blocker is anything that prevents a goal from progressing. Categorize by
+domain:
 
-For each active blocker:
+- **Engineering blockers** — unfinished infra, API gaps, unresolved bugs
+- **Marketing blockers** — no creative assets, unclear targeting, budget not
+  approved
+- **Operations blockers** — supplier delays, fulfillment process undefined,
+  tooling not in place
+- **Cross-agent blockers** — dependency between two agents that is unresolved
 
-| Blocker type | Action |
-|---|---|
-| Waiting on CTO / CMO / Head of Ops decision | Comment with explicit question and deadline |
-| Waiting on MCAE or vendor | Head of Operations escalates; CEO owns strategic relationship if unresolved 48h+ |
-| Waiting on budget approval | CEO resolves immediately — do not let money be the blocker |
-| Waiting on IP clearance | CEO resolves — IP is a hard gate, never skip |
-| Needs board input | Draft a decision memo and send; do not wait for next scheduled meeting |
+For each blocker record: what it is, which agent owns it, and what unblocks it.
 
-### Step 4 — Reprioritization
+### 4. Reprioritize
 
-If a goal is at risk, explicitly downgrade lower-priority work to free up capacity:
+After scoring and surfacing blockers, decide:
 
-- Reassign issues from lower-priority goals to direct reports already loaded.
-- Change issue priorities via `PATCH /api/issues/{id}` — update `priority` field.
-- Post a comment on deprioritized issues explaining the trade-off and expected resumption date.
-- Never deprioritize production ops or IP compliance — both are existential.
+- Should any agent shift focus this week? (e.g., pull backend engineer off new
+  features to fix a fulfillment integration bug)
+- Is any goal being over-resourced relative to its current bottleneck?
+- Is there a cross-agent coordination problem that only the CEO can resolve?
 
-### Step 5 — New Work Decomposition
+Output a ranked list of the top 3-5 priorities for the week across the team.
 
-For any new strategic input (board request, market signal, partnership inquiry):
+### 5. Communicate Decisions
 
-1. Decide: does this advance one of the four active goals, or is it a distraction?
-2. If it advances a goal: create issues with `parentId`, `goalId`, and a clear acceptance criterion. Route to the right direct report.
-3. If it does not advance a goal: document the decision to defer and the reasoning. Do not create issues.
+Summarize the review in a short memo format:
+- Goal statuses (traffic light)
+- Top blockers and owners
+- Priority changes for the week
+- Any decisions that need agent acknowledgment
 
-### Step 6 — IP Compliance Check
+Send to relevant agents via the appropriate channel (Google Chat, task update,
+or direct assignment).
 
-- Review any new catalog figurines or AI pipeline outputs currently in review.
-- Confirm each has passed IP clearance before approving for production.
-- If clearance is ambiguous: block production, comment with the specific IP concern, escalate.
+## Anti-patterns
 
-### Step 7 — Weekly Digest (Mondays)
-
-After completing the review, draft the weekly digest:
-
-- **Recipients:** Board / investors (via Gmail).
-- **Content:** One paragraph per goal — status, last week's progress, this week's focus, risks.
-- **Tone:** Confident and specific. Real numbers, real dates. Acknowledge problems with a plan.
-- **Send via:** `gws gmail +send`
-
-## Abbreviated Heartbeat Sweep
-
-When not doing a full review, run steps 1, 2, and 3 only. Takes 5–10 minutes. The goal is to catch anything that went sideways since the last full review.
-
-## Red Flags That Require Immediate Action
-
-- Any goal has had zero issue progress for 3+ days.
-- A direct report is waiting on a CEO decision and did not escalate — find and unblock proactively.
-- MCAE has not confirmed a production batch that is now overdue.
-- An AI pipeline output with an IP concern has moved to production without clearance.
-- Stripe payments are failing or a customer has not received a confirmed order.
-
-## Output Format
-
-End every strategy review with a brief written summary logged to `$AGENT_HOME/notes/weekly-review-{YYYY-MM-DD}.md`:
-
-```
-# Strategy Review — [date]
-
-## Goal Status
-- MVP Platform: [status]
-- AI Pipeline: [status]
-- Brand / Acquisition: [status]
-- Production Ops: [status]
-
-## Top 3 Risks
-1. [risk + owner + mitigation]
-2. ...
-3. ...
-
-## Decisions Made
-- [decision + rationale]
-
-## Delegated This Session
-- [issue] → [direct report]
-```
+- Reviewing status without making a decision — every review must produce at
+  least one action or confirmation that no change is needed.
+- Treating all 5 goals as equally urgent every week — at any given time, one
+  or two goals dominate; focus effort there.
+- Waiting for complete data before reviewing — use best available information
+  and flag gaps as part of the output.
+- Conflating "busy" with "progress" — agent activity is not the same as goal
+  advancement; tie everything back to the 5 goals.

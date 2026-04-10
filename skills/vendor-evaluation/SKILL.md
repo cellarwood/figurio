@@ -1,11 +1,10 @@
 ---
 name: vendor-evaluation
 description: >
-  Evaluate and compare 3D printing vendors for Figurio's figurine production.
-  MCAE (mcae.cz) is the primary vendor using Stratasys J55 PolyJet. Covers
-  per-unit pricing across small/medium/large size tiers, print quality
-  standards, turnaround time, volume capacity, and drop-ship capability for
-  assessing backup or alternative vendors.
+  Evaluate and manage Figurio's sole printing partner MCAE (mcae.cz), which
+  produces all 3D-printed figurines on Stratasys J55 PolyJet. Covers per-unit
+  pricing across small/medium/large size tiers, turnaround SLAs, quality
+  acceptance standards, and the two shipping providers (Zásilkovna, DHL).
 allowed-tools:
   - Read
   - Grep
@@ -13,117 +12,123 @@ metadata:
   paperclip:
     tags:
       - operations
-      - procurement
-      - vendors
+      - vendor
+      - fulfillment
 ---
 
-# Vendor Evaluation
+# Vendor Evaluation — MCAE (mcae.cz)
 
-## When to Use
+## Overview
 
-Use this skill when:
-- Assessing a new vendor as a backup or replacement for MCAE
-- Renegotiating terms with MCAE
-- Comparing quotes from multiple vendors
-- Auditing vendor performance against Figurio's quality and delivery standards
+MCAE is Figurio's exclusive outsourced printing partner. All figurines are
+produced on the Stratasys J55 PolyJet printer, which delivers full-color,
+multi-material output without post-processing painting. Because MCAE is a
+single-source supplier, evaluations focus on SLA adherence, per-unit cost
+tracking, and quality consistency rather than comparative vendor scoring.
 
-## Figurio Production Context
+---
 
-Figurio produces full-color 3D-printed figurines in three size tiers:
+## Size Tiers
 
-| Tier   | Approx. Height | Key Consideration          |
-|--------|----------------|----------------------------|
-| Small  | ~8 cm          | High volume, detail-critical|
-| Medium | ~15 cm         | Core product, balance of cost and quality |
-| Large  | ~25 cm         | Lower volume, premium margin |
+Figurio defines three production tiers. All pricing and SLA discussions with
+MCAE must reference these tiers explicitly:
 
-**Technology requirement:** PolyJet (Stratasys J55 or equivalent). Alternatives using FDM or SLA are disqualifying — full-color photopolymer jetting is non-negotiable for Figurio's product quality.
+| Tier   | Nominal height | Typical volume range |
+|--------|---------------|----------------------|
+| Small  | ~8 cm         | Low material use     |
+| Medium | ~15 cm        | Mid material use     |
+| Large  | ~25 cm        | High material use    |
 
-**Current primary vendor:** MCAE Systems (mcae.cz), Stratasys authorized partner, Czech Republic.
+When requesting quotes or reviewing invoices, verify line items map to one of
+these three tiers. Any MCAE proposal that introduces a fourth tier or bundles
+tiers must be flagged for COO review before acceptance.
 
-## Evaluation Criteria
+---
 
-### 1. Per-Unit Pricing by Size Tier
+## Per-Unit Pricing
 
-Request itemized quotes for each tier at representative volumes (e.g., 10, 50, 100 units/month). Capture:
+- Negotiate and lock pricing per tier on a quarterly basis.
+- Track actual invoiced cost per unit in the fulfillment cost sheet alongside
+  Stripe revenue per order to maintain margin visibility.
+- Watch for material surcharges — J55 PolyJet resin prices fluctuate. MCAE may
+  request mid-quarter adjustments; these require COO sign-off.
+- Volume discounts apply when monthly unit count crosses agreed thresholds.
+  Confirm thresholds are documented in the current MCAE contract addendum.
 
-- Base print cost per unit (CZK or EUR)
-- Material cost (PolyJet support + model resin)
-- Post-processing cost (cleaning, support removal, surface finish)
-- Setup/plate fee per batch
-- Volume discount thresholds
+---
 
-Flag any vendor that cannot quote per-tier — bundled pricing obscures true cost at scale.
+## Turnaround SLAs
 
-### 2. PolyJet Print Quality
+Standard MCAE turnaround commitments (business days from confirmed print file
+receipt):
 
-Figurio figurines require:
-- Full CMYK+W color fidelity (no color approximation or segmented coloring)
-- Resolution: minimum 14 micron layer thickness (J55 standard)
-- Surface smoothness adequate for unpainted figurines
-- Accurate detail at 8 cm scale (fine facial features, text, logos)
+| Tier   | Standard SLA | Rush SLA (if offered) |
+|--------|-------------|----------------------|
+| Small  | 3 BD        | 1–2 BD               |
+| Medium | 4 BD        | 2–3 BD               |
+| Large  | 5–6 BD      | 3–4 BD               |
 
-Evaluation steps:
-1. Request sample print of a standard Figurio test file (small-tier reference model)
-2. Inspect color accuracy, layer visibility, and edge sharpness
-3. Confirm J55 or equivalent machine — do not accept vendor claims without machine model verification
+- SLA clock starts when MCAE confirms the print file is print-ready (not on
+  file upload).
+- Track SLA adherence monthly. If MCAE misses SLA on more than 5% of units in
+  a rolling 30-day window, escalate via formal notice per contract terms.
+- Holiday closures at MCAE's facility (Czech public holidays) must be factored
+  into customer-facing delivery estimates.
 
-### 3. Turnaround Time
+---
 
-Measure from print file submission to goods ready for shipping:
+## Quality Standards
 
-| Acceptable | Marginal | Disqualifying |
-|------------|----------|---------------|
-| ≤ 5 business days | 6–8 business days | > 8 business days |
+Figurio accepts a figurine from MCAE only if it meets all of the following:
 
-Confirm whether turnaround includes post-processing and QA, or print-only. Ask about rush capacity and associated surcharges.
+1. **Color accuracy** — visible colors match the submitted 3D model within
+   acceptable tolerance (no washed-out or shifted hues on skin tones or
+   clothing).
+2. **Surface finish** — no visible layer lines, delamination, or support
+   artifact scars on front-facing surfaces.
+3. **Dimensional accuracy** — height within ±2 mm of nominal tier size.
+4. **Structural integrity** — no cracks, brittle joints, or broken extremities
+   (fingers, accessories).
+5. **Base stability** — figurine stands unsupported on a flat surface.
 
-### 4. Volume Capacity
+Any unit failing one or more criteria is a **reject**. Log rejects by order ID
+and tier, and request MCAE reprint at no additional charge per SLA terms.
+Sustained reject rates above 2% trigger a formal quality review meeting with
+MCAE.
 
-Assess monthly throughput across all three tiers combined. Minimum acceptable capacity for a backup vendor: 200 units/month. For primary vendor consideration: 500+ units/month.
+---
 
-Ask explicitly:
-- Max units/month on J55 (or equivalent) machines dedicated to Figurio-style work
-- Lead time impact at 80% vs. 100% capacity
-- Ability to scale up within 2 weeks for seasonal spikes (e.g., gift season Q4)
+## Shipping Providers
 
-### 5. Drop-Ship Capability
+Figurio ships finished figurines via two carriers. MCAE hands off to the
+carrier after packaging at their facility.
 
-Figurio's preferred model: vendor ships directly to end customer, bypassing Figurio warehouse.
+### Zásilkovna
+- Used for domestic Czech Republic orders and select CEE destinations.
+- Lower cost, extensive parcelshop pickup network.
+- Preferred for small and medium tiers where delivery speed is less critical.
 
-Evaluate:
-- Can vendor pack orders individually with Figurio's branded packaging inserts?
-- Can vendor print Zásilkovna or DHL shipping labels on Figurio's account?
-- Does vendor support per-order shipment or only batch pallet delivery?
-- API or CSV-based order submission for drop-ship workflows?
+### DHL
+- Used for international orders outside Zásilkovna's network and for customers
+  selecting express delivery.
+- Higher cost; justified for large-tier orders (higher AOV) and international.
+- Track DHL invoices separately — surcharges (fuel, remote area) can erode
+  margin on small international orders.
 
-Drop-ship capability is highly desirable but not disqualifying — vendors without it require Figurio to manage a receiving and re-ship step.
+When evaluating MCAE performance, include carrier handoff timing: MCAE must
+dispatch to the carrier on the same business day the print is completed and
+QA-passed.
 
-## Scoring Template
+---
 
-Rate each vendor 1–5 per criterion. Minimum acceptable total: 18/25.
+## Periodic Evaluation Cadence
 
-| Criterion             | Weight | Score (1–5) | Weighted |
-|-----------------------|--------|-------------|---------|
-| Pricing competitiveness | 5x  |             |         |
-| PolyJet quality         | 5x  |             |         |
-| Turnaround time         | 5x  |             |         |
-| Volume capacity         | 5x  |             |         |
-| Drop-ship capability    | 5x  |             |         |
-| **Total**             | **25** |             |         |
+| Review type        | Frequency | Owner       |
+|--------------------|-----------|-------------|
+| SLA adherence      | Monthly   | COO         |
+| Per-unit cost audit | Quarterly | COO + Finance |
+| Quality reject rate | Monthly   | COO         |
+| Contract renewal   | Annual    | COO + Legal |
 
-## MCAE Baseline (Reference)
-
-Use MCAE's current terms as the benchmark when evaluating alternatives:
-- Technology: Stratasys J55 PolyJet confirmed
-- Location: Czech Republic (low shipping distance to CZ customers)
-- Relationship: established, NDA in place, familiar with Figurio file formats
-
-Any alternative vendor must score within 3 points of MCAE's total to justify a transition.
-
-## Anti-Patterns
-
-- Do not evaluate vendors based on FDM or SLA capability alone — full-color PolyJet is required
-- Do not accept sample prints of the vendor's own demo models — always test with a Figurio reference file
-- Do not compare pricing without normalizing to the same size tier and volume — raw quotes are misleading
-- Do not onboard a backup vendor without a completed sample evaluation and signed NDA
+Maintain a running MCAE scorecard. Use it as the primary input for annual
+contract negotiations.

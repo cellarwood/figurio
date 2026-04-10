@@ -4,35 +4,39 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code editing, file system access, shell execution, Git operations, linting, running tests |
-| `design-plugin` | Read and inspect design assets; access Figma-exported specs and tokens |
-| `web-design-plugin` | Browser automation via Playwright for visual testing and cross-browser checks (includes `media-plugin` and `office-plugin` as dependencies) |
-| `media-plugin` | Screenshot capture, Mermaid diagram rendering, Playwright media automation, ElevenLabs audio (dependency of web-design-plugin) |
-| `office-plugin` | Document and spreadsheet reading for specs and requirements (dependency of web-design-plugin) |
+| `dev-tools-plugin@claude-my-marketplace` | Run shell commands, npm scripts, file operations, and dev server management |
+| `design-plugin@claude-my-marketplace` | Access design assets, inspect component specs, work with design tokens |
+| `web-design-plugin@claude-my-marketplace` | Browser automation via Playwright for visual testing and UI interaction (includes media-plugin + office-plugin) |
+| `media-plugin@claude-my-marketplace` | Playwright-based media capture, screenshot diffing, Mermaid diagram rendering |
+| `office-plugin@claude-my-marketplace` | Read and write structured documents (bundled with web-design-plugin) |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `chrome` | `mcp__chrome` | Chrome DevTools Protocol access — inspect DOM, run accessibility audits, capture screenshots, profile runtime performance, emulate devices |
+| `chrome` | `mcp__chrome` | Chrome DevTools Protocol — inspect the live DOM, computed styles, network requests, console output, and run accessibility audits in the running browser |
 
-## Playwright Permissions
+### Chrome DevTools MCP usage notes
 
-| Permission | What it does |
-|-----------|-------------|
-| `mcp__plugin_media-plugin_media-playwright` | Playwright automation via media-plugin for screenshot and media capture |
-| `mcp__plugin_media-plugin_media-mcp` | Media MCP general access |
-| `mcp__plugin_media-plugin_mermaid` | Render Mermaid diagrams for architecture and flow documentation |
-| `mcp__plugin_media-plugin_ElevenLabs` | Audio generation (use only if explicitly required by a task) |
-| `mcp__plugin_web-design-plugin_webdesign-playwright` | Full browser automation for visual regression and e2e UI testing |
+- Connect to the dev server running on `localhost` (default Vite port `5173`).
+- Use for layout debugging, computed style inspection, and console error triage.
+- Use the accessibility tree view to verify ARIA roles and labels before closing a UI issue.
+- Use the network panel to confirm Stripe Elements and API requests are shaped correctly.
+
+### Playwright (media-plugin and web-design-plugin)
+
+Both `mcp__plugin_media-plugin_media-playwright` and `mcp__plugin_web-design-plugin_webdesign-playwright` provide browser automation. Use them for:
+- Full-page screenshots of completed UI for issue comments.
+- Visual regression checks when refactoring shared components.
+- Simulating user flows (add to cart, checkout) end-to-end.
 
 ## Usage Guidelines
 
-- Use the `chrome` MCP for accessibility audits (axe), device emulation, and DOM inspection during development — this is your primary visual QA tool.
-- Use `webdesign-playwright` or `media-playwright` to capture before/after screenshots when closing visual UI tasks; attach them to issue comments as evidence.
-- Run Playwright e2e tests against the local dev server (`http://localhost:5173` or the Docker-compose address) rather than production.
-- Use `dev-tools-plugin` for all file edits, shell commands (Vite dev server, test runner, linter), and Git operations — do not commit directly to `main`.
-- Use `design-plugin` to inspect exported assets and token files before implementing a new component from a Figma spec.
+- Always start the Vite dev server (`npm run dev`) via dev-tools before using Chrome DevTools MCP — the MCP connects to a running browser tab, not a static file.
+- Use Chrome DevTools MCP for interactive debugging; use Playwright for automated capture and regression checks. They complement rather than replace each other.
+- Run `npm run build` via dev-tools before marking any issue done — a passing dev server is not proof of a clean build.
+- Use the design-plugin to pull design tokens or inspect component specs rather than guessing at spacing, color, or typography values.
+- Keep Playwright scripts lightweight and scoped to the flow under test — avoid creating giant end-to-end scripts that are slow to maintain.
 
 ---
 *Add personal tool notes below as you discover and use tools.*
