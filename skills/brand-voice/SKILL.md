@@ -1,136 +1,110 @@
 ---
 name: brand-voice
 description: >
-  Figurio brand voice guide for all marketing and content output.
-  Defines the playful, creative, premium-craft tone; messaging pillars
-  (customization, quality, giftability); content do's and don'ts;
-  and adapted voice for social media targeting figurine enthusiasts,
-  cosplayers, gift buyers, and collectible communities.
-allowed-tools:
-  - Read
-  - Write
+  Figurio brand voice guide for the CMO agent. Covers the playful, creative, artisan-quality,
+  and accessible tone used across product descriptions, social media, email, and ads targeting
+  figurine collectors and gift buyers in the Czech D2C market.
 metadata:
   paperclip:
     tags:
+      - marketing
+      - cmo
       - brand
-      - content
-      - voice
-      - social-media
+      - copywriting
 ---
 
 # Brand Voice
 
 ## Who Figurio Is
 
-Figurio turns real people into full-color 3D-printed figurines. Customers are buying a piece of themselves — or a deeply personal gift. The brand sits at the intersection of craft, technology, and emotion. It is not a generic print shop and it is not a toy brand.
+Figurio makes high-quality full-color 3D-printed figurines — both from a curated catalog and
+from AI-generated custom designs (Prompt to Print). Production uses Stratasys J55 PolyJet
+technology via MCAE, which means vivid color accuracy and smooth surface detail. The brand lives
+at the intersection of technology and craft: it's not a cheap novelty, it's a keepsake.
 
----
+The audience is primarily gift buyers (Czech market, 25–45) and figurine collectors who care
+about finish quality. They are excited by personalisation and want the product to feel special,
+not mass-produced.
 
-## Tone at a Glance
+## Voice Attributes
 
-| Dimension | Figurio is... | Figurio is NOT... |
-|---|---|---|
-| Personality | Playful, warm, a little cheeky | Childish, silly, immature |
-| Craft | Premium, detail-obsessed | Snobby, technical, cold |
-| Creativity | Imaginative, inspiring | Chaotic, unfocused |
-| Technology | Clever, accessible | Geeky jargon-heavy |
-| Emotion | Heartfelt, celebratory | Sentimental, over-the-top |
+| Attribute | What it means in practice |
+|-----------|--------------------------|
+| Playful | Lighthearted, a little witty — we enjoy what we do. Not silly or meme-heavy. |
+| Creative | We celebrate imagination. We invite customers into the making process. |
+| Artisan-quality | We are proud of craft. We name materials and process details where relevant. |
+| Accessible | No jargon. The tech behind the product is a feature, not a barrier. |
 
-One-line summary: **"A craft studio that happens to use a 3D printer."**
-
----
-
-## Messaging Pillars
-
-Every piece of Figurio content should connect to at least one of these three pillars.
-
-### 1. Customization
-The product is made *for one specific person*. Lean into uniqueness, personalization, and the impossibility of getting this anywhere else.
-
-> "There is no other figurine of you anywhere in the world."
-> "Made from your photo. Built to last forever."
-
-### 2. Quality
-Figurio uses full-color PolyJet printing (Stratasys J55 via MCAE). The result is vivid, detailed, and tactile. The quality story is the product's superpower against cheap resin alternatives.
-
-> "Every layer captures something real."
-> "Painted by physics, not by hand."
-
-### 3. Giftability
-Most customers are buying for someone else. The gift angle — the moment of surprise, the lasting keepsake — is one of Figurio's strongest emotional levers.
-
-> "The gift they didn't know they needed."
-> "Something they'll still have in 30 years."
-
----
-
-## Voice in Practice
-
-### Social Captions
-
-- Lead with the person, not the product: "She didn't believe we could print her at 1:12 scale — until this."
-- Use short punchy sentences. One idea per line on TikTok/IG.
-- Exclamation marks: max one per caption. Avoid double exclamation (`!!`) entirely.
-- Emoji: 1–3 per caption on social, placed after punctuation, never mid-sentence. Prefer: `✨ 🎁 🖨️ 🧑‍🎨`
-- Questions work well to invite comments: "Which detail would you want captured?"
-- Avoid passive voice in captions — always active.
+## Tone by Channel
 
 ### Product Descriptions
 
-- Focus on the human story first, specifications second.
-- Use sensory language: "vivid full-color surface", "smooth matte finish", "fits in your palm".
-- Size tier naming: Small (8 cm), Medium (12 cm), Large (18 cm) — always state cm, not mm.
-- Don't say "3D printed" in the first sentence of a product description; lead with what it is, not how it's made.
+- Lead with the emotional outcome ("a keepsake they'll display for years"), not the tech spec
+- Then earn the spec: mention PolyJet color accuracy as proof of quality, not as engineering detail
+- Keep sentences short. One idea per sentence.
+- End with a gentle call to imagination: "what will yours look like?"
+
+**Good:**
+> Each figurine is printed to order on a Stratasys J55 — the same technology used for
+> professional-grade color models. The result is a miniature that actually looks like you.
+
+**Bad:**
+> Our state-of-the-art PolyJet multi-material 3D printing process delivers photorealistic
+> full-color output with superior surface quality.
+
+### Social Media (Instagram, TikTok)
+
+- Instagram: slightly more polished and editorial. Captions can be a few sentences; always end
+  with a question or soft CTA ("Tag someone who needs this").
+- TikTok: punchy, conversational, first-person. Hook in the first three words of on-screen text.
+  Use present tense. Match energy to trend format without losing brand warmth.
+- Hashtags (Instagram): mix specific (`#customfigurine`, `#3dprintedgift`) with reach tags
+  (`#giftideas`, `#personalisedgifts`). Max 8–10 per post.
+- Avoid: corporate phrases, passive voice, exclamation marks used three times in a row.
+
+**Instagram caption example:**
+> Prompted. Printed. Unwrapped.
+> This is what happens when you describe yourself to our AI and let it build the rest.
+> What would your figurine look like? Drop your description below.
+
+**TikTok hook example:**
+> I typed 12 words. This showed up at my door.
 
 ### Email
 
-- Subject lines: conversational, curiosity-first. Avoid "10% OFF" as the entire subject.
-  - Good: "We made a tiny version of your dog"
-  - Bad: "Figurio — New Products Available Now"
-- Body: short paragraphs (2–3 sentences max). One CTA per email.
-- Sign-off: "The Figurio team" — never "Figurio Customer Service".
+- Subject lines: specific and curiosity-driven. Avoid "Check out our new…"
+- Preview text: extend the subject line thought, never repeat it
+- Body: warm, direct, short paragraphs (2–3 sentences max). Use "you" throughout.
+- Sign-off: from a person name at Figurio, not "The Figurio Team"
+- Promotional urgency: state deadlines plainly ("Order by Dec 18 to receive before Christmas"),
+  never manufactured scarcity ("Only a few left!" unless true)
 
-### Blog / Long-form
+**Subject line examples:**
+- "Your figurine is waiting to be described"
+- "We turned someone's dog into a 3cm masterpiece"
+- "Last day: order for Christmas delivery"
 
-- Write for gift buyers and enthusiasts, not for engineers.
-- Explain 3D printing concepts in one sentence max, then move on.
-- Headers should be human: "How we print your face in full color" not "PolyJet Printing Process Overview".
+### Paid Ads
 
----
+- Headline: one clear benefit or hook. 6 words or fewer when possible.
+- Body: one sentence of proof (material, production quality, or social proof)
+- CTA: "Design yours", "Start with a prompt", "See the catalog" — not "Buy now" or "Shop here"
+- Avoid: discount-first framing unless running a genuine promotion. Lead with quality and novelty.
 
-## Content Do's
+## Words to Use / Avoid
 
-- Do name the customer experience: "imagine unwrapping a figurine of yourself"
-- Do show the process — printing, detail shots, unboxing — people find it magical
-- Do reference real use cases: cosplay characters, wedding cake toppers, sports trophies, memorial portraits
-- Do use "you" and "your" directly — this is always personal
-- Do celebrate the craft: mention MCAE partnership when relevant for credibility
-- Do write in Czech for Czech-market content; use English for international social posts
+| Use | Avoid |
+|-----|-------|
+| figurine | statue, statuette, toy |
+| printed to order | manufactured, mass-produced |
+| full-color PolyJet | inkjet (confusing), FDM |
+| keepsake, miniature | trinket, knick-knack |
+| design your own, describe it | configure, input, submit |
+| vivid, detailed, lifelike | photorealistic (overused) |
+| craft, made with care | artisanal (cliché) |
 
-## Content Don'ts
+## Localisation Note
 
-- Don't reference copyrighted characters or IP (no Marvel, Disney, Nintendo characters) — IP compliance is critical
-- Don't use "cheap", "affordable", or "budget" — Figurio is premium
-- Don't over-explain the tech (avoid "PolyJet", "voxel", "support structures" in customer-facing copy)
-- Don't use stock-photo language: "delighted customer", "perfect gift for the whole family"
-- Don't write in third person about Figurio ("Figurio offers...") — use "we" always
-- Don't use hype filler: "game-changing", "revolutionary", "disruptive"
-
----
-
-## Audience Segments and Voice Adjustments
-
-| Segment | Tone Adjustment | Key Phrases |
-|---|---|---|
-| Gift buyers (families) | Warmer, emotional, ease-of-process | "just send us a photo", "arrives ready to give" |
-| Cosplayers | More playful, fandom-aware, bold | "your character, in your hands", "print your alter ego" |
-| Collectible enthusiasts | Craft-focused, detail-obsessed | "limited to one", "collector-grade finish" |
-| Corporate / event gifting | Professional but still personal | "memorable, branded keepsakes", "team figurines" |
-
----
-
-## Quick Reference: Approved Descriptors
-
-Use freely: vivid, full-color, one-of-a-kind, handcrafted quality, detail-perfect, lasting, personal, made from your photo, real-person figurine, gift-ready.
-
-Avoid: cheap, plastic-y, mass-produced, toy, trinket, novelty, revolutionary, best-in-class.
+Primary market is Czech Republic; copy is written in Czech for local campaigns and in English
+for export or international social content. Tone remains identical across languages — warmth and
+specificity do not change. Avoid idioms that do not translate directly.

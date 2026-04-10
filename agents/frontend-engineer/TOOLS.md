@@ -4,32 +4,35 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code generation, file editing, terminal commands, dependency management, TypeScript/React development workflows |
-| `design-plugin` | Access to design assets, icon libraries, and visual specification files |
-| `web-design-plugin` | Web-focused design tooling including Playwright-based visual testing and layout inspection (includes media-plugin and office-plugin capabilities) |
-| `media-plugin` | Mermaid diagram rendering, media capture via Playwright, media MCP integration |
-| `office-plugin` | Document and spreadsheet handling (available via web-design-plugin chain) |
+| `dev-tools-plugin` | Code editing, file system access, shell execution, Git operations, linting, running tests |
+| `design-plugin` | Read and inspect design assets; access Figma-exported specs and tokens |
+| `web-design-plugin` | Browser automation via Playwright for visual testing and cross-browser checks (includes `media-plugin` and `office-plugin` as dependencies) |
+| `media-plugin` | Screenshot capture, Mermaid diagram rendering, Playwright media automation, ElevenLabs audio (dependency of web-design-plugin) |
+| `office-plugin` | Document and spreadsheet reading for specs and requirements (dependency of web-design-plugin) |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `chrome` | `mcp__chrome` | Chrome DevTools MCP -- attaches to a running Chrome instance for live DOM inspection, JavaScript console access, network request monitoring, performance profiling, and accessibility tree inspection |
+| `chrome` | `mcp__chrome` | Chrome DevTools Protocol access — inspect DOM, run accessibility audits, capture screenshots, profile runtime performance, emulate devices |
 
-### Playwright (via plugins)
+## Playwright Permissions
 
 | Permission | What it does |
 |-----------|-------------|
-| `mcp__plugin_media-plugin_media-playwright` | Playwright automation via media-plugin -- browser control, screenshots, interaction scripting |
-| `mcp__plugin_web-design-plugin_webdesign-playwright` | Playwright automation via web-design-plugin -- visual regression captures, layout verification |
+| `mcp__plugin_media-plugin_media-playwright` | Playwright automation via media-plugin for screenshot and media capture |
+| `mcp__plugin_media-plugin_media-mcp` | Media MCP general access |
+| `mcp__plugin_media-plugin_mermaid` | Render Mermaid diagrams for architecture and flow documentation |
+| `mcp__plugin_media-plugin_ElevenLabs` | Audio generation (use only if explicitly required by a task) |
+| `mcp__plugin_web-design-plugin_webdesign-playwright` | Full browser automation for visual regression and e2e UI testing |
 
 ## Usage Guidelines
 
-- Use **Chrome DevTools MCP** for live debugging sessions: inspect React component trees, audit accessibility labels, profile rendering performance on the catalog and 3D preview pages, and capture network payloads from Stripe or the AI generation polling endpoint.
-- Use **Playwright** (via web-design-plugin or media-plugin) for automated end-to-end tests and visual regression snapshots. Always run the full Playwright suite before marking a checkout or AI order flow issue as done.
-- Use **design-plugin** to inspect design assets and icon specifications before implementing a new component -- do not guess spacing or color values when the source of truth is available.
-- Use **dev-tools-plugin** for all file editing, running `tsc`, `vite build`, and `npx playwright test` commands. Keep the TypeScript compiler error count at zero before closing any issue.
-- When debugging a Three.js rendering problem or a GSAP animation glitch, use Chrome DevTools MCP Performance panel first -- measure before speculating.
+- Use the `chrome` MCP for accessibility audits (axe), device emulation, and DOM inspection during development — this is your primary visual QA tool.
+- Use `webdesign-playwright` or `media-playwright` to capture before/after screenshots when closing visual UI tasks; attach them to issue comments as evidence.
+- Run Playwright e2e tests against the local dev server (`http://localhost:5173` or the Docker-compose address) rather than production.
+- Use `dev-tools-plugin` for all file edits, shell commands (Vite dev server, test runner, linter), and Git operations — do not commit directly to `main`.
+- Use `design-plugin` to inspect exported assets and token files before implementing a new component from a Figma spec.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

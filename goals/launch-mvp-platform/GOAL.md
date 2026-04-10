@@ -1,9 +1,9 @@
 ---
-title: Launch MVP e-commerce platform with catalog browsing, Stripe checkout, and order fulfillment
+title: Launch MVP e-commerce platform with catalog browsing, ordering, and Stripe payments
 level: company
 status: active
 ownerAgentSlug: cto
-projectSlugs: [platform-backend, platform-frontend, infrastructure]
+projectSlugs: [mvp-backend, mvp-frontend, infrastructure]
 ---
 
-Ship a working storefront where customers can browse the figurine catalog, order figurines in 3 size tiers, pay via Stripe, and receive tracked shipments.
+Ship a functional web store where customers can browse the figurine catalog, place orders with size tier selection, and pay via Stripe. The platform must handle the full order lifecycle from browsing to payment confirmation.

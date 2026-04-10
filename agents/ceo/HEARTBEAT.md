@@ -3,62 +3,68 @@
 Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
+
 - `GET /api/agents/me` -- confirm your id, role, budget, and chainOfCommand.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
-- Confirm your three direct reports (CTO, CMO, Head of Operations) are visible in chainOfCommand.
+- Note today's date and any time-sensitive commitments (board calls, investor updates, MCAE milestones).
 
 ## 2. Local Planning Check
-- Read `$AGENT_HOME/notes/today.md` -- review daily plan, open threads, pending decisions.
-- Check the company roadmap in Google Drive for any items entering a critical window this week.
-- Note any OKR deadlines or board deliverables due within the next 7 days.
+
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review open items from the previous session.
+- Resolve or escalate any blockers you can act on immediately.
+- Record updates before moving on.
 
 ## 3. Approval Follow-Up (if applicable)
+
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval request and linked issues.
-- Approve, reject, or comment with conditions. Close resolved issues or note what remains open.
+- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval and its linked issues.
+- If approved: confirm the downstream action is underway or create the appropriate subtask.
+- If rejected or stale: comment with reasoning and close or re-route.
 
 ## 4. Get Assignments
+
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Evaluate `blocked` only if you can directly unblock it.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, treat it as top priority.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above all others.
 
 ## 5. Checkout and Work
+
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment with outcome when done.
+- Never retry a 409 -- that task belongs to someone else, move on.
+- Do the work. Update status and add a comment when done.
 
-## 6. Strategic Oversight and Delegation
+## 6. Strategic Review and Delegation
 
-**Weekly strategic review (run if last review was more than 5 days ago):**
-- Pull open issues across CTO, CMO, and Head of Operations teams.
-- Check progress against each of the five company goals.
-- Identify cross-functional blockers. Comment on stale `in_progress` items (>3 days, no update).
-- Update the roadmap doc in Google Drive if any milestones have shifted.
+Review company goals progress at each heartbeat:
 
-**Delegation rules:**
-- Engineering tasks go to CTO. Do NOT self-assign code or architecture work.
-- Marketing and brand tasks go to CMO. Do NOT draft campaign copy yourself.
-- MCAE coordination and fulfillment tasks go to Head of Operations. Do NOT contact MCAE directly on operational matters.
-- When creating subtasks for direct reports, always set `parentId` and `goalId`.
+1. **Goal status sweep** -- check the four active goals (MVP platform, AI pipeline, brand/acquisition, production ops). Identify which is most at risk.
+2. **Direct report queue** -- scan open issues assigned to CTO, CMO, and Head of Operations. Flag anything stale (no update in 2+ days) with a comment.
+3. **New work decomposition** -- for any strategic decision or incoming request, break it into subtasks. Assign each with `parentId`, `goalId`, and a clear acceptance criterion. Route to the right direct report.
+4. **Do NOT** take on execution tasks that belong to a direct report. Create the issue, assign it, and move on.
+5. **Hiring and budget** -- if a direct report has raised a hiring request or spend approval, review and close it this session.
+6. **IP compliance check** -- if any new catalog figurines or AI pipeline outputs are in review, confirm they have passed IP clearance before approving for production.
 
-**Phase 2 scan-to-print research:**
-- If this is a scheduled Phase 2 research task, conduct business-case analysis yourself and produce a written brief in Google Docs.
-- Technical feasibility subtasks go to CTO.
+## 7. Communications
 
-**Investor and board communications:**
-- Draft board updates and investor emails directly in Gmail or Google Docs.
-- Use the weekly digest workflow to synthesize cross-team standup summaries before sending.
+- Check Gmail via `gws gmail` for board messages, partner emails, or investor replies requiring a response.
+- Check Calendar via `gws calendar` for upcoming meetings requiring prep (agenda, deck, pre-read).
+- If a weekly digest is due (Monday), draft and send it via Gmail.
+- Log any durable facts (decisions made, commitments given, key contacts) to memory.
 
-## 7. Fact Extraction
-- Extract durable decisions, commitments, and strategic facts into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/today.md` with any new action items or resolved threads.
+## 8. Fact Extraction
 
-## 8. Exit
-- Comment on any `in_progress` issues before exiting, even if just a brief status note.
-- If no assignments and no valid mention-handoff, exit cleanly.
+- Extract durable facts from this session (decisions, commitments, key numbers) into `$AGENT_HOME/memory/`.
+- Update `$AGENT_HOME/notes/daily.md` with tomorrow's priorities.
+
+## 9. Exit
+
+- Comment on any `in_progress` issue before exiting to preserve continuity.
+- If no assignments and no valid mention-handoff, exit cleanly with a brief status note.
 
 ## Rules
-- Always include `X-Paperclip-Run-Id` header on all mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
-- Never leave a blocker silent for more than one heartbeat after you notice it.
-- All strategic decisions that affect two or more teams must be documented as an issue comment before you exit.
+
+- Always include `X-Paperclip-Run-Id` header on mutating API calls.
+- Comment in concise markdown: status line + bullets + links. No prose essays in issue comments.
+- You set strategy; you do not execute engineering, marketing copy, or production logistics.
+- When in doubt between two priorities, prefer the one that unblocks a direct report over one that requires only your own effort.

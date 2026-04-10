@@ -9,20 +9,21 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/daily.md` for today's plan and any carry-over blockers.
-- Review in-progress component work: are there stalled Playwright tests, unresolved TypeScript errors, or pending design decisions?
-- Record any resolved blockers or updated priorities before continuing.
+- Read `$AGENT_HOME/notes/plan.md` for today's plan.
+- Review progress against open tasks; identify blockers.
+- Update plan and daily notes before proceeding.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- Review the approval and its linked issues.
+- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval and linked issues.
 - Close resolved issues or comment on what remains open.
+- If a design review was approved, proceed to implement; if rejected, read feedback and revise.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can now unblock it.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
 ## 5. Checkout and Work
@@ -31,45 +32,35 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Frontend Engineering Workflow
+## 6. Frontend Workflow
 
-**Before coding:**
-- Confirm the API endpoint or data contract this UI depends on exists. If not, build against a typed mock and note the dependency in the issue.
-- Check if a design spec or Figma frame is referenced. If missing, apply a principled default and document it in a comment.
+For each UI task:
 
-**While coding:**
-- Implement components against the shadcn-ui / Radix UI primitives. Do not hand-roll what the design system already provides.
-- For 3D preview work (Three.js), test orbit controls at multiple viewport sizes and on both mouse and touch input.
-- For Stripe Elements, test against Stripe test-mode card numbers. Never commit real card data or live Stripe keys.
-- Run `tsc --noEmit` and confirm zero TypeScript errors before marking an issue done.
-
-**Accessibility checks (on every UI component):**
-- Keyboard navigability: tab order, focus trap in modals/drawers, escape key dismissal.
-- ARIA roles and labels: interactive elements must have accessible names.
-- Color contrast: verify text and interactive states pass WCAG 2.1 AA (4.5:1 normal, 3:1 large text).
-- Screen reader smoke test: use browser accessibility tree via Chrome DevTools MCP.
-
-**Testing:**
-- Write or update a Playwright spec for any new critical path (add to cart, checkout step, AI order submission).
-- Run existing Playwright suite locally before marking an issue done: `npx playwright test`.
-- If a test is flaky, fix it or skip it with a linked ticket -- never leave a red pipeline.
-
-**Performance check (for heavy pages):**
-- Use Chrome DevTools MCP Performance panel to confirm no layout thrash or long tasks on catalog and 3D preview pages.
-- Lazy-load Three.js and GSAP -- they must not block initial page paint.
+1. **Understand the requirement** -- read the issue description, linked designs, and relevant API contracts in `/docs` or comments.
+2. **Identify the component surface** -- which page, component, or flow is affected? Check `/frontend/src` for existing components before creating new ones.
+3. **Implement** -- use shadcn-ui primitives and Tailwind utilities. Keep components composable and co-locate styles.
+4. **Accessibility check** -- run `axe` or equivalent within Chrome DevTools MCP. All interactive elements must have labels, focus states, and correct ARIA roles.
+5. **Responsive check** -- test at 320 px, 768 px, and 1280 px using Chrome DevTools device emulation via the `chrome` MCP.
+6. **Visual review** -- use `media-playwright` or `webdesign-playwright` to capture screenshots for comparison against design specs.
+7. **Write or update tests** -- Vitest unit tests for logic/hooks; Playwright e2e for critical flows (checkout, prompt submission).
+8. **Stripe flows** -- always test checkout in Stripe test mode. Verify error states (declined card, network failure) render correctly.
+9. **Three.js / 3D preview** -- after changes to the model viewer, confirm loading states, error states, and orbit controls work on both desktop and touch.
+10. **Comment and close** -- post a summary comment with screenshot links (if visual), test results summary, and any follow-up issues created.
 
 ## 7. Fact Extraction
 
-- Extract durable facts (API shape changes, component decisions, design patterns adopted) into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/daily.md` with progress and any new blockers.
+- Extract durable facts from conversations into `$AGENT_HOME/memory/`.
+- Record design decisions, API contract details, and accessibility findings in daily notes.
+- Update component inventory notes when new shadcn-ui components are introduced.
 
 ## 8. Exit
 
-- Comment on any in_progress work before exiting: include current state, what remains, and any blockers.
+- Comment on any in_progress tasks before exiting — include current state, what was done, and what remains.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never commit secrets, Stripe live keys, or real customer data to the repository.
+- Never leave the checkout flow or payment components in a broken state between sessions — note any partial changes explicitly.
+- Do not merge or deploy — GitHub Actions handles CI/CD. Commit to a branch and open a PR if the task requires it.

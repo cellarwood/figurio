@@ -1,12 +1,10 @@
 ---
 name: architecture-review
 description: >
-  Technical architecture review for the Figurio platform — FastAPI backend,
-  React/TypeScript frontend, 3D mesh processing pipeline, Stripe payment
-  integration, microk8s/K8s infrastructure, and PostgreSQL schema decisions.
-  Use when evaluating new services, reviewing pull requests with structural
-  changes, or assessing whether a design fits Figurio's tech stack and
-  pipeline constraints.
+  Review system architecture decisions for Figurio's D2C 3D-figurine platform.
+  Covers API design and versioning, PostgreSQL schema design, service boundary
+  definitions between catalog/order/AI-pipeline services, and build-vs-buy
+  evaluation for 3D model processing and AI generation workflows.
 allowed-tools:
   - Read
   - Grep
@@ -21,87 +19,75 @@ metadata:
 
 # Architecture Review
 
-## When to Use
+Use this skill when evaluating or challenging design decisions across Figurio's
+backend services, database schema, API surface, or infrastructure topology.
 
-Invoke this skill when:
-- A new service, endpoint group, or pipeline stage is being designed
-- A PR introduces structural changes (new DB tables, new Celery task types, new API contracts)
-- The team is evaluating whether to add a new dependency or external integration
-- A post-incident review uncovers a structural failure mode
+## Service Boundaries
 
-## Core Platform Components
+Figurio's backend is split into three primary service domains. Keep these
+boundaries explicit — cross-service calls must go through defined API contracts,
+not shared database tables.
 
-### Backend — FastAPI + Celery + Redis
+### Catalog Service
+- Owns product definitions: SKU, name, thumbnail, material options, price tiers
+- Read-heavy; data changes only when ops team updates the figurine lineup
+- Exposes: `GET /api/v1/products`, `GET /api/v1/products/{sku}`
+- No writes from order or AI-pipeline services into catalog tables
 
-- All synchronous CRUD lives in FastAPI routers under `/api/v1/`
-- All long-running or async work (AI generation, mesh repair, MCAE file dispatch, preview rendering) runs as **Celery tasks** backed by Redis
-- Task results are stored in PostgreSQL via a `jobs` table, not in Redis — Redis is ephemeral
-- Worker containers are separate Deployments from the API container; never run Celery inside the API pod
+### Order Service
+- Owns the full order lifecycle: cart → Stripe prepayment → fulfillment handoff
+- Holds references to catalog SKUs (foreign key by SKU string, not catalog DB row ID)
+- Communicates MCAE production status via webhook receiver — does not poll
+- Exposes: `POST /api/v1/orders`, `GET /api/v1/orders/{order_id}`, fulfillment webhook
 
-### Frontend — React + TypeScript
+### AI-Pipeline Service
+- Owns the "Prompt to Print" workflow: prompt intake → model generation → review → STL handoff
+- Calls external vendor API (Meshy or Tripo3D) asynchronously; never blocks the HTTP response
+- Stores generation job state (pending/processing/approved/rejected) in its own schema
+- On approval, pushes STL reference into order service via internal API call — does not write to order tables directly
 
-- React strict mode enabled; no `any` casts without a comment explaining why
-- shadcn-ui / Radix UI primitives only — do not introduce a second component library
-- State that spans the order funnel (cart, preview approval, deposit status) lives in a React context or Zustand store — not in component-local state
-- No direct API calls inside components — all network requests go through a typed API client layer
+## API Design Conventions
 
-### 3D Mesh Pipeline
+- All public endpoints: `/api/v1/{resource}` (collections) and `/api/v1/{resource}/{id}` (single item)
+- Internal service-to-service endpoints: `/internal/v1/{resource}` — not exposed through Traefik ingress
+- Error responses always return `{ "error": { "code": "SNAKE_CASE_CODE", "message": "..." } }`
+- Pagination via `?page=` and `?per_page=` (default 20, max 100) on all collection endpoints
+- Stripe webhook handler lives at `/webhooks/stripe` — validate signature before processing
 
-The pipeline is the core product moat. Every stage must be:
-- **Instrumented** — emit structured logs and metrics at entry/exit of each stage
-- **Resumable** — a Celery task failure must not lose the original prompt or input mesh
-- **Auditable** — store the input, output, and repair diff for every model in object storage (S3-compatible bucket), keyed by `order_id`
+## Database Schema Principles
 
-Pipeline stages and their ownership:
-```
-prompt → AI generation API (external) → raw mesh (OBJ/GLB)
-      → mesh validation (automated, Python) → repair (NetFabb/Blender script)
-      → human QA flag (optional) → rendered preview (PNG/GLTF)
-      → customer approval → print file (STL/3MF) → MCAE dispatch
-```
+- Each service domain has its own PostgreSQL schema (`catalog`, `orders`, `ai_pipeline`) in the shared cluster
+- No cross-schema foreign key constraints — reference by business key (e.g., `sku`, `order_id` UUID)
+- Use `TIMESTAMPTZ` for all timestamps; store in UTC
+- Soft-delete pattern (`deleted_at TIMESTAMPTZ`) for catalog items and orders — never hard delete
+- AI generation jobs: index on `(status, created_at)` for queue polling queries
 
-A design is acceptable if and only if each stage can fail independently without corrupting downstream stages.
+## Build vs. Buy Evaluation Framework
 
-### Stripe Integration
+When assessing whether to build a component or use an external vendor, apply these criteria in order:
 
-- Use Stripe's `PaymentIntent` flow — not legacy Charges API
-- For AI custom orders: two `PaymentIntent` objects per order (50% deposit, 50% balance) linked by metadata `order_id`
-- Webhook handler must be idempotent — duplicate events must not double-charge or double-dispatch
-- Store `stripe_payment_intent_id` on the `orders` table; never store raw card data anywhere
-
-### PostgreSQL Schema
-
-- Every table has `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`, `created_at`, `updated_at`
-- No polymorphic FK columns (e.g., `resource_id` + `resource_type`) — use separate FK columns per related type
-- Migrations via Alembic; every migration must be reversible (downgrade defined)
-- JSON columns are permitted for model metadata and mesh repair reports, but not for fields that are queried or indexed
-
-### Infrastructure — microk8s + Traefik
-
-- Kubernetes context for local dev: `microk8s-local`; production targets GKE
-- Traefik is the ingress; do not expose services directly via NodePort in production
-- Each service has its own Namespace: `figurio-api`, `figurio-worker`, `figurio-frontend`
-- Resource requests and limits are required on every container spec — no unbounded pods
-- Secrets managed via Kubernetes Secrets, injected as env vars — never hardcoded in manifests or images
+1. **Core differentiator?** If yes, build it. Figurio's differentiator is the AI customization UX and order experience — not rendering pipelines or payment infrastructure.
+2. **3D processing and model generation** — buy. Meshy/Tripo3D are external vendors. Integration cost is low; switching cost is manageable if the AI-pipeline service wraps the vendor behind a stable internal interface.
+3. **Payments** — buy (Stripe). Never implement payment processing in-house.
+4. **Production/print handoff to MCAE** — thin integration layer only. MCAE operates Stratasys J55 PolyJet hardware; Figurio's responsibility ends at delivering a validated STL file and order manifest.
+5. **Auth/identity** — evaluate managed solutions before building. Figurio is a small team; a custom auth service is not worth the maintenance burden.
 
 ## Review Checklist
 
-When reviewing a design or PR, check:
+When reviewing a proposed architecture change, confirm:
 
-- [ ] No synchronous blocking I/O in FastAPI request handlers (offload to Celery)
-- [ ] Celery tasks are idempotent — safe to retry on failure
-- [ ] New DB tables follow schema conventions (UUID PK, timestamps, reversible migration)
-- [ ] Stripe flows use PaymentIntent and webhook idempotency
-- [ ] Pipeline stage stores input + output in object storage before marking success
-- [ ] No secrets in code or Docker image layers
-- [ ] New dependencies justified — package added via `uv add`, not `pip install`
-- [ ] Container has resource requests/limits defined
+- [ ] Service boundary is respected — no cross-domain direct DB access
+- [ ] New endpoints follow `/api/v1/` naming and error response format
+- [ ] Async operations (AI generation, MCAE handoff) are non-blocking
+- [ ] Vendor integrations are wrapped behind an internal interface (not called directly from business logic)
+- [ ] Schema changes include migration scripts and are backward compatible
+- [ ] No synchronous calls from AI-pipeline to external vendor inside an HTTP request cycle
+- [ ] Internal endpoints are excluded from Traefik public ingress rules
 
 ## Anti-patterns
 
-- Running mesh repair or AI generation synchronously inside an API request handler
-- Storing Celery task state as the sole source of truth (Redis evicts data)
-- Polymorphic FK columns in PostgreSQL
-- Adding a second component library to the frontend
-- Hardcoding environment-specific URLs or credentials in source code
-- Defining a Kubernetes Deployment without resource limits
+- Calling the Meshy/Tripo3D API synchronously inside a FastAPI route handler — use a background task or job queue
+- Sharing a PostgreSQL table between two service domains
+- Storing Stripe payment method details in Figurio's own database (use Stripe customer/payment intent IDs only)
+- Exposing internal service endpoints through the public Traefik ingress
+- Hardcoding vendor-specific model generation parameters in order or catalog logic

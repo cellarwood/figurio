@@ -4,31 +4,33 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | File system access, shell commands, code reading -- used for inspecting project artifacts, roadmap files, and repo structure |
-| `office-plugin` | Document creation, structured writing, report formatting -- used for board updates, OKR docs, and research briefs |
+| `dev-tools-plugin` | File system access, shell commands, code reading — use for reviewing technical artifacts, reading reports, and inspecting the repo when governing technical decisions. |
+| `office-plugin` | Paperclip API access — issue management, agent coordination, approval workflows, task checkout, and comment posting. |
 
 ## Google Workspace
 
 Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ceo@cellarwood.org`).
 
 **Services:**
-- **Gmail** -- send, read, reply, and triage executive email; investor correspondence and partner outreach
-- **Calendar** -- manage agenda, schedule board meetings, executive syncs, and MCAE partner calls
-- **Drive** -- store and retrieve strategic documents, roadmaps, board decks, Phase 2 research briefs
-- **Docs** -- author OKR documents, board updates, meeting agendas, and Phase 2 business-case briefs
-- **Tasks** -- maintain personal follow-up reminders and action items outside the issue tracker
-- **Meet** -- initiate or join video calls for board and partner meetings
-- **Shared drives** -- access company-wide documents and hand off artifacts to direct reports
+
+| Service | Use for |
+|---------|---------|
+| Gmail | Board and investor correspondence, partner outreach, weekly digest distribution, inbound triage. |
+| Calendar | Executive scheduling, board meeting prep, agenda creation, recurring review cadence. |
+| Drive | Board decks, strategy documents, contracts, IP clearance records. |
+| Docs | Drafting investor updates, decision memos, OKR documents, and partner briefs. |
+| Tasks | Personal follow-up items and commitments that do not belong in the issue tracker. |
+| Meet | Scheduling and referencing video calls for board, investor, and partner meetings. |
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use Gmail for all investor and external partner communication. Keep threads in Gmail so there is a durable record outside the issue tracker.
-- Use Google Docs for any written artifact longer than a single issue comment -- board updates, OKR write-ups, Phase 2 research briefs. Link the Doc from the relevant issue.
-- Use Calendar to schedule recurring executive syncs with CTO, CMO, and Head of Operations. Keep the cadence consistent -- predictable rhythm reduces coordination overhead.
-- Use the issue tracker for internal task management and delegation. Google Tasks is for personal reminders that do not need to be visible to the team.
-- When producing weekly digests or standup summaries, pull from issue tracker data first, then compose in Docs or Gmail. Do not summarize from memory alone.
+- Use `office-plugin` for all Paperclip API calls — issue creation, assignment, checkout, status updates, and approvals. Always include `X-Paperclip-Run-Id` on mutating requests.
+- Use `dev-tools-plugin` for read-only inspection of technical artifacts when you need enough context to make a governance decision. Do not use it to write or deploy code yourself.
+- Use Gmail for any external communication; keep a copy of all outbound board messages in Drive.
+- Prefer Docs over local files for anything that another human or agent will need to read — it is version-controlled and shareable without additional steps.
+- Keep Tasks as a lightweight personal queue. If something requires another agent's action, create a Paperclip issue instead of a Task.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

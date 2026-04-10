@@ -15,15 +15,15 @@ agents:
           requirement: optional
         GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
           kind: plain
-          requirement: optional
+          requirement: required
           default: /paperclip/.gws/figurio.json
         AGENT_EMAIL:
           kind: plain
-          requirement: optional
+          requirement: required
           default: figurio-ceo@cellarwood.org
         COMPANY_DOMAIN:
           kind: plain
-          requirement: optional
+          requirement: required
           default: cellarwood.org
 
   cto:
@@ -37,7 +37,7 @@ agents:
       env:
         GH_TOKEN:
           kind: secret
-          requirement: optional
+          requirement: required
         DOCKER_HUB_USERNAME:
           kind: secret
           requirement: optional
@@ -66,43 +66,18 @@ agents:
         MEDIA_OUTPUT_DIR:
           kind: plain
           requirement: optional
-          default: /workspace/output/media
+          default: /workspace/media-output
         GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
           kind: plain
-          requirement: optional
+          requirement: required
           default: /paperclip/.gws/figurio.json
         AGENT_EMAIL:
           kind: plain
-          requirement: optional
+          requirement: required
           default: figurio-cmo@cellarwood.org
         COMPANY_DOMAIN:
           kind: plain
-          requirement: optional
-          default: cellarwood.org
-
-  head-of-operations:
-    adapter:
-      type: claude_local
-      config:
-        model: claude-sonnet-4-6
-    budget:
-      monthlyLimitCents: 8000
-    inputs:
-      env:
-        STRIPE_SECRET_KEY:
-          kind: secret
           requirement: required
-        GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
-          kind: plain
-          requirement: optional
-          default: /paperclip/.gws/figurio.json
-        AGENT_EMAIL:
-          kind: plain
-          requirement: optional
-          default: figurio-ops@cellarwood.org
-        COMPANY_DOMAIN:
-          kind: plain
-          requirement: optional
           default: cellarwood.org
 
   backend-engineer:
@@ -116,16 +91,16 @@ agents:
       env:
         GH_TOKEN:
           kind: secret
-          requirement: optional
+          requirement: required
         DATABASE_URL:
           kind: secret
-          requirement: optional
+          requirement: required
         STRIPE_SECRET_KEY:
           kind: secret
-          requirement: optional
+          requirement: required
         STRIPE_WEBHOOK_SECRET:
           kind: secret
-          requirement: optional
+          requirement: required
 
   frontend-engineer:
     adapter:
@@ -138,7 +113,20 @@ agents:
       env:
         GH_TOKEN:
           kind: secret
-          requirement: optional
+          requirement: required
+
+  ml-engineer:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthlyLimitCents: 12000
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: required
 
   devops-engineer:
     adapter:
@@ -158,9 +146,6 @@ agents:
         DOCKER_HUB_TOKEN:
           kind: secret
           requirement: required
-        DATABASE_URL:
-          kind: secret
-          requirement: optional
         SENTRY_DSN:
           kind: plain
           requirement: optional
@@ -183,18 +168,43 @@ agents:
         MEDIA_OUTPUT_DIR:
           kind: plain
           requirement: optional
-          default: /workspace/output/media
+          default: /workspace/media-output
         GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
           kind: plain
-          requirement: optional
+          requirement: required
           default: /paperclip/.gws/figurio.json
         AGENT_EMAIL:
           kind: plain
-          requirement: optional
+          requirement: required
           default: figurio-content@cellarwood.org
         COMPANY_DOMAIN:
           kind: plain
-          requirement: optional
+          requirement: required
+          default: cellarwood.org
+
+  head-of-operations:
+    adapter:
+      type: claude_local
+      config:
+        model: claude-sonnet-4-6
+    budget:
+      monthlyLimitCents: 8000
+    inputs:
+      env:
+        STRIPE_SECRET_KEY:
+          kind: secret
+          requirement: required
+        GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
+          kind: plain
+          requirement: required
+          default: /paperclip/.gws/figurio.json
+        AGENT_EMAIL:
+          kind: plain
+          requirement: required
+          default: figurio-ops@cellarwood.org
+        COMPANY_DOMAIN:
+          kind: plain
+          requirement: required
           default: cellarwood.org
 
 routines:
@@ -203,8 +213,8 @@ routines:
       - kind: schedule
         cronExpression: "0 9 * * 1"
         timezone: Europe/Prague
-  weekly-architecture-review:
+  ip-compliance-review:
     triggers:
       - kind: schedule
-        cronExpression: "0 10 * * 2"
+        cronExpression: "0 14 * * 3"
         timezone: Europe/Prague

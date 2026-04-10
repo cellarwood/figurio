@@ -1,237 +1,168 @@
 ---
 name: api-design
 description: >
-  REST API conventions for the Figurio e-commerce platform (FastAPI/Python).
-  Covers endpoint naming for catalog, orders, and AI generation jobs; pagination;
-  error responses; Stripe webhook handling; order state machine transitions; and
-  AI job queue patterns using Celery+Redis.
-allowed-tools:
-  - Read
-  - Grep
-  - Bash
+  REST API conventions for Figurio's FastAPI backend. Covers endpoint naming,
+  pagination, error responses, authentication patterns, Stripe payment integration,
+  and the order state machine for catalog and AI-custom ("Prompt to Print") figurine orders.
 metadata:
   paperclip:
-    tags: [engineering, backend, api]
+    tags:
+      - engineering
+      - backend
 ---
 
 # API Design
 
 ## URL Structure
 
-Base path: `/api/v1/`
+All Figurio API endpoints follow:
 
-| Resource | Collection | Single Item |
-|----------|------------|-------------|
-| Catalog figurines | `GET /api/v1/catalog` | `GET /api/v1/catalog/{slug}` |
-| Orders | `GET /api/v1/orders` | `GET /api/v1/orders/{order_id}` |
-| AI generation jobs | `GET /api/v1/ai-jobs` | `GET /api/v1/ai-jobs/{job_id}` |
-| Stripe webhooks | — | `POST /api/v1/webhooks/stripe` |
-| Admin | `GET /api/v1/admin/orders` | `GET /api/v1/admin/orders/{order_id}` |
+- `/api/v1/{resource}` — collections
+- `/api/v1/{resource}/{id}` — single items
+- `/api/v1/{resource}/{id}/{sub-resource}` — nested sub-resources
 
-Rules:
-- Resource names are **plural, kebab-case** nouns: `ai-jobs`, not `aiJob` or `ai_job`
-- IDs are UUIDs throughout; never expose sequential integer PKs in URLs
-- Nested sub-resources only one level deep: `GET /api/v1/orders/{order_id}/items`
-
-## FastAPI Router Layout
-
-Group routers by domain. Each router module lives at `app/routers/<domain>.py`:
+Resource naming uses lowercase kebab-case plural nouns:
 
 ```
-app/
-  routers/
-    catalog.py
-    orders.py
-    ai_jobs.py
-    webhooks.py
-    admin.py
+/api/v1/products
+/api/v1/products/{product_id}
+/api/v1/orders
+/api/v1/orders/{order_id}
+/api/v1/orders/{order_id}/items
+/api/v1/custom-figurines
+/api/v1/custom-figurines/{figurine_id}
+/api/v1/customers/{customer_id}/orders
 ```
 
-Register with prefix in `app/main.py`:
+## Authentication
 
-```python
-app.include_router(catalog.router, prefix="/api/v1/catalog", tags=["catalog"])
-app.include_router(orders.router, prefix="/api/v1/orders", tags=["orders"])
-app.include_router(ai_jobs.router, prefix="/api/v1/ai-jobs", tags=["ai-jobs"])
-app.include_router(webhooks.router, prefix="/api/v1/webhooks", tags=["webhooks"])
+All endpoints (except `/api/v1/auth/*` and public product catalog reads) require a Bearer JWT in the `Authorization` header. The JWT encodes `customer_id`, `email`, and `role` (`customer` or `admin`).
+
 ```
+Authorization: Bearer <jwt>
+```
+
+Admin-only routes are protected by a `require_admin` dependency. Never expose internal IDs (e.g., raw DB primary keys) in routes accessible to customers — use UUIDs.
+
+Stripe webhook endpoints authenticate via `Stripe-Signature` header, verified with `stripe.WebhookSignature.verify_header`. Webhook routes live under `/api/v1/webhooks/stripe`.
+
+## Request and Response Conventions
+
+- All request/response bodies are JSON.
+- Use Pydantic v2 models for all request bodies and response schemas. Never return raw SQLAlchemy ORM objects.
+- `snake_case` for all JSON field names.
+- Timestamps are ISO 8601 UTC strings: `"2024-03-15T10:30:00Z"`.
+- Monetary values (prices, totals) are integers in CZK halers (i.e., smallest unit) — never floats.
+- Product SKUs are strings, not integers.
 
 ## Pagination
 
-All list endpoints use **cursor-based pagination** (not offset). Query params:
+All list endpoints support cursor-based pagination using `after` and `limit` query parameters:
 
-| Param | Type | Default | Description |
-|-------|------|---------|-------------|
-| `limit` | int | 20 | Max items, capped at 100 |
-| `cursor` | str | — | Opaque cursor from previous response |
+```
+GET /api/v1/products?limit=20&after=<cursor>
+```
 
-Response envelope:
+Response envelope for paginated lists:
 
 ```json
 {
   "data": [...],
   "pagination": {
-    "next_cursor": "eyJpZCI6MTIzfQ==",
-    "has_more": true,
-    "limit": 20
+    "limit": 20,
+    "after": "<next_cursor>",
+    "has_more": true
   }
 }
 ```
 
-Cursors are base64-encoded JSON of the last item's sort key. Never expose raw DB row IDs in cursors.
+Default `limit` is 20, maximum is 100. `after` is an opaque base64-encoded cursor (encodes the last item's `id` and `created_at`). Never expose raw SQL offsets as pagination parameters.
 
 ## Error Responses
 
-All errors return `application/json` with this shape:
+All errors use a consistent envelope:
 
 ```json
 {
   "error": {
     "code": "ORDER_NOT_FOUND",
-    "message": "Order f47ac10b-... does not exist.",
+    "message": "Order with id 'abc123' does not exist.",
     "details": {}
   }
 }
 ```
 
-Error code conventions:
-- `SCREAMING_SNAKE_CASE` strings, domain-prefixed: `ORDER_NOT_FOUND`, `AI_JOB_FAILED`, `CATALOG_ITEM_UNAVAILABLE`
-- HTTP status must match semantics: 400 validation, 404 not found, 409 conflict, 422 unprocessable, 503 downstream unavailable
+Standard HTTP status codes:
 
-Use a shared exception handler — never let raw Python exceptions surface:
+| Status | Use case |
+|--------|----------|
+| 400 | Validation errors, bad request |
+| 401 | Missing or invalid JWT |
+| 403 | Authenticated but unauthorized (e.g., customer accessing another's order) |
+| 404 | Resource not found |
+| 409 | State conflict (e.g., attempting to cancel a shipped order) |
+| 422 | Pydantic validation failure (FastAPI default) |
+| 500 | Unexpected server error |
 
-```python
-# app/exceptions.py
-class FigurioError(HTTPException):
-    def __init__(self, code: str, message: str, status_code: int, details: dict = {}):
-        super().__init__(status_code=status_code)
-        self.code = code
-        self.message = message
-        self.details = details
-```
+Error `code` values are SCREAMING_SNAKE_CASE and domain-specific (e.g., `INVALID_FIGURINE_PROMPT`, `STRIPE_PAYMENT_FAILED`, `ORDER_STATE_CONFLICT`).
+
+Pydantic 422 validation errors are reformatted into the standard envelope by a global exception handler — do not return FastAPI's default 422 structure to clients.
 
 ## Order State Machine
 
-Orders move through these states only in the permitted transitions below:
+All orders (catalog and custom figurine) progress through these states. Invalid transitions return `409 ORDER_STATE_CONFLICT`.
 
 ```
 PENDING_PAYMENT
-    └─► PAYMENT_CAPTURED
-            └─► FILE_PREPARATION
-                    └─► SENT_TO_MCAE
-                            └─► PRINTING
-                                    └─► SHIPPED
-                                            └─► DELIVERED
-                                    └─► PRINT_FAILED → FILE_PREPARATION (retry)
-    └─► PAYMENT_FAILED
-PAYMENT_CAPTURED
-    └─► CANCELLED (before SENT_TO_MCAE only)
+    → PAID              (Stripe webhook: payment_intent.succeeded)
+    → CANCELLED         (payment_intent.payment_failed or manual cancel before payment)
+
+PAID
+    → IN_PRODUCTION     (admin marks order as sent to MCAE)
+    → CANCELLED         (admin cancel, triggers Stripe refund)
+
+IN_PRODUCTION
+    → SHIPPED           (admin records tracking number)
+
+SHIPPED
+    → DELIVERED         (admin confirms delivery)
 ```
 
-For AI-custom orders, additional states sit between `PAYMENT_CAPTURED` and `FILE_PREPARATION`:
+Custom figurine orders have an additional pre-payment state:
 
 ```
-PAYMENT_CAPTURED → AI_JOB_QUEUED → AI_JOB_PROCESSING → PREVIEW_PENDING_APPROVAL
-    └─► PREVIEW_APPROVED → FILE_PREPARATION
-    └─► PREVIEW_REJECTED → AI_JOB_QUEUED (re-run, max 3 revisions)
-    └─► SECOND_PAYMENT_PENDING → SECOND_PAYMENT_CAPTURED → FILE_PREPARATION
+PROMPT_RECEIVED
+    → RENDER_IN_PROGRESS  (AI generation started)
+    → RENDER_COMPLETE     (customer approval pending)
+    → PENDING_PAYMENT     (customer approved render)
+    → RENDER_REJECTED     (customer rejected render — loops back to PROMPT_RECEIVED)
 ```
 
-Enforce transitions in `app/services/order_state.py` — reject invalid transitions with `ORDER_INVALID_TRANSITION` (409).
+State transitions are performed via dedicated action endpoints, not PATCH on `status`:
 
-## Stripe Webhook Handling
-
-Endpoint: `POST /api/v1/webhooks/stripe`
-
-Always verify the Stripe signature before processing:
-
-```python
-import stripe
-
-@router.post("/stripe")
-async def stripe_webhook(request: Request):
-    payload = await request.body()
-    sig = request.headers.get("stripe-signature")
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig, settings.STRIPE_WEBHOOK_SECRET
-        )
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail="Invalid signature")
-
-    await handle_stripe_event(event)
-    return {"received": True}
+```
+POST /api/v1/orders/{order_id}/cancel
+POST /api/v1/orders/{order_id}/mark-in-production
+POST /api/v1/orders/{order_id}/mark-shipped
+POST /api/v1/custom-figurines/{figurine_id}/approve-render
+POST /api/v1/custom-figurines/{figurine_id}/reject-render
 ```
 
-Events to handle and their order transitions:
+## Stripe Payment Integration
 
-| Stripe Event | Action |
-|---|---|
-| `payment_intent.succeeded` | `PENDING_PAYMENT → PAYMENT_CAPTURED` |
-| `payment_intent.payment_failed` | `PENDING_PAYMENT → PAYMENT_FAILED` |
-| `checkout.session.completed` | Confirm second-payment for AI orders |
-| `charge.dispute.created` | Flag order, notify admin |
+All orders are prepaid. The payment flow:
 
-Webhook handler must be **idempotent** — check `stripe_event_id` in DB before processing. Return 200 immediately; do heavy work in a Celery task.
+1. Client calls `POST /api/v1/orders/{order_id}/create-payment-intent` — returns a `client_secret`.
+2. Client completes payment in browser using Stripe.js.
+3. Stripe calls `/api/v1/webhooks/stripe` with `payment_intent.succeeded` — backend transitions order to `PAID`.
 
-## AI Generation Job Queue Patterns
+Never trust client-side confirmation. Always rely on the Stripe webhook to advance order state. Store `stripe_payment_intent_id` on the order record. Idempotency keys for PaymentIntent creation use `order_id` as the key prefix.
 
-Jobs are dispatched via Celery with Redis as the broker.
+Refunds are initiated server-side via `stripe.Refund.create(payment_intent=...)` — never expose Stripe secret keys to the client.
 
-### Enqueue on Order Creation
+## FastAPI Conventions
 
-```python
-# app/services/ai_jobs.py
-from app.worker import celery_app
-
-def enqueue_ai_job(order_id: str, prompt: str) -> str:
-    task = celery_app.send_task(
-        "tasks.generate_model",
-        args=[order_id, prompt],
-        queue="ai_generation",
-    )
-    return task.id  # stored as ai_job.celery_task_id
-```
-
-### Job Status Polling
-
-`GET /api/v1/ai-jobs/{job_id}` returns:
-
-```json
-{
-  "job_id": "uuid",
-  "order_id": "uuid",
-  "status": "PROCESSING",
-  "progress_pct": 45,
-  "preview_url": null,
-  "error": null,
-  "created_at": "2026-04-10T10:00:00Z",
-  "updated_at": "2026-04-10T10:03:12Z"
-}
-```
-
-Job statuses: `QUEUED | PROCESSING | PREVIEW_READY | APPROVED | REJECTED | FAILED`
-
-Celery tasks must update the `ai_jobs` table at each phase transition — never trust Celery task state as the source of truth.
-
-### Retry Policy
-
-```python
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
-def generate_model(self, order_id: str, prompt: str):
-    try:
-        ...
-    except TransientError as exc:
-        raise self.retry(exc=exc)
-    except PermanentError:
-        # update job status to FAILED, no retry
-        ...
-```
-
-## Anti-patterns
-
-- Do not expose internal DB IDs or Celery task IDs directly in public API responses — always use the application-level UUID
-- Do not use GET endpoints for state-changing operations (no `GET /orders/{id}/cancel`)
-- Do not process Stripe webhooks synchronously in the request thread — always hand off to Celery
-- Do not use offset pagination on large tables (orders, ai-jobs) — use cursor pagination
-- Do not return stack traces or SQLAlchemy error messages in error responses
+- Group routes with `APIRouter`, one router per domain module (e.g., `orders`, `products`, `customers`, `custom_figurines`).
+- Use FastAPI `Depends` for auth, DB session, and pagination parameter injection.
+- Async route handlers and async SQLAlchemy sessions throughout — no synchronous DB calls.
+- Background tasks (e.g., triggering AI render) use FastAPI `BackgroundTasks` for lightweight work, or enqueue to a task queue for long-running jobs.

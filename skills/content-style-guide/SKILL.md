@@ -1,117 +1,159 @@
 ---
 name: content-style-guide
 description: >
-  Figurio content writing style for a premium Czech D2C brand selling full-color
-  3D-printed figurines. Covers product description tone (emphasize detail,
-  craftsmanship, giftability), blog posts about 3D printing and collectibles,
-  social captions, SEO metadata, and figurine naming conventions.
+  Figurio content style guide for the content-creator agent. Covers voice and tone,
+  product description format for 3D figurines across size tiers (8cm, 15cm, 25cm),
+  blog post structure, social media captions, email newsletter tone, and SEO keyword
+  usage for custom figurines and personalized gifts.
 metadata:
   paperclip:
     tags:
       - content
       - marketing
-      - copywriting
+      - e-commerce
 ---
 
 # Content Style Guide
 
-Figurio is a premium craft brand. Every word must reinforce three brand pillars:
-**extraordinary detail**, **artisan craftsmanship**, and **emotional giftability**.
-Audience: gift buyers, collectors, and cosplayers in Czech Republic and Central Europe.
-Competitors are HeroForge, Shapeways, and Funko — Figurio differentiates through
-full-color printing, hyper-personalization, and a warm, human tone.
+Figurio is a Czech-based D2C e-commerce brand selling display-grade, full-color 3D-printed
+figurines — both catalog products and AI-custom "Prompt to Print" pieces. All content must
+reflect the brand's character: **playful, creative, artisan-quality, accessible**.
 
-## Voice and Tone
+## Brand Voice
 
-- **Warm, precise, and proud** — we're craftspeople, not a factory.
-- Avoid corporate language: no "leverage", "synergy", "solutions".
-- Never undersell the technology, but keep jargon minimal. Say "full-color resin print" not "MultiJet polymer substrate layer fusion".
-- Speak directly to the reader: "your figurine", "the person you're celebrating".
-- For Czech-audience copy, use formal "Vy" when in doubt; localize idioms.
+| Trait | In Practice |
+|---|---|
+| Playful | Light, enthusiastic — avoid corporate stiffness |
+| Creative | Celebrate imagination; position Figurio as a canvas, not just a shop |
+| Artisan-quality | Highlight craftsmanship, detail, full-color print fidelity |
+| Accessible | No jargon; warm and inclusive; prices feel fair, not cheap |
+
+Write in second person ("you", "your") where possible. Keep sentences short and punchy.
+Never use passive voice for product benefits.
 
 ## Product Descriptions
 
-Structure every product description in three beats:
+### Structure
 
-1. **The Wow line** — one sentence that makes the product viscerally appealing.
-2. **Craftsmanship details** — materials, print resolution, finish, size. Be specific.
-3. **Gift hook** — who it's for, what occasion, why it will be remembered.
+1. **Hook line** — one sentence that leads with the emotion or use case, not the spec.
+2. **What it is** — brief factual description; material, finish, size tier.
+3. **Why it stands out** — 2-3 specific detail callouts (color accuracy, display quality, gift angle).
+4. **Size tier note** — always state the tier and dimensions explicitly.
+5. **CTA prompt** — one line nudging to cart or customization.
 
-### Example — Standard Figurine
+### Size Tier Language
 
-> Meet your miniature self — captured in full color down to the last brushstroke of
-> your jacket. Each Figurio figurine is printed at 0.1 mm resolution on professional
-> resin, hand-inspected, and shipped in a gift-ready magnetic box. Perfect for
-> birthdays, graduations, and anyone who deserves a one-of-a-kind keepsake.
+| Tier | Dimensions | Suggested framing |
+|---|---|---|
+| Small | 8 cm | "Desk-ready", "pocket-sized personality", "perfect starter piece" |
+| Medium | 15 cm | "The sweet spot", "shelf statement", "ideal gift size" |
+| Large | 25 cm | "Display centerpiece", "collector's scale", "conversation starter" |
 
-### Required Details to Include
+### Example Product Description
 
-| Field | Example |
-|---|---|
-| Print technology | Full-color resin, 0.1 mm resolution |
-| Approximate size | 15 cm tall |
-| Finish | Matte / gloss / satin |
-| Packaging | Magnetic gift box / display case |
-| Lead time | 5–7 business days |
+> Meet your new desk companion. This full-color 3D-printed dragon figurine captures every
+> scale in vivid detail — from the iridescent wings to the ember-glow eyes. Printed at
+> artisan quality with Figurio's proprietary color process, it arrives ready to display.
+>
+> **Size:** Medium (15 cm) — the sweet spot for shelves, desks, and gift boxes alike.
+>
+> Want it your way? Switch to Prompt to Print and describe your dragon — we'll bring it
+> to life.
 
-### Words That Work
+### Tone Don'ts
 
-Use: *crafted*, *detailed*, *one-of-a-kind*, *heirloom*, *captured*, *lifelike*, *bespoke*, *keepsake*, *celebrate*.
-
-Avoid: *cheap*, *fast*, *printed*, *item*, *product* (use "figurine"), *nice*.
-
-## Figurine Naming Conventions
-
-Names follow the pattern: `[Adjective] [Character/Theme] Figurine`
-
-- Adjective drawn from: *Classic*, *Heroic*, *Portrait*, *Custom*, *Collector's*, *Signature*
-- Theme/character is descriptive, never a proper noun of a licensed IP
-- Examples: *Heroic Warrior Figurine*, *Classic Portrait Figurine*, *Collector's Dragon Figurine*
-- AI-custom and scan-to-print products always include "Custom" or "Bespoke" in the name
-- Do not use generic model numbers in consumer-facing names
+- Do not write "high-quality" alone — say *what* quality means ("pin-sharp color layers").
+- Do not use "cheap" or "affordable" — use "accessible" or frame with value.
+- Do not mention competitor brands or 3D printing technology brands.
 
 ## Blog Posts
 
-Target length: 600–1 000 words. Structure:
+### Format
 
-1. **Hook** — open with a scene, question, or surprising fact about 3D printing or collecting (first 2 sentences).
-2. **Body** — 3–4 sections with H2 headers. Each section makes one clear point.
-3. **Figurio tie-in** — one natural mention of how Figurio's approach addresses the topic. Not a hard sell.
-4. **CTA** — a single call to action at the end (e.g., "Design your own" or "Browse the catalog").
+```
+Title: [Benefit or Story Hook] — keep under 65 characters for SEO
+Meta description: 150-160 characters, include primary keyword
 
-**Good topic angles for Figurio blog:**
-- Behind the scenes: how full-color 3D printing works
-- Gift guides: "10 unique gifts for collectors"
-- Community: customer stories and cosplay use cases
-- Craft: comparing 3D print finishes, caring for resin figurines
+## Intro (1-2 short paragraphs)
+Hook the reader with a relatable scenario or question.
 
-## Social Captions
+## Body Sections (H2 headers)
+3-5 sections, each 100-200 words. Use subheadings (H3) for lists.
 
-Platform guidelines:
+## Figurio Angle
+Natural, non-pushy mention of how Figurio products relate to the topic.
+One contextual product link maximum per 600 words of body.
 
-| Platform | Length | Tone | Hashtag count |
-|---|---|---|---|
-| Instagram | 80–150 chars + hashtags | Visual, emotional | 8–12 |
-| Facebook | 100–200 chars | Warm, conversational | 2–4 |
-| TikTok | 50–100 chars | Punchy, trend-aware | 4–6 |
+## Closing CTA
+One paragraph. End with a direct, action-oriented sentence.
+```
 
-Always include at least one of: `#figurio`, `#3dprinted`, `#customfigurine`, `#personalizedgift`.
+### Blog Topic Buckets
 
-Lead with the visual payoff, not the product spec. Example:
-> "She cried. Then she put it on her desk. That's a win. 🖤 #figurio #customfigurine #giftideas"
+- Gift guides (occasions, recipient types)
+- 3D printing explainers for enthusiasts and curious newcomers
+- Collector culture and display tips
+- Behind-the-scenes: how Figurio figurines are made
+- Prompt to Print tutorials and inspiration
 
-## SEO Metadata
+## Social Media Captions
 
-See the `seo-checklist` skill for full requirements. Summary for content writing:
+### Instagram / Facebook
 
-- **Title tags**: 50–60 characters, lead with primary keyword, end with "| Figurio"
-- **Meta descriptions**: 140–155 characters, include a benefit and soft CTA
-- **Alt text**: descriptive noun phrase — "full-color 3D printed wedding figurine, 15cm" not "img_0432.jpg"
+- Lead with the visual hook — describe what's striking about the image in line 1.
+- 3-5 sentences max before the line break.
+- End with a question or soft CTA ("Which size would you choose? Link in bio.").
+- 5-10 hashtags after line break: mix brand (`#Figurio`, `#PromptToPrint`) + niche
+  (`#3Dprinting`, `#customfigurines`, `#giftideas`, `#figurinecollector`).
 
-## Anti-patterns
+### Example Caption
 
-- Do not open product descriptions with "Introducing…"
-- Do not write "high quality" — show it through specifics instead
-- Do not use exclamation marks more than once per page
-- Do not reference competitor names in consumer-facing copy
-- Do not use passive voice in the Wow line
+> Every detail, exactly as you imagined it. This custom knight figurine was born from a
+> single Prompt to Print description — full armor, battle stance, and all. Printed at
+> 15 cm so every engraving shows. What would your figurine look like?
+>
+> #Figurio #PromptToPrint #custom3Dprint #customfigurines #personalizedgifts
+> #3Dprinting #giftideas #figurinecollector #3Dartisan
+
+### TikTok / Reels Scripts
+
+- Hook in first 2 seconds (text overlay or spoken line).
+- Show the figurine reveal or before/after print process.
+- Voiceover tone: casual, curious, slightly amazed — not salesy.
+- End card: "Yours starts with a prompt. Link in bio."
+
+## Email Newsletter
+
+### Tone
+
+Warm, like a letter from a creative friend — not a marketing blast. Use "we" for Figurio
+and "you" for the reader. Avoid exclamation point overload (max 2 per email).
+
+### Subject Line Formula
+
+- Gift angle: `[Occasion] sorted — [product or offer]`
+- New arrival: `New drop: [product name or theme]`
+- Prompt to Print: `Describe it. We'll print it.`
+- Re-engagement: `Still thinking about that figurine?`
+
+### Structure
+
+1. **Greeting** — first name token if available, otherwise "Hey there,"
+2. **Lead story** — 2-3 sentences, one topic only per email
+3. **Product spotlight** — image + description (use product description format above)
+4. **CTA button** — single, clear action ("Shop now", "Start your prompt", "See all sizes")
+5. **Footer note** — optional: brief behind-the-scenes or fun fact about the print process
+
+## SEO Keywords
+
+See the `seo-checklist` skill for full on-page SEO guidance. Core keywords to weave
+naturally into all content formats:
+
+**Primary:** custom figurines, 3D figurines, personalized figurines, custom 3D printed figurine  
+**Secondary:** personalized gifts, unique gifts, figurine collector, Prompt to Print,
+custom gifts Czech Republic, 3D printing gifts  
+**Long-tail:** custom figurine from photo, AI custom figurine, 3D printed gift ideas,
+display figurines handcrafted
+
+Keyword density target: 1-2% for primary terms. Never keyword-stuff — priority is
+natural readability.

@@ -9,68 +9,59 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/` for today's plan and outstanding items.
-- Review any open migration conflicts or failing test runs noted from the previous session.
-- Resolve or escalate blockers before picking up new work.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review in-progress work. Note any blockers or outstanding decisions.
+- Record any updates to the plan.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- read the approval and linked issues.
-- Close issues that were resolved by the approved change.
-- Comment on any issues that remain open, describing what is still needed.
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can directly unblock it now.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above the queue.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can actively unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
 ## 5. Checkout and Work
 
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to another worker instance.
-- Do the work. Update status to `in_progress` when you start, `done` when complete.
-- Comment on the issue when done: status line + bullet summary + links to commits or PRs.
+- Never retry a 409 -- that task belongs to someone else.
+- Do the work. Update status and comment when done.
 
 ## 6. Backend Engineering Workflow
 
-### For API and business logic tasks
-- Read the relevant FastAPI router and Pydantic schemas before editing.
-- Run existing tests with `uv run pytest` before and after changes to confirm no regressions.
-- Always manage dependencies with `uv add` / `uv remove` -- never call `pip` directly.
-- After schema changes, generate an Alembic migration: `uv run alembic revision --autogenerate -m "<description>"`.
-- Review the generated migration file manually before committing -- autogenerate is not always correct.
+### Starting a new feature or schema change
+- Identify whether a database migration is needed. If yes, create it with `uv run alembic revision --autogenerate -m "<description>"`, review the generated file for correctness before applying.
+- Apply with `uv run alembic upgrade head` in dev. Never hand-edit the database.
+- Define Pydantic request/response models before writing route handlers. The OpenAPI schema is a contract.
 
-### For AI pipeline and Celery tasks
-- Check `$AGENT_HOME/runtime/agents/mesh-pipeline-guide.md` for the canonical pipeline architecture.
-- Implement retries with exponential backoff for all external API calls (Meshy, Tripo3D).
-- Test Celery tasks in eager mode in pytest (`CELERY_TASK_ALWAYS_EAGER=True`).
-- Log task start, external API response codes, and final outcome at INFO level.
+### Stripe work
+- Always verify `Stripe-Signature` in webhook handlers before reading event data.
+- Use idempotency keys on all Stripe API calls that create resources (charges, refunds, sessions).
+- Test webhook handlers against Stripe CLI (`stripe listen --forward-to`) in dev.
+- For custom figurine orders: confirm deposit is captured before triggering AI generation job; confirm design approval before releasing remainder.
 
-### For Stripe integration
-- Test webhooks locally using the Stripe CLI (`stripe listen --forward-to ...`).
-- Always verify the webhook signature before processing any event.
-- Use idempotency keys on all charge and payment intent creation calls.
-
-### For mesh repair (Blender)
-- Run Blender headless: `blender --background --python <script.py>`.
-- Scripts must exit with a non-zero code on failure so Celery marks the task as failed.
-- Keep Blender scripts under `backend/workers/mesh/` and test with sample STL/OBJ fixtures.
+### Completing work
+- Run the test suite: `uv run pytest`.
+- If the task touches an API route or schema consumed by the frontend, note the change (path, method, schema diff) in the issue comment.
+- Update the issue status to `done` and add a comment: status line + what changed + any follow-up issues created.
 
 ## 7. Fact Extraction
 
-- After completing significant work, extract durable facts (API contracts settled, migration numbers, third-party quirks) into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/daily.md` with what was done and what is next.
+- Extract durable facts (schema decisions, Stripe event types in use, MCAE format constraints) into `$AGENT_HOME/notes/`.
+- Update `$AGENT_HOME/notes/daily.md` with today's progress.
 
 ## 8. Exit
 
-- Comment on any `in_progress` issue before exiting, describing exact state and the next concrete step.
+- Comment on any `in_progress` work before exiting, even if only to record current state.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never call `pip` directly -- always use `uv`.
-- Never commit secrets; reference environment variables via `.env.example` only.
+- Never modify the database schema outside of Alembic migrations.
+- Never merge a migration that has not been tested locally end-to-end.

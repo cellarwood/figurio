@@ -1,197 +1,197 @@
 ---
 name: component-patterns
 description: >
-  React/shadcn-ui component patterns for the Figurio storefront (D2C 3D-printed figurines).
-  Covers catalog product grid, figurine detail cards with Three.js 3D preview, AI custom
-  figurine prompt builder, Stripe checkout flow components, and responsive layout conventions.
+  React/TypeScript component patterns for the Figurio storefront (shadcn-ui + Radix UI + Tailwind).
+  Covers product cards with size tier badges, the Three.js 3D model viewer, cart drawer,
+  Stripe checkout form, and order status timeline. Used whenever building or reviewing
+  storefront UI components.
 allowed-tools:
   - Read
   - Grep
-  - Glob
+  - Write
+  - Bash
 metadata:
   paperclip:
     tags:
       - engineering
       - frontend
-      - components
 ---
 
 # Component Patterns
 
-## When to Use
-
-Apply this skill when building or modifying any React component in the Figurio storefront — product catalog, figurine detail pages, AI prompt builder, or checkout flow.
-
 ## Stack Conventions
 
-- **Components**: shadcn-ui primitives + Radix UI for headless behavior
-- **Styling**: Tailwind CSS utility classes only — no custom CSS files unless Three.js canvas requires it
-- **TypeScript**: strict mode; all props must be explicitly typed, no `any`
-- **Routing**: React Router v6 (`useNavigate`, `<Link>`)
-- **Animations**: GSAP for entrance/exit transitions; Tailwind `transition-*` for hover/focus states
+- **TypeScript strict mode** — all props and state must be fully typed; no `any`
+- **shadcn-ui** components are the base layer — extend, don't replace
+- **Radix UI** primitives for accessible interactive components (Dialog, Drawer, etc.)
+- **Tailwind CSS** for all styling — no inline styles, no CSS modules
+- **GSAP** for complex animations (cart drawer entrance, figurine spotlight); CSS transitions for simple hover/focus states
+- **Three.js** for 3D preview rendering
 
-## Component File Structure
+---
 
-```
-src/
-└── components/
-    ├── catalog/
-    │   ├── ProductGrid.tsx
-    │   ├── ProductCard.tsx
-    │   └── FilterBar.tsx
-    ├── figurine/
-    │   ├── FigurineDetail.tsx
-    │   ├── FigurinePreview3D.tsx   # Three.js canvas wrapper
-    │   └── FigurinePromptBuilder.tsx
-    ├── checkout/
-    │   ├── CheckoutFlow.tsx
-    │   ├── PaymentStep.tsx         # Stripe Elements wrapper
-    │   └── OrderSummary.tsx
-    └── ui/                         # shadcn-ui generated components (do not edit)
-```
+## Product Card
 
-Each component file exports one named component matching the filename.
-
-## Catalog Product Grid
-
-Use CSS Grid via Tailwind. The grid must be responsive across all breakpoints:
+Each catalog figurine card renders name, a rendered thumbnail, price, and a size tier badge.
 
 ```tsx
-// ProductGrid.tsx
-<div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-  {products.map((product) => (
-    <ProductCard key={product.id} product={product} />
-  ))}
-</div>
-```
-
-`ProductCard` renders a shadcn-ui `Card` with:
-- Figurine image (top, fixed aspect ratio `aspect-square`, `object-cover`)
-- Product name (`text-sm font-medium`)
-- Price in CZK (`text-sm text-muted-foreground`)
-- "Customize" CTA button using shadcn-ui `Button` variant `outline`
-
-Cards link to `/figurines/{slug}` via `<Link>` — never `<a>`.
-
-## Figurine Detail Card with 3D Preview
-
-The 3D preview is a Three.js canvas rendered inside a contained `div`. It must never stretch the layout:
-
-```tsx
-// FigurinePreview3D.tsx
-interface FigurinePreview3DProps {
-  modelUrl: string;
-  className?: string;
-}
-
-export function FigurinePreview3D({ modelUrl, className }: FigurinePreview3DProps) {
-  const canvasRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    // Three.js scene init here — renderer, camera, controls
-    // return cleanup fn to dispose renderer
-  }, [modelUrl]);
-
-  return (
-    <div
-      ref={canvasRef}
-      className={cn("w-full aspect-square rounded-lg overflow-hidden bg-muted", className)}
-      aria-label="Interactive 3D figurine preview"
-      role="img"
-    />
-  );
+// components/product/ProductCard.tsx
+interface ProductCardProps {
+  sku: string;
+  name: string;
+  thumbnailUrl: string;
+  priceCZK: number;
+  sizeTier: 'small' | 'medium' | 'large';
+  isCustom?: boolean; // Prompt-to-Print entries
 }
 ```
 
-The parent `FigurineDetail` layout uses a two-column grid on desktop:
+### Size Tier Badge
+
+Size maps directly to the Figurio production tier. Render inside the card's top-right corner using an absolutely-positioned `<Badge>` (shadcn-ui).
+
+| Tier   | Label | Tailwind color token |
+|--------|-------|----------------------|
+| small  | S · 8 cm | `bg-sky-100 text-sky-800` |
+| medium | M · 15 cm | `bg-violet-100 text-violet-800` |
+| large  | L · 25 cm | `bg-amber-100 text-amber-800` |
 
 ```tsx
-<div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-  <FigurinePreview3D modelUrl={figurine.modelUrl} />
-  <FigurineInfo figurine={figurine} />
-</div>
+const TIER_STYLES = {
+  small:  'bg-sky-100 text-sky-800',
+  medium: 'bg-violet-100 text-violet-800',
+  large:  'bg-amber-100 text-amber-800',
+} as const;
+
+<Badge className={cn('absolute top-2 right-2 text-xs font-semibold', TIER_STYLES[sizeTier])}>
+  {sizeTier === 'small' ? 'S · 8 cm' : sizeTier === 'medium' ? 'M · 15 cm' : 'L · 25 cm'}
+</Badge>
 ```
 
-Always clean up Three.js renderer in `useEffect` return to prevent memory leaks.
+### Card interaction
 
-## AI Prompt Builder
+- Clicking the card navigates to `/catalog/[sku]`
+- "Add to cart" button inside the card triggers an optimistic cart update, then GSAP fly-to-cart animation
+- For Prompt-to-Print items, card shows "Customize" CTA instead
 
-The prompt builder is a multi-step form using local `useState` — do not use a form library for this component. Steps: Subject → Style → Material → Review.
+---
+
+## 3D Model Viewer
+
+Used on product detail page (`/catalog/[sku]`) and the AI preview approval step.
 
 ```tsx
-// FigurinePromptBuilder.tsx
-type PromptStep = "subject" | "style" | "material" | "review";
-
-interface PromptState {
-  subject: string;
-  style: string;
-  material: string;
+// components/viewer/ModelViewer.tsx
+interface ModelViewerProps {
+  modelUrl: string;       // .glb file URL
+  autoRotate?: boolean;   // default: true on catalog, false on approval step
+  onLoadError?: () => void;
 }
 ```
 
-Use shadcn-ui `Tabs` for step navigation when all steps are reachable, or a linear stepper with `Button` next/back controls when steps are sequential. Show step progress with shadcn-ui `Progress`.
+### Implementation rules
 
-Controlled inputs use shadcn-ui `Input` and `Textarea`. Style/material selections use shadcn-ui `ToggleGroup` (Radix-backed).
+- Wrap Three.js canvas in a `<Suspense>` with a skeleton placeholder (`<ModelViewerSkeleton />`)
+- Use `@react-three/fiber` and `@react-three/drei` (if added to stack) OR a raw Three.js `WebGLRenderer` inside a `useEffect` — prefer `@react-three/fiber` for cleaner lifecycle management
+- Default camera: 45° elevation, distance adjusted per size tier (small=0.3m, medium=0.5m, large=0.8m)
+- Background: transparent — the containing card provides the background
+- Expose `aria-label="Interactive 3D preview of [product name]. Use mouse or touch to rotate."` on the canvas wrapper
 
-## Checkout Flow Components
+---
 
-Checkout is a three-step flow: Cart → Shipping → Payment. Use React Router for step routing (`/checkout/cart`, `/checkout/shipping`, `/checkout/payment`).
+## Cart Drawer
 
-**Stripe Elements** must be wrapped in `<Elements stripe={stripePromise}>` at the `CheckoutFlow` level, not per-step:
-
-```tsx
-// CheckoutFlow.tsx
-<Elements stripe={stripePromise} options={elementsOptions}>
-  <Outlet />
-</Elements>
-```
-
-`PaymentStep` renders `<PaymentElement />` from `@stripe/react-stripe-js`. Never build custom card inputs — always use Stripe Elements.
-
-`OrderSummary` is a sticky sidebar on desktop (`lg:sticky lg:top-4`), stacked below the form on mobile.
-
-## Responsive Layout Patterns
-
-| Breakpoint | Behavior |
-|---|---|
-| default (mobile) | Single column, full-width cards, stacked checkout |
-| `sm` (640px) | 3-column product grid |
-| `lg` (1024px) | 4-column grid, 2-column figurine detail, sticky checkout sidebar |
-| `xl` (1280px) | 5-column product grid |
-
-Container max-width: `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8` on all top-level page wrappers.
-
-## GSAP Animations
-
-Use GSAP for component entrance animations only. Register animations in `useLayoutEffect`, clean up with `gsap.context()`:
+Uses Radix UI `Sheet` (via shadcn-ui) from the right side. Triggered by the cart icon in the global header.
 
 ```tsx
-useLayoutEffect(() => {
-  const ctx = gsap.context(() => {
-    gsap.from(".product-card", {
-      opacity: 0,
-      y: 20,
-      stagger: 0.05,
-      duration: 0.3,
-      ease: "power2.out",
-    });
-  }, containerRef);
-  return () => ctx.revert();
-}, [products]);
+// components/cart/CartDrawer.tsx
+// State managed via Zustand cartStore
 ```
 
-Never animate elements that are offscreen or hidden — check `prefers-reduced-motion` before applying GSAP:
+### Behaviour
+
+- Opens with a GSAP slide-in (`x: '100%' → 0`, duration 0.3s, ease: `power2.out`)
+- Line items show: thumbnail, name, size tier badge, quantity stepper, remove button
+- Subtotal in CZK, VAT note (`"Incl. 21% VAT"`)
+- "Proceed to Checkout" button navigates to `/checkout` and closes the drawer
+- Drawer is a `role="dialog"` with `aria-label="Shopping cart"` and focus trap via Radix
+
+### Empty state
+
+Show a centered SVG illustration with copy "Your cart is empty" and a "Browse Catalog" link. No spinner — the cart is always synchronous from local state.
+
+---
+
+## Stripe Checkout Form
+
+Located at `/checkout`. Embeds Stripe Elements via `@stripe/react-stripe-js`.
 
 ```tsx
-const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-if (!prefersReduced) { /* GSAP animation */ }
+// components/checkout/CheckoutForm.tsx
 ```
 
-## Anti-patterns
+### Layout
 
-- Do not use inline styles except for Three.js canvas sizing when unavoidable
-- Do not edit files under `src/components/ui/` — those are shadcn-ui managed
-- Do not use `React.FC` — use explicit function declarations with typed props interfaces
-- Do not put Three.js logic inside JSX render — always in `useEffect`/`useLayoutEffect`
-- Do not use `any` for Stripe or Three.js types — import their types from `@stripe/stripe-js` and `three`
+1. **Order summary** (right column, sticky on desktop) — read-only, mirrors cart contents
+2. **Payment form** (left column):
+   - Stripe `<PaymentElement />` — covers card, Apple Pay, Google Pay, iDEAL, Bancontact, SEPA
+   - Shipping address using Stripe's `<AddressElement mode="shipping" />`
+   - "Pay now" submit button with loading spinner (shadcn-ui `<Button>` with `disabled` + spinner during `confirmPayment`)
+
+### Error handling
+
+- Stripe API errors surface via `<PaymentElement>` natively — do not duplicate error state
+- Network/fetch errors: show shadcn-ui `<Alert variant="destructive">` above the submit button
+- On success: redirect to `/order/[orderId]/confirmation`
+
+### Prompt-to-Print deposit flow
+
+When `orderType === 'custom'`, the checkout form collects only the 50% deposit. A prominent banner reads:
+> "You are paying a 50% deposit. The remaining balance is due after you approve your 3D preview."
+
+---
+
+## Order Status Timeline
+
+Used on `/order/[orderId]` (tracking page) and the confirmation page.
+
+```tsx
+// components/order/OrderTimeline.tsx
+interface OrderTimelineProps {
+  steps: OrderStep[];
+  currentStep: OrderStatus;
+}
+
+type OrderStatus =
+  | 'payment_captured'
+  | 'file_prep'
+  | 'printing'
+  | 'quality_check'
+  | 'shipped'
+  | 'delivered';
+
+interface OrderStep {
+  status: OrderStatus;
+  label: string;
+  estimatedDate?: string; // ISO 8601
+  completedAt?: string;
+}
+```
+
+### Rendering rules
+
+- Vertical timeline on mobile, horizontal stepper on `md:` and above
+- Completed steps: filled circle icon + full color (`text-violet-700`)
+- Current step: animated pulse ring around circle
+- Upcoming steps: hollow circle + muted text (`text-muted-foreground`)
+- For Prompt-to-Print orders, insert `preview_approval` step between `file_prep` and `printing` — include a "Review Preview" CTA button on that step when `currentStep === 'preview_approval'`
+
+---
+
+## General Rules
+
+- All components must export a named export (no default exports except pages)
+- Props interfaces live in the same file as the component; shared types live in `types/`
+- Use `cn()` (from `lib/utils`) for conditional class merging — never string concatenation
+- No component should fetch data directly — data is passed via props or read from Zustand stores
+- Skeleton loaders must match the exact dimensions of the loaded content to prevent layout shift

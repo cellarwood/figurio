@@ -1,10 +1,10 @@
 ---
 name: seo-checklist
 description: >
-  SEO checklist for Figurio content — keyword targeting for '3D printed figurines',
-  'custom figurines', and 'personalized gifts', meta tags, image alt text for
-  product photos, internal linking strategy, and JSON-LD product schema markup
-  for the Figurio e-commerce catalog.
+  SEO checklist for Figurio product pages, blog posts, and landing pages. Covers
+  meta tags, Open Graph tags, structured data (JSON-LD) for 3D figurine products,
+  image alt text conventions, and keyword density guidelines for 'custom figurines',
+  '3D figurines', and 'personalized gifts'.
 allowed-tools:
   - Read
   - Grep
@@ -13,168 +13,203 @@ metadata:
     tags:
       - seo
       - content
-      - engineering
+      - e-commerce
 ---
 
 # SEO Checklist
 
-Apply this checklist to every page published on figurio.cz or figurio.eu —
-product pages, blog posts, landing pages, and category pages.
+Use this checklist when creating or auditing any Figurio page — product listings, blog
+posts, landing pages, or the Prompt to Print flow.
 
-## Primary Keyword Targets
+---
 
-| Intent | Primary keyword | Supporting keywords |
-|---|---|---|
-| Commercial | `custom figurines` | `custom 3D figurines`, `personalized figurine` |
-| Commercial | `3D printed figurines` | `3D print figurine`, `resin figurines` |
-| Gift intent | `personalized gifts` | `unique personalized gifts`, `custom gift ideas` |
-| Niche | `scan to print figurine` | `3D scan figurine`, `photo to figurine` |
-| Niche | `AI custom figurine` | `AI generated figurine`, `custom miniature` |
+## Core Keywords
 
-Target one primary keyword per page. Do not stuff multiple primary keywords onto the same URL.
+Always target these terms. Weave them naturally — never stuff.
 
-## Title Tags
-
-- Length: 50–60 characters
-- Pattern: `{Primary Keyword} — {Differentiator} | Figurio`
-- Examples:
-  - `Custom 3D Printed Figurines — Full-Color Resin | Figurio`
-  - `Personalized Gift Figurines for Collectors | Figurio`
-- The primary keyword must appear in the first 40 characters
-- Never duplicate title tags across pages
-
-## Meta Descriptions
-
-- Length: 140–155 characters
-- Must include: primary keyword, one concrete benefit, a soft CTA
-- Example:
-  ```
-  Order a full-color custom figurine from your photo. 0.1 mm detail, gift-ready
-  packaging, ships in 5–7 days. Design yours at Figurio.
-  ```
-- Do not use the same meta description on two pages
-
-## Heading Structure
-
-- One `H1` per page — contains the primary keyword, matches the page intent
-- `H2` headings: supporting keywords or subtopics; 2–5 per page
-- `H3` and below: descriptive only, no keyword stuffing
-- Product pages: H1 = figurine name (which must follow naming conventions in `content-style-guide`)
-
-## Image Alt Text
-
-Every product photo requires descriptive alt text. Format:
-
-```
-{color/finish} {material} {subject} figurine[, {size}][, {occasion}]
-```
-
-Examples:
-- `full-color resin custom wedding figurine, 15 cm`
-- `matte finish 3D printed fantasy warrior figurine, gift box`
-- `scan-to-print portrait figurine of elderly man, display base`
-
-Rules:
-- Never use filename as alt text
-- Never leave alt text empty on product images
-- Do not start with "image of" or "photo of"
-- Keep under 125 characters
-
-## Internal Linking
-
-Minimum links per page type:
-
-| Page type | Minimum internal links |
+| Type | Keywords |
 |---|---|
-| Blog post | 3 — at least 1 to a product category, 1 to a related blog post |
-| Product page | 2 — to the parent category and one related product |
-| Category page | 1 — to the most popular product in the category |
+| Primary | `custom figurines`, `3D figurines`, `personalized figurines`, `custom 3D printed figurine` |
+| Secondary | `personalized gifts`, `unique gifts`, `figurine collector`, `Prompt to Print`, `3D printing gifts` |
+| Long-tail | `custom figurine from photo`, `AI custom figurine`, `3D printed gift ideas`, `display figurines` |
 
-Anchor text rules:
-- Use descriptive anchors: "browse custom figurines" not "click here"
-- Match anchor text to the title of the destination page where possible
-- Do not use the same anchor text for different destination URLs
+**Keyword density:** 1-2% for primary terms per page. Check: primary keyword should appear
+in title, first 100 words of body, at least one H2, and meta description.
 
-## URL Structure
+---
 
-- Lowercase, hyphen-separated, no underscores
-- Product pages: `/products/{category-slug}/{product-slug}`
-- Blog posts: `/blog/{topic-slug}/{post-slug}`
-- Category pages: `/categories/{category-slug}`
-- Examples:
-  - `/products/custom/ai-portrait-figurine`
-  - `/blog/gift-guides/best-3d-printed-gifts-2026`
+## Meta Tags Checklist
 
-## JSON-LD Product Schema
+### Title Tag
 
-Every product page must include a `<script type="application/ld+json">` block with the following fields populated:
+- [ ] 50-65 characters (including spaces)
+- [ ] Primary keyword near the front
+- [ ] Brand name at the end: `| Figurio`
+- [ ] Unique per page — no duplicates across the site
+
+**Product page formula:** `[Product Name] — [Size] Custom 3D Figurine | Figurio`
+Example: `Dragon Knight — 15cm Custom 3D Figurine | Figurio`
+
+**Blog post formula:** `[Post Title — under 55 chars] | Figurio`
+Example: `Best Personalized Gifts for Collectors | Figurio`
+
+**Landing page formula:** `Custom Figurines — [Value Prop] | Figurio`
+Example: `Custom Figurines — Bring Your Idea to Life | Figurio`
+
+### Meta Description
+
+- [ ] 150-160 characters
+- [ ] Includes primary keyword once
+- [ ] Includes a soft CTA ("Shop now", "Order yours", "Start your prompt")
+- [ ] Unique per page
+
+**Product page example:**
+> Shop our 15cm Dragon Knight — a full-color 3D figurine with display-grade detail.
+> Custom sizes available. Order yours today at Figurio.
+
+**Blog post example:**
+> Looking for unique personalized gifts? Explore our top 3D figurine picks for collectors,
+> gamers, and gift-givers. Find yours at Figurio.
+
+---
+
+## Open Graph Tags
+
+Required on every public page. Set in the page `<head>`.
+
+```html
+<meta property="og:title" content="[Same as title tag, minus brand suffix]" />
+<meta property="og:description" content="[Meta description text]" />
+<meta property="og:type" content="product" />  <!-- or "article" for blog posts -->
+<meta property="og:url" content="https://figurio.com/products/[slug]" />
+<meta property="og:image" content="https://figurio.com/images/[product-slug]-og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="Figurio" />
+<meta property="og:locale" content="en_US" />
+```
+
+- [ ] `og:image` is 1200x630px, shows the product clearly on a clean background
+- [ ] `og:type` is `product` for product pages, `article` for blog posts
+- [ ] Twitter Card tags also present (`twitter:card`, `twitter:title`, `twitter:description`, `twitter:image`)
+
+---
+
+## Structured Data (JSON-LD)
+
+### Product Pages
+
+Include on every figurine product listing. Place in a `<script type="application/ld+json">` tag.
 
 ```json
 {
   "@context": "https://schema.org",
   "@type": "Product",
-  "name": "Classic Portrait Figurine",
-  "description": "Full-color resin figurine printed at 0.1 mm resolution...",
+  "name": "Dragon Knight Figurine — 15cm",
+  "description": "Full-color 3D-printed dragon knight figurine at display grade. 15cm size, artisan quality.",
+  "image": "https://figurio.com/images/dragon-knight-15cm.jpg",
   "brand": {
     "@type": "Brand",
     "name": "Figurio"
   },
-  "image": ["https://figurio.cz/images/products/classic-portrait-front.jpg"],
-  "sku": "FIG-CPF-001",
+  "sku": "FIG-DRK-15",
   "offers": {
     "@type": "Offer",
-    "url": "https://figurio.cz/products/custom/classic-portrait-figurine",
-    "priceCurrency": "CZK",
-    "price": "1490",
+    "url": "https://figurio.com/products/dragon-knight-15cm",
+    "priceCurrency": "EUR",
+    "price": "49.00",
     "availability": "https://schema.org/InStock",
-    "shippingDetails": {
-      "@type": "OfferShippingDetails",
-      "deliveryTime": {
-        "@type": "ShippingDeliveryTime",
-        "businessDays": { "@type": "QuantitativeValue", "minValue": 5, "maxValue": 7 }
-      }
+    "seller": {
+      "@type": "Organization",
+      "name": "Figurio"
     }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.8",
-    "reviewCount": "124"
   }
 }
 ```
 
-Required fields: `name`, `description`, `brand`, `image`, `sku`, `offers` (with `price`, `priceCurrency`, `availability`).
-Optional but high-value: `aggregateRating`, `shippingDetails`.
+- [ ] `@type` is `Product`
+- [ ] `name` includes size tier (8cm / 15cm / 25cm)
+- [ ] `sku` follows Figurio SKU format: `FIG-[CODE]-[SIZE]`
+- [ ] `priceCurrency` is `EUR` (primary market)
+- [ ] `availability` reflects actual stock status
 
-## Blog Post SEO Checklist
+### Blog Posts
 
-Before publishing any blog post, confirm:
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Best Personalized Gifts for Figurine Collectors",
+  "author": {
+    "@type": "Organization",
+    "name": "Figurio"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Figurio",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://figurio.com/images/logo.png"
+    }
+  },
+  "datePublished": "2026-04-10",
+  "dateModified": "2026-04-10",
+  "image": "https://figurio.com/images/blog/[post-slug]-hero.jpg"
+}
+```
 
-- [ ] Primary keyword in title (within first 60 chars)
-- [ ] Primary keyword in first 100 words of body
-- [ ] Primary keyword in at least one H2
-- [ ] Meta description written, 140–155 chars, includes keyword
-- [ ] All images have descriptive alt text
-- [ ] At least 3 internal links with descriptive anchors
-- [ ] URL slug matches primary keyword (hyphenated, lowercase)
-- [ ] No duplicate title tag or meta description with existing posts
+- [ ] `@type` is `Article`
+- [ ] `datePublished` and `dateModified` are accurate ISO 8601 dates
+- [ ] `headline` matches the page H1 exactly
 
-## Product Page SEO Checklist
+---
 
-Before publishing any product page, confirm:
+## Image Alt Text
 
-- [ ] H1 matches the figurine name (naming convention from `content-style-guide`)
-- [ ] Title tag 50–60 chars, primary keyword in first 40 chars
-- [ ] Meta description 140–155 chars with benefit and CTA
-- [ ] All product photos have alt text (format above)
-- [ ] JSON-LD Product schema present and valid (test with Google Rich Results Tool)
-- [ ] SKU populated in schema matches catalog SKU
-- [ ] Price and currency correct in schema (`CZK` for .cz, `EUR` for .eu)
-- [ ] At least 2 internal links (parent category + related product)
+All figurine images must have descriptive alt text. Never use file names as alt text.
 
-## Anti-patterns
+### Formula
 
-- Do not target more than one primary keyword per page
-- Do not use auto-generated meta descriptions — write them manually
-- Do not add `noindex` to product pages without explicit approval
-- Do not use keyword-stuffed alt text: "3D figurine custom figurine printed figurine" is a violation
+`[Color/style descriptor] [product name] [size] 3D figurine [context if useful]`
+
+**Examples:**
+
+| Context | Alt Text |
+|---|---|
+| Product hero | `Full-color dragon knight 15cm 3D figurine on white background` |
+| Lifestyle shot | `Custom 3D printed figurine on wooden desk next to books` |
+| Size comparison | `Figurio figurine size comparison: 8cm, 15cm, and 25cm side by side` |
+| Prompt to Print | `AI-generated custom figurine from Figurio Prompt to Print feature` |
+
+- [ ] Every `<img>` has a non-empty `alt` attribute
+- [ ] Alt text is under 125 characters
+- [ ] Primary keyword (`3D figurine` or `custom figurine`) appears in alt text for main product images
+- [ ] Decorative images use `alt=""`
+
+---
+
+## URL Structure
+
+- [ ] All lowercase, hyphen-separated: `/products/dragon-knight-15cm`
+- [ ] No underscores, no special characters, no query strings in canonical URLs
+- [ ] Size tier in slug for product pages: `-8cm`, `-15cm`, `-25cm`
+- [ ] Blog slugs: `/blog/[keyword-rich-slug]` — include primary keyword where natural
+
+---
+
+## Page-Level Checklist Summary
+
+Run through this for every page before publishing:
+
+- [ ] Title tag: 50-65 chars, keyword first, `| Figurio` suffix
+- [ ] Meta description: 150-160 chars, includes keyword + CTA
+- [ ] Open Graph tags complete and image is 1200x630
+- [ ] JSON-LD structured data present and valid (use Google Rich Results Test)
+- [ ] H1 contains primary keyword; appears exactly once on the page
+- [ ] Primary keyword in first 100 words of body copy
+- [ ] At least one H2 includes a secondary keyword
+- [ ] All images have descriptive alt text following the formula above
+- [ ] URL is clean, lowercase, hyphenated
+- [ ] Internal link to at least one related product or blog post
+- [ ] Canonical tag set to the page's own URL
+- [ ] Page loads under 3 seconds (flag to engineering if not)

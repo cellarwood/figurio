@@ -9,64 +9,66 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/today.md` (or create it if missing).
-- Review the editorial calendar in Google Calendar (`gws calendar agenda`) for publish deadlines today and in the next 3 days.
-- Identify any overdue or at-risk deliverables and note them before doing any new work.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review any in-progress deliverables: are they complete, blocked, or still active?
+- Note any content calendar deadlines due today or within 48 hours.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- If approved, move the deliverable to its final state (publish draft, upload asset, close issue with Drive link).
+- If rejected, read the CMO's feedback, revise, and re-submit.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can now unblock it.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless a blocker has been resolved.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
-- Check for new mentions or CMO comments in Gmail (`gws gmail`) that may affect priorities.
 
 ## 5. Checkout and Work
 
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
 - Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+- Do the work (see section 6 for content workflow).
+- Update status and comment with a deliverable link when done.
 
 ## 6. Content Workflow
 
-**For written content (web copy, blog posts, product descriptions):**
-1. Confirm keyword target and search intent before writing.
-2. Validate the concept is IP-clean before drafting.
-3. Draft in Google Docs (`gws docs`); use a consistent naming convention: `[Type] [Topic] [YYYY-MM-DD]`.
-4. Apply SEO checklist (`seo-checklist` skill): title tag, meta description, heading hierarchy, internal linking, image alt text.
-5. Upload final asset to the correct Google Drive folder.
-6. Comment on the issue with the Doc link and a one-paragraph summary of what was written and why.
+For **written content** (product descriptions, blog posts, newsletters, social captions):
+1. Pull relevant brand voice rules from `$AGENT_HOME/guides/brand-voice.md` if it exists.
+2. Apply seo-checklist skill for any public-facing web copy.
+3. Draft in Google Docs via `gws docs` and save to Drive.
+4. Comment on the issue with the Doc URL and a one-sentence summary of what was produced.
 
-**For visual assets (renders, lifestyle images, banners):**
-1. Confirm dimensions, format, and placement context before generating.
-2. Use `media-plugin` for image/video generation; use `design-plugin` for brand-consistent layout and composition.
-3. Verify the output is IP-clean before saving.
-4. Upload to the content asset library in Google Drive (`gws drive upload`).
-5. Comment on the issue with a link to the asset and any usage notes.
+For **visual content** (product photography, catalog images, packaging, brand graphics):
+1. Use media-plugin to generate source imagery.
+2. Use design-plugin for layout, color, and typography direction.
+3. Upload final assets to Google Drive via `gws drive upload`.
+4. Comment on the issue with the Drive URL.
 
-**For brand identity work (guidelines, style documents):**
-1. Check the canonical brand guidelines document first — do not contradict existing decisions without CMO approval.
-2. Draft updates in Google Docs.
-3. Surface significant changes (new colors, typeface changes, logo variants) to the CMO before finalizing.
+For **email campaigns**:
+1. Draft copy in Google Docs.
+2. Use `gws gmail` to send a test version to the CMO for approval if needed.
+3. Record campaign metadata (send date, subject line, audience segment) in the content calendar Google Sheet.
+
+For **content calendar updates**:
+1. Open the tracking Sheet via `gws sheets`.
+2. Update publish dates, status columns, and asset links for all active items.
 
 ## 7. Fact Extraction
 
-- Extract durable facts from this session into memory: new keywords identified, brand decisions made, assets created and their Drive locations, deadlines confirmed.
-- Update `$AGENT_HOME/notes/today.md` with session progress.
+- Extract durable facts (brand decisions, approved copy, visual standards, confirmed publish dates) into memory.
+- Update `$AGENT_HOME/notes/daily.md` with what was completed and what is pending.
 
 ## 8. Exit
 
-- Comment on any `in_progress` issue before exiting — include current state and next action.
+- Comment on any in_progress issues before exiting with a status line, progress bullets, and next step.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never publish content to the live site directly — hand off to the backend engineer via an issue with the final asset and placement instructions.
-- All content drafts live in Google Drive before they are considered complete.
+- Every closed content issue must have a deliverable link (Doc, Drive, or published URL).
+- Never close an issue without attaching proof of the output.

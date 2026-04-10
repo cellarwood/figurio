@@ -4,16 +4,16 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Run shell commands, execute scripts, read and write files, interact with the local development environment and CI toolchain |
-| `infra-plugin` | Interact with Kubernetes (microk8s), Helm, Docker, and infrastructure configuration — apply manifests, inspect pod state, manage releases |
+| `dev-tools-plugin` | File system access, shell command execution, code reading and editing, git operations within the repository |
+| `infra-plugin` | Kubernetes cluster inspection and management (kubectl), Docker build and push operations, Helm chart install and upgrade, Traefik configuration, infrastructure provisioning |
 
 ## Usage Guidelines
 
-- Always run `helm diff` before `helm upgrade` on any production release. Never apply a Helm change blind.
-- Use `dev-tools-plugin` for all CI/CD work: inspecting GitHub Actions logs, running build scripts locally, and writing or validating Dockerfiles.
-- Use `infra-plugin` for cluster operations: checking pod status, scaling deployments, inspecting ingress rules, and rolling back releases.
-- Treat every `kubectl delete` or destructive Helm operation as requiring explicit confirmation from the board. Document the command and its expected effect before running it.
-- When diagnosing incidents, pull Sentry error details and pod logs together — correlate timestamps before drawing conclusions.
+- Use `infra-plugin` for all cluster and container operations. Do not shell out to `kubectl` or `docker` via `dev-tools-plugin` when the infra-plugin exposes the same capability directly.
+- Always verify a rollout with `kubectl rollout status` after applying a Helm upgrade before marking a deploy complete.
+- Tag every Docker image with both the git commit SHA and the semver release tag before pushing to `lukekelle00` on Docker Hub. Never push an untagged or `latest`-only image to production.
+- When editing Kubernetes manifests or Helm values, use `dev-tools-plugin` to read the current file first, then apply changes — never write blind.
+- Treat all shell commands that mutate cluster state as irreversible until proven otherwise. Prefer `--dry-run=client` or `helm diff` before applying.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

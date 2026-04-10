@@ -1,38 +1,43 @@
-# Tools -- Head of Operations
+# Tools -- HeadOfOperations
 
 ## Plugins
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `company-plugin` | Stripe MCP for payment operations; DHL API Assistant for EU shipping label generation and tracking |
-| `office-plugin` | Google Workspace access via `gws` CLI (Gmail, Calendar, Drive, Docs, Sheets, Tasks) |
+| `company-plugin@claude-my-marketplace` | Provides MCP-backed access to company integrations: Stripe payment data and DHL shipping API |
+| `office-plugin@claude-my-marketplace` | Provides Google Workspace access via the `gws` CLI for Gmail, Calendar, Drive, Docs, Sheets, and Tasks |
 
-## MCP Servers
+## MCP Tool Permissions
 
-No dedicated MCP servers are configured for this agent. Stripe and DHL capabilities are delivered through `company-plugin` permissions listed below.
+The following MCP tools are permitted for this agent:
 
-**Allowed MCP permissions:**
-
-| Permission | What it does |
-|-----------|-------------|
-| `mcp__plugin_company-plugin_stripe` | Stripe API access -- list/create refunds, retrieve disputes, submit dispute evidence, retrieve payout data |
-| `mcp__plugin_company-plugin_dhl-api-assistant` | DHL API access -- generate EU shipping labels, retrieve tracking events, manage shipment records |
+| Tool | Permission String | What it does |
+|------|------------------|-------------|
+| DHL API Assistant | `mcp__plugin_company-plugin_dhl-api-assistant` | Creates DHL shipments, generates labels, and retrieves tracking status for EU orders |
+| Stripe | `mcp__plugin_company-plugin_stripe` | Queries payment intents, captured charges, and customer records for reconciliation and order verification |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ops@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ops@cellarwood.org`). Credentials at `GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE`.
 
-**Services:** Gmail (send, read, reply, triage), Calendar (agenda, event management), Drive (file storage and retrieval), Docs (document authoring), Sheets (data tracking and reporting), Tasks (action item management), shared Drive access.
+**Services:**
+
+- **Gmail** -- vendor correspondence with MCAE, courier partners, and packaging suppliers; inbound triage; sending operational updates
+- **Calendar** -- MCAE pickup windows, DHL/Zásilkovna cut-off times, packaging lead time reminders, recurring operational checkpoints
+- **Drive** -- storing and sharing SOPs, pricing sheets, vendor agreements, and fulfillment trackers
+- **Docs** -- authoring and maintaining the order-to-print SOP and vendor onboarding guides
+- **Sheets** -- MCAE pricing and SLA tracker, packaging inventory tracker, Stripe reconciliation log
+- **Tasks** -- personal operational to-dos that don't yet warrant a Paperclip issue
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use Google Sheets as the system of record for MCAE pricing tiers, SLA performance logs, and shipping rate comparisons -- keep them current after every vendor interaction.
-- When generating DHL shipment labels via the DHL API Assistant, always record the tracking number against the Figurio order ID before closing the task.
-- Use Stripe MCP for all refund and dispute operations -- never process payment actions through any other interface.
-- Zasilkovna (CZ/SK parcels) is managed via its own API outside the DHL tool -- document Zasilkovna API credentials and endpoint notes in `$AGENT_HOME/notes/zasilkovna.md`.
-- Vendor correspondence (MCAE, DHL, packaging suppliers) goes through Gmail at figurio-ops@cellarwood.org; store agreed terms and contract attachments in a dedicated Google Drive folder, not in email threads alone.
+- Use the Stripe MCP to pull payment data; never ask engineering to run ad-hoc queries for reconciliation checks you can do yourself.
+- Use the DHL API assistant for EU label generation; document each label in the fulfillment tracker (Google Sheets) immediately after creation, not in batch at end of day.
+- All vendor commitments confirmed via Gmail must be copied into the relevant Google Sheet within the same heartbeat -- email threads are not a record system.
+- When drafting vendor emails via `gws gmail`, always reference specific order numbers, size tiers, agreed prices, and deadlines in the body; never send vague follow-ups.
+- Use Google Calendar to set reminders for every SLA deadline and vendor lead-time milestone -- operational memory must not live only in your working context.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

@@ -1,61 +1,66 @@
 # Figurio
 
-A Paperclip company package (`agentcompanies/v1`) for Figurio — a direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines.
+A Paperclip Agent Company (`agentcompanies/v1`) for a direct-to-consumer e-commerce business selling high-quality full-color 3D-printed figurines.
 
-## Product Lines
+## What is Figurio?
 
-- **Catalog Figurines** — curated, rotating catalog of pre-designed figurines (seasonal, viral, collectible)
-- **AI Custom Figurines** — describe a figurine in natural language, AI generates a 3D model, automated mesh repair, customer preview and approval
-- **Scan-to-Print (Phase 2)** — 3D scanning at events and pop-ups for personalized figurines
+Figurio designs, produces, and delivers 3D-printed figurines from the Czech Republic. Two product lines:
 
-## Tech Stack
+- **Catalog Figurines** — curated, pre-designed figurines available for immediate order
+- **AI Custom Figurines ("Prompt to Print")** — customers describe a figurine in natural language, AI generates a 3D model, customer approves a preview, then it prints
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, Three.js |
-| Backend | Python, FastAPI, SQLAlchemy, Alembic, Celery, Redis |
-| Infrastructure | Docker, Kubernetes (microk8s), Traefik, GitHub Actions |
-| Payments | Stripe |
-| AI Pipeline | Text-to-3D (Meshy/Tripo3D), Blender mesh repair |
-| Shipping | Zasilkovna (CZ/SK), DHL (EU) |
-| Production | MCAE (Stratasys J55 PolyJet) |
+All production is outsourced to MCAE (mcae.cz) using Stratasys J55 PolyJet technology. Orders are prepaid via Stripe.
 
-## Organization
+## Org Chart
 
 ```
 CEO
 ├── CTO
 │   ├── Backend Engineer
 │   ├── Frontend Engineer
+│   ├── ML/AI Engineer
 │   └── DevOps Engineer
 ├── CMO
 │   └── Content Creator
 └── Head of Operations
 ```
 
-**8 agents** | **5 projects** | **34 tasks** | **5 goals** | **16 custom skills** | **20 subagents**
+**9 agents** | **~$980/mo total budget**
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, Three.js |
+| Backend | Python, FastAPI, PostgreSQL, Stripe SDK |
+| AI Pipeline | Meshy/Tripo3D APIs, Blender scripting, PyTorch |
+| Infrastructure | Docker, Kubernetes (microk8s), Helm, Traefik |
+| CI/CD | GitHub Actions |
+| Payments | Stripe |
+| Shipping | Zasilkovna (CZ), DHL (EU) |
 
 ## Projects
 
 | Project | Owner | Description |
 |---------|-------|-------------|
-| platform-backend | Backend Engineer | FastAPI API with catalog, orders, Stripe, AI pipeline |
-| platform-frontend | Frontend Engineer | React storefront with catalog, checkout, 3D preview |
+| mvp-backend | Backend Engineer | FastAPI API with catalog, orders, Stripe, AI pipeline |
+| mvp-frontend | Frontend Engineer | React storefront with catalog, cart, checkout, 3D preview |
 | infrastructure | DevOps Engineer | Docker, K8s, CI/CD, monitoring |
-| operations | Head of Operations | MCAE vendor management, shipping, packaging |
-| marketing | Content Creator | Brand identity, content, SEO, social media |
+| brand-and-marketing | Content Creator | Brand identity, content, social media, SEO |
+| operations-setup | Head of Operations | MCAE partnership, fulfillment, shipping |
 
 ## Importing Into Paperclip
 
 ### Via Paperclip UI/API
 
-1. Push this package to GitHub (`cellarwood/figurio`)
+1. Push this package to GitHub
 2. Import via Paperclip UI (Company Import page) or API:
    ```
    POST /companies/import
-   { "source": { "type": "github", "repo": "cellarwood/figurio" } }
    ```
+   with `source.type: "github"` pointing to this repo
 3. The import handles all files: COMPANY.md, agents, projects, tasks, skills, .paperclip.yaml
+4. Runtime files (settings.json, mcp.json, subagents) are deployed to agent workspaces
 
 ### Global Config (manual)
 
@@ -64,7 +69,8 @@ CEO
 
 ### Secrets Setup
 
-Run the generated setup script for required environment variables:
+Run the generated script to configure required secrets:
+
 ```bash
 bash scripts/setup-secrets.sh
 ```
@@ -75,13 +81,13 @@ Required secrets: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `GH_TOKEN`, `DOC
 
 | Service | Value |
 |---------|-------|
-| Domain | cellarwood.org |
 | GitHub | cellarwood/figurio |
 | Docker Hub | lukekelle00 |
-| K8s Context | microk8s-local |
+| K8s Cluster | microk8s-local |
+| Domain | cellarwood.org |
+| GWS Domain | cellarwood.org |
 | Slack | 00aiworkspace.slack.com |
 | Stripe | Cellarwood |
-| GWS | cellarwood.org |
 
 ## License
 

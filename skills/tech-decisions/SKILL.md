@@ -1,129 +1,111 @@
 ---
 name: tech-decisions
 description: >
-  Build-vs-buy decision framework for Figurio — covers AI text-to-3D model
-  hosting (Meshy, Tripo3D, Luma Genie vs. self-hosted), mesh repair tooling
-  (NetFabb, Meshmixer, Blender scripting), printing partner model (MCAE
-  exclusivity vs. multi-vendor vs. in-house), and framework/service choices
-  aligned to the Figurio tech stack. Use when evaluating new vendors, tooling
-  options, or whether to build a capability internally.
+  Technical decision records for Figurio's D2C 3D-figurine platform. Covers
+  rationale behind stack choices (FastAPI, React/TS, microk8s), vendor selection
+  criteria for AI model generation (Meshy vs Tripo3D), performance tradeoffs,
+  and infrastructure decisions for the Czech Republic-based operation.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
 metadata:
   paperclip:
     tags:
       - engineering
-      - strategy
+      - architecture
       - decisions
 ---
 
-# Tech Decisions
+# Technical Decision Records
 
-## When to Use
+Use this skill when making, documenting, or revisiting a technology or vendor
+decision at Figurio. New decisions should follow the format below. Existing
+records here capture the settled choices and their reasoning.
 
-Use this skill when:
-- Evaluating a new external API, SaaS tool, or open-source library for Figurio
-- Deciding whether to build a capability in-house or integrate a third-party service
-- Reassessing an existing vendor relationship as volume or requirements change
-- Writing a decision record (ADR) for the engineering or CEO team
+## Decision Record Format
 
-## Decision Framework
+When logging a new decision, capture:
 
-Figurio is pre-revenue. Default to **buy/API-first** unless the capability is on the core moat list below. Optimize for reversibility: design the integration behind an abstraction layer so the vendor can be swapped without rewriting the rest of the pipeline.
+```
+## [Decision title]
+- **Status**: Accepted | Superseded | Under review
+- **Date**: YYYY-MM-DD
+- **Context**: What problem required a decision?
+- **Decision**: What was chosen?
+- **Rationale**: Why this over the alternatives?
+- **Tradeoffs**: What are we accepting as a downside?
+- **Review trigger**: Under what conditions should this be revisited?
+```
 
-### Core Moat — Always Own
+---
 
-These are the capabilities that differentiate Figurio. Never fully delegate to a single vendor with no fallback:
+## Settled Decisions
 
-1. **Mesh validation and repair logic** — the rules for what makes a model printable on the Stratasys J55 are Figurio-specific. Wrap any tool (NetFabb, Blender) behind a `MeshRepairService` interface
-2. **Order and pipeline state** — `orders`, `jobs`, `previews` live in Figurio's PostgreSQL, never in a vendor's database
-3. **Customer-facing preview rendering** — Figurio controls the preview UX; the renderer (Three.js, model-viewer, or a server-side render job) is an internal concern
+### Backend: FastAPI (Python, uv)
+- **Status**: Accepted
+- **Context**: Need a backend framework for catalog, order, and AI-pipeline services. Team has Python fluency.
+- **Decision**: FastAPI with `uv` for dependency and virtualenv management.
+- **Rationale**: Native async support suits the AI-pipeline service's non-blocking generation jobs. Automatic OpenAPI docs reduce frontend integration friction. `uv` is significantly faster than pip/poetry for CI cold starts.
+- **Tradeoffs**: Python is not ideal for CPU-bound work — 3D file validation and processing should be offloaded to external services or CLI tools, not Python loops.
+- **Review trigger**: If the AI-pipeline service needs heavy in-process 3D mesh manipulation.
 
-### Commodity — Buy First
+### Frontend: React + TypeScript + shadcn-ui + Tailwind
+- **Status**: Accepted
+- **Context**: D2C storefront needs a component-rich UI for catalog browsing, AI prompt flow, and order tracking.
+- **Decision**: React/TS with shadcn-ui components and Tailwind utility classes.
+- **Rationale**: shadcn-ui provides accessible, unstyled primitives that Tailwind can theme without fighting a design system. TypeScript catches contract mismatches with the FastAPI OpenAPI types early.
+- **Tradeoffs**: Tailwind verbosity in JSX. Mitigate with consistent component encapsulation — style in the component, not at the call site.
+- **Review trigger**: If the AI prompt UX requires a canvas or WebGL layer (evaluate dedicated 3D viewer libraries at that point).
 
-- Payments: **Stripe** (decided). Do not build payment processing.
-- Email/transactional notifications: **SendGrid or Resend** — integrate via simple HTTP, wrap in a `NotificationService`
-- Object storage: **S3-compatible** (GCS or Cloudflare R2) — no custom file server
-- Authentication: **Supabase Auth or Clerk** — do not build auth from scratch for MVP
+### Database: PostgreSQL (single cluster, multi-schema)
+- **Status**: Accepted
+- **Context**: Need persistent storage for catalog, orders, and AI job state.
+- **Decision**: Single PostgreSQL cluster with separate schemas per service domain (`catalog`, `orders`, `ai_pipeline`).
+- **Rationale**: Operational simplicity for a small team. Multi-schema gives logical isolation without the overhead of separate clusters. Cross-schema joins are possible for analytics but prohibited in application code.
+- **Tradeoffs**: All services share failure domain. Acceptable at current scale; revisit if traffic warrants read replicas or separate clusters.
+- **Review trigger**: p99 query latency exceeds 200ms under production load, or team size grows to the point where schema coordination becomes a bottleneck.
 
-## AI Text-to-3D Model Sourcing
+### Infrastructure: microk8s (local K8s) + Traefik + Docker + GitHub Actions
+- **Status**: Accepted
+- **Context**: Need container orchestration that a small Czech team can operate without managed K8s costs (EKS/GKE).
+- **Decision**: microk8s on self-managed nodes with Traefik as ingress controller; Docker for local dev; GitHub Actions for CI/CD.
+- **Rationale**: microk8s is lightweight and operationally close to upstream K8s, preserving future migration paths. Traefik integrates cleanly with K8s ingress annotations and handles TLS termination. GitHub Actions is sufficient for the current deployment cadence and avoids a separate CI system.
+- **Tradeoffs**: Self-managed K8s means the team owns node health and upgrades. No autoscaling unless cluster-autoscaler is configured manually. Acceptable while traffic is predictable.
+- **Review trigger**: Node management overhead exceeds ~2 hrs/week, or traffic becomes spiky enough to require dynamic scaling.
 
-**Current candidates:** Meshy, Tripo3D, Luma Genie, CSM 3D, self-hosted (e.g., Shap-E, CRM, InstantMesh)
+### Payments: Stripe (prepaid only)
+- **Status**: Accepted
+- **Context**: Figurio collects full payment before handing off to MCAE production. No COD or net-terms.
+- **Decision**: Stripe Payment Intents for upfront charge; no custom payment logic.
+- **Rationale**: Figurio is based in Czech Republic — Stripe supports CZK and EUR, handles SCA/3DS compliance for EU customers, and has a mature FastAPI integration ecosystem.
+- **Tradeoffs**: Platform fee. Non-negotiable given compliance requirements.
+- **Review trigger**: If Stripe's CZK settlement costs become materially worse than alternatives (e.g., Comgate for Czech-only volume).
 
-### Evaluation Criteria
+### AI Model Generation Vendor: Meshy vs Tripo3D
+- **Status**: Under review — evaluate on generation quality, latency, and CZK pricing
+- **Context**: "Prompt to Print" feature requires text-to-3D or image-to-3D generation producing print-ready or near-print-ready models for Stratasys J55 PolyJet (full-color PolyJet, 0.014mm layers).
+- **Decision**: Wrap the vendor behind `ai_pipeline` service's internal interface regardless of which is chosen. This makes switching cost low.
+- **Evaluation criteria** (in priority order):
+  1. Output mesh quality suitable for PolyJet printing (watertight, manifold STL/OBJ)
+  2. Generation latency (target: model ready within 3 minutes for UX)
+  3. API reliability and uptime SLA
+  4. Per-generation cost at expected volume
+  5. EU data residency or at minimum GDPR-compatible DPA available
+- **Rationale for deferring final choice**: Neither vendor has been benchmarked against MCAE's PolyJet print requirements. Decision blocked on physical test prints.
+- **Review trigger**: After test print batch from both vendors is evaluated by ops/production team.
 
-| Criterion | Weight | Notes |
-|-----------|--------|-------|
-| Output mesh quality (manifold ratio, detail) | High | Directly determines repair labor cost |
-| Printability rate without manual repair | High | Drives 3D technician hours per order |
-| Per-generation cost at target volume | Medium | Factor into custom figurine pricing model |
-| API reliability and rate limits | Medium | Celery retry budget depends on this |
-| Latency (time to usable mesh) | Low | Pipeline is async; customer waits anyway |
-| Data privacy / mesh ownership | High | Figurio must own output mesh IP |
+### Production Partner: MCAE (Stratasys J55 PolyJet)
+- **Status**: Accepted (outsourced, not built)
+- **Context**: Figurio does not own printing hardware. Production is outsourced.
+- **Decision**: MCAE as sole production partner using Stratasys J55 PolyJet for full-color figurines. Integration via order manifest + STL file handoff.
+- **Rationale**: J55 PolyJet produces the full-color, high-detail output that is Figurio's product differentiator. MCAE is an established Stratasys partner in Czech Republic.
+- **Tradeoffs**: Single vendor dependency for production. No fallback printer. Accept this risk at current scale; document escalation path if MCAE capacity is constrained.
+- **Review trigger**: MCAE lead times exceed stated SLA, or Figurio volume warrants negotiating a second print partner.
 
-### Current Position (April 2026)
+## Principles for Future Decisions
 
-Use a **hosted API** (Meshy or Tripo3D) for launch — faster integration, no GPU infra cost. Wrap the call in a `TextTo3DClient` abstraction with a single `generate(prompt: str) -> MeshResult` interface so the provider can be swapped without touching the Celery task.
-
-Revisit self-hosting when:
-- Monthly generation volume exceeds ~500 models/month AND
-- Per-unit API cost exceeds self-hosted GPU amortization, OR
-- A quality gap is confirmed by QA data (repair rate > 40% of outputs)
-
-Do not self-host before those thresholds — GPU infra management will cost more in engineering time than it saves.
-
-## Mesh Repair Tooling
-
-**Candidates:** NetFabb (cloud API), Meshmixer (local/scripted), Blender Python scripting, Manifold (open-source C++/Python bindings)
-
-### Current Position
-
-Run a **two-layer repair pipeline**:
-1. **Automated:** Blender Python script (via `bpy`) for common issues — non-manifold edges, inverted normals, thin walls below J55 minimum (0.5mm). Free, scriptable, runs in-container.
-2. **Escalation:** NetFabb Cloud for geometries the Blender script cannot fix. API-based, pay-per-use.
-
-Do not license Meshmixer per-seat — it is GUI-only and cannot be automated in a Celery worker.
-
-Flag models that survive both layers but still fail validation for **human QA review** — do not silently pass bad meshes to MCAE.
-
-## Printing Partner Model
-
-**Current:** MCAE (mcae.cz) — Stratasys J55 PolyJet, outsourced exclusively.
-
-### Decision Thresholds
-
-| Phase | Condition | Action |
-|-------|-----------|--------|
-| Launch | < 50 orders/month | MCAE exclusive, negotiated per-unit pricing |
-| Growth | 50–200 orders/month | Negotiate volume tier with MCAE; evaluate second Czech/EU PolyJet partner as backup |
-| Scale | > 200 orders/month | Model in-house Stratasys J55 lease/purchase economics; consider lower-cost FDM/SLA tier for catalog items |
-
-Never build a dependency on MCAE that cannot be transferred to another Stratasys-authorized partner within 30 days. All print files must be stored in Figurio's object storage in a vendor-neutral format (3MF/STL).
-
-## Framework and Service Choices
-
-### When a Second Backend Language Is Justified
-
-- **Go:** Only for a standalone performance-critical service (e.g., a mesh-streaming proxy, a high-throughput webhook receiver). Must be a separate Deployment, not mixed into the Python codebase.
-- **Node.js/Express:** Only if consuming a JS-only SDK with no Python equivalent and the integration cannot be wrapped.
-- Default for everything else: **Python/FastAPI**.
-
-### When to Add a New Python Dependency
-
-1. Check if the standard library or an already-approved package covers the need
-2. Confirm the package is maintained (last commit < 12 months, CVE scan clean)
-3. Add via `uv add <package>` — never `pip install`
-4. If the package is a large optional dependency (e.g., `bpy`, `open3d`), isolate it to the worker image, not the API image
-
-### Database
-
-PostgreSQL is the single source of truth. Do not introduce a second relational database. Redis is task queue and cache only — not a primary store.
-
-## Writing a Decision Record
-
-For any non-trivial tech decision, document:
-1. **Context** — what problem, what constraints, what triggered the evaluation
-2. **Options considered** — at least two, with a one-line tradeoff summary each
-3. **Decision** — what was chosen and why
-4. **Consequences** — what this forecloses, what the swap-out path is if wrong
-5. **Review trigger** — the condition under which this decision should be revisited (volume threshold, cost threshold, new product line)
-
-Keep ADRs in `docs/decisions/` as Markdown files named `YYYY-MM-DD-<slug>.md`.
+- Prefer managed/vendor solutions for non-differentiating infrastructure (auth, payments, email, SMS)
+- Wrap every external vendor integration behind an internal service interface — never call third-party APIs from business logic directly
+- Optimize for small-team operability over theoretical scalability
+- Decisions affecting the AI-pipeline or print-handoff flow require a physical print validation before going to production
