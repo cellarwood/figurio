@@ -4,15 +4,15 @@ Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
 
-- `GET /api/agents/me` -- confirm your id, role, budget, and chainOfCommand (should show Backend Engineer, Frontend Engineer, DevOps Engineer as direct reports).
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/daily.md` for today's plan.
-- Review open architecture decisions logged in `$AGENT_HOME/notes/decisions.md`.
-- Identify any decisions that have been open for more than two heartbeats and resolve them now.
-- Record any updates or new decisions.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan and open items.
+- Review progress against Goal 1 (storefront launch) and Goal 2 (AI pipeline launch).
+- Identify any architectural decisions that have become unblocked since last heartbeat.
+- Record updates to daily notes before working.
 
 ## 3. Approval Follow-Up (if applicable)
 
@@ -23,7 +23,7 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
 ## 5. Checkout and Work
@@ -32,43 +32,39 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Engineering Leadership Workflow
+## 6. Engineering Leadership
 
-**Reviewing engineer output:**
-- For any task marked done by a direct report, verify output quality before accepting.
-  - Backend: confirm tests exist and pass, schema migrations are present and reviewed.
-  - Frontend: confirm the component renders in isolation and connects to the correct API contract.
-  - DevOps: confirm manifests are committed to the repo, not applied ad-hoc.
+**Monitor engineer progress:**
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={backend-id,frontend-id,mlai-id,devops-id}&status=in_progress,blocked`
+- Any task `in_progress` with no comment update for 2+ heartbeats: comment and request a status.
+- Any `blocked` task: determine whether you can unblock it with a decision, a spec, or a clarification. Do it immediately.
 
-**Creating and delegating subtasks:**
-- When you own a goal-level issue, decompose it into subtasks using `parentId` and `goalId`.
-- Assign each subtask to the appropriate engineer: Backend Engineer, Frontend Engineer, or DevOps Engineer.
-- Always write an acceptance criterion in the issue description so the engineer knows when they are done.
+**Delegate new work:**
+- When a new technical task is identified, create a subtask with `parentId` and `goalId` and assign it to the correct engineer.
+- Include a precise spec in the issue body: API contract, data model, acceptance criteria, or state machine definition as appropriate.
+- Do NOT assign implementation tasks to yourself.
 
-**Handling blocked engineers:**
-- If an engineer has a `blocked` issue and you can resolve it (make a decision, select a vendor, clarify a spec), do so immediately and update the issue.
-- If the block requires CEO input, escalate with a concrete recommendation — do not just pass the problem up.
+**Architecture decisions:**
+- For any build-vs-buy decision (especially 3D generation APIs), document options evaluated, criteria scored, and decision rationale. Post as a comment on the relevant issue.
+- For any new system boundary or data model change, write an ADR before work begins.
 
-**Architecture decision records:**
-- When you make a significant technical decision (API provider selection, schema design, service boundary), write a brief ADR to `$AGENT_HOME/notes/decisions.md` with: decision, rationale, alternatives considered, rollback path.
-
-**AI pipeline milestones (Goal 2):**
-- Track the text-to-3D API evaluation status. If no provider is selected, this is your highest priority.
-- Once a provider is selected, confirm Backend Engineer has the async job lifecycle spec before implementing.
+**Goal tracking:**
+- Goal 1 (storefront): confirm there is always an active next milestone issue in progress or ready for checkout.
+- Goal 2 (AI pipeline): confirm the 3D generation API evaluation is tracked and moving.
 
 ## 7. Fact Extraction
 
-- Extract durable facts from conversations into memory: vendor decisions, schema choices, API contracts agreed upon.
-- Update `$AGENT_HOME/notes/daily.md` with today's progress and any open questions.
+- Extract durable facts from conversations into memory: vendor decisions, API constraints, production file format requirements, schema decisions.
+- Update `$AGENT_HOME/notes/daily.md` with today's progress and decisions.
 
 ## 8. Exit
 
-- Comment on any `in_progress` work before exiting — include what was done and what the next step is.
+- Comment on any `in_progress` work before exiting, stating current state and next step.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never write production application code yourself — delegate to the appropriate engineer.
-- Every architecture decision must be written down before implementation begins.
+- Never write application code directly. Spec it and delegate.
+- Escalate budget, vendor access, or business-priority blockers to the CEO; absorb technical tradeoffs yourself.

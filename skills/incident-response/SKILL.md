@@ -1,244 +1,220 @@
 ---
 name: incident-response
 description: >
-  Incident response playbook for Figurio — severity classification for
-  payment failures, site down, and stuck orders; escalation paths to the CTO;
-  Sentry alert handling procedures; and a post-mortem template.
+  Incident handling procedures for Figurio — severity classification for e-commerce
+  and 3D printing operations, escalation paths, communication templates for customers
+  and stakeholders, and postmortem format.
 allowed-tools:
   - Read
-  - Write
-  - Bash
   - Grep
+  - Bash
 metadata:
   paperclip:
     tags:
-      - engineering
       - devops
-      - incident-response
+      - incidents
+      - operations
 ---
 
-# Incident Response Playbook
+# Incident Response
+
+Procedures for detecting, responding to, and learning from incidents affecting Figurio services.
 
 ## Severity Levels
 
-| Level | Definition | Response SLA |
-|-------|------------|-------------|
-| SEV-1 | Platform is down or payments are completely broken | Immediate — drop everything |
-| SEV-2 | Major feature degraded (e.g., orders stuck, image gen failing) | Within 15 minutes |
-| SEV-3 | Non-critical degradation (e.g., slow responses, single-user error) | Within 2 hours |
+### SEV-1 — Critical (respond immediately)
 
-When in doubt, **classify higher and downgrade** — it is better to over-respond
-than to let an SEV-1 drift for 30 minutes.
+Production is down or revenue is blocked. All hands.
 
----
+Examples:
+- Checkout / Stripe payment flow completely broken
+- Frontend unreachable (GKE ingress down, Traefik failure)
+- FastAPI backend crash-looping in production
+- Customer data at risk (security breach suspected)
+- Zásilkovna order export failure causing shipping stoppage
 
-## Severity Classification Guide
+Response time: **within 15 minutes**
 
-### SEV-1 — Immediate Response
+### SEV-2 — High (respond within 1 hour)
 
-- `https://figurio.cz` returns 5xx or is unreachable
-- Stripe webhook endpoint (`/api/webhooks/stripe`) is failing — payments not
-  being processed or Stripe events not received
-- PostgreSQL pod is down or in CrashLoopBackOff
-- Traefik ingress is not routing — TLS cert expired or IngressRoute broken
-- CI/CD pipeline is deploying a broken image and site is degraded
+Significant degradation — most users affected or key feature broken.
 
-### SEV-2 — Respond Within 15 Minutes
+Examples:
+- "Prompt to Print" AI pipeline returning errors for >50% of requests
+- Product catalog returning stale data (cache invalidation failure)
+- Order status emails not sending
+- Sentry error rate spike >50% over baseline
 
-- Order status stuck in `pending` for >10 minutes after payment confirmation
-- AI figurine generation jobs failing for all users (Meshy/Tripo3D errors,
-  backend worker crash)
-- Stripe webhooks delayed (events not processed, orders not transitioning state)
-- Backend pod restarting repeatedly but service still partially available
-- GitHub Actions deploy pipeline broken — no new deploys possible
+Response time: **within 1 hour**
 
-### SEV-3 — Respond Within 2 Hours
+### SEV-3 — Medium (respond within 4 hours)
 
-- Single user reporting an order issue that is not reproduced broadly
-- Elevated error rate in Sentry (spike, not sustained)
-- Slow response times (p95 > 2s) but not complete failure
-- A non-critical background job (e.g., backup CronJob) failing
+Partial degradation — subset of users or non-critical feature affected.
 
----
+Examples:
+- Single product category broken
+- Admin panel inaccessible (non-customer-facing)
+- Staging environment down
+- Non-critical API endpoint returning 500s
+
+Response time: **within 4 hours**
+
+### SEV-4 — Low (respond next business day)
+
+Minor issues, no user impact.
+
+Examples:
+- CI pipeline flaky (not blocking deploys)
+- Non-critical Sentry noise
+- Documentation or config drift
 
 ## Escalation Paths
 
-| Condition | Escalate to | Channel |
-|-----------|-------------|---------|
-| SEV-1 any duration | CTO immediately | Slack `#ops` + direct message |
-| SEV-2 unresolved after 30 min | CTO | Slack `#ops` |
-| Payment processing down | CTO + CEO | Slack `#ops` + direct message |
-| Data loss or potential data breach | CTO + CEO immediately | Direct message only |
+```
+SEV-1  →  DevOps on-call  →  CTO (if not resolved in 30 min)  →  CEO (if revenue impact >1hr)
+SEV-2  →  DevOps on-call  →  CTO (if not resolved in 2hr)
+SEV-3  →  DevOps engineer (async)
+SEV-4  →  Backlog ticket
+```
 
-Post in `#ops` for all SEV-1 and SEV-2 incidents. Use plain declarative
-statements: "PostgreSQL pod is in CrashLoopBackOff. Root cause: PVC at 98%
-capacity. Expanding volume now. ETA 5 minutes."
+For payment incidents (Stripe), also contact the backend engineer immediately — payment logic lives in the FastAPI service.
 
-Never leave an active SEV-1 or SEV-2 without a named owner.
+For shipping incidents (Zásilkovna), loop in the COO — they have the vendor contact.
 
----
+## Incident Response Steps
 
-## Sentry Alert Handling
+### 1. Detect and declare
 
-Figurio uses Sentry for error observability on both frontend and backend.
+- Sentry alert, user report, or monitoring alert fires
+- Assign a severity level
+- Post in `#incidents` (Slack/Discord): "Incident declared: [SEV-X] — [one-line description] — investigating"
 
-### Triage Steps
+### 2. Investigate
 
-1. Open the Sentry issue — read the full stack trace, not just the title.
-2. Check the "first seen" vs "last seen" timestamps. A spike in an old issue
-   differs from a brand-new error class.
-3. Check the Sentry `environment` tag — confirm it is `production`, not `dev`.
-4. Check "affected users" count. One user != SEV-1.
-5. Cross-reference with recent deploys: did the error first appear after the
-   last `main` merge?
-
-### Common Sentry Alert Patterns
-
-| Alert Pattern | Likely Cause | First Action |
-|---------------|--------------|--------------|
-| `stripe.error.SignatureVerificationError` | Webhook secret mismatch or Stripe replay | Check `STRIPE_WEBHOOK_SECRET` in K8s Secret; check Stripe dashboard for failed deliveries |
-| `sqlalchemy.exc.OperationalError: connection refused` | PostgreSQL pod down or PVC full | `kubectl get pods -n figurio`; check PVC usage |
-| `ConnectionError` to Meshy/Tripo3D API | External AI API outage or key expired | Check API status pages; verify API keys in K8s Secrets |
-| `ImagePullBackOff` logged from cluster | Bad image tag pushed to Docker Hub | Check image exists: `docker pull lukekelle00/figurio-backend:<sha>` |
-| Frontend JS `ChunkLoadError` | Stale cached frontend after deploy | Likely a cache/CDN issue; check if backend is serving new frontend hash |
-
-### Alert Response Actions
-
-For Sentry alerts that constitute a SEV-1 or SEV-2:
-1. Acknowledge the alert in Sentry (assign to self).
-2. Post status in `#ops` immediately.
-3. Follow the relevant runbook steps (deployment-runbook for deploy issues,
-   this file for service failures).
-4. Update Sentry issue with findings as you go.
-5. Resolve the Sentry issue only after confirming fix is deployed and error
-   rate returns to baseline.
-
----
-
-## Response Procedures by Incident Type
-
-### Site Down (SEV-1)
+Check in this order:
 
 ```bash
-# 1. Check pod status
+# Pod health
 kubectl get pods -n figurio
+kubectl describe pod <crashing-pod> -n figurio
 
-# 2. Check ingress
-kubectl get ingressroute -n figurio
-kubectl logs -n kube-system -l app=traefik --tail=50
+# Recent logs
+kubectl logs -n figurio deploy/figurio-backend --since=10m
+kubectl logs -n figurio deploy/figurio-frontend --since=10m
 
-# 3. Check recent events
+# Sentry — check the error and stack trace for the incident
+# GKE events
 kubectl get events -n figurio --sort-by='.lastTimestamp' | tail -20
 
-# 4. If a pod is CrashLoopBackOff, get logs
-kubectl logs <pod-name> -n figurio --previous
+# Traefik ingress
+kubectl logs -n kube-system deploy/traefik --since=10m
 ```
 
-If the issue is a bad deploy: execute Helm rollback immediately (see
-deployment-runbook).
+### 3. Contain
 
-If Traefik is the issue: restart Traefik pod and check certificate status.
-
-### Payment Failures (SEV-1)
-
-1. Check Stripe Dashboard → Webhooks → recent delivery attempts.
-2. Check backend Sentry for `stripe` tagged errors.
-3. Verify the `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY` Kubernetes
-   Secrets are present and correct:
-   ```bash
-   kubectl get secret figurio-backend-secrets -n figurio -o jsonpath='{.data}' | \
-     python3 -c "import sys,json,base64; d=json.load(sys.stdin); print(list(d.keys()))"
-   ```
-4. Confirm the backend `/api/webhooks/stripe` route is reachable via Traefik.
-5. If Stripe deliveries are failing with 5xx, the backend is likely down —
-   follow the Site Down procedure.
-6. If Stripe deliveries are returning 400 (signature error), rotate the webhook
-   secret: update in Stripe Dashboard → update K8s Secret → redeploy backend.
-
-### Orders Stuck (SEV-2)
-
-An order is "stuck" when it remains in `pending` state for >10 minutes after
-a successful Stripe payment.
-
-1. Check Sentry for `order` or `webhook` tagged errors in the last 30 minutes.
-2. Check Stripe webhook delivery log for the affected payment's `checkout.session.completed` event.
-3. If the event was delivered but not processed, query PostgreSQL:
-   ```bash
-   kubectl exec -it <postgres-pod> -n figurio -- \
-     psql -U figurio -c "SELECT id, status, stripe_session_id, created_at FROM orders ORDER BY created_at DESC LIMIT 10;"
-   ```
-4. If the order exists but status is wrong, identify whether it is a backend
-   processing bug or a data integrity issue before any manual update.
-5. Escalate to CTO if a manual DB fix is required — do not run `UPDATE` on
-   orders without explicit authorization.
-
-### PostgreSQL Down (SEV-1)
+- If a bad deploy caused it: **rollback immediately** (see deployment-runbook skill)
+- If a dependency is failing (Stripe, Zásilkovna): activate the relevant maintenance page via Traefik middleware
+- If data is at risk: isolate the affected service — scale to 0 replicas if necessary
 
 ```bash
-kubectl get pods -n figurio -l app=postgres
-kubectl describe pod <postgres-pod> -n figurio
-kubectl logs <postgres-pod> -n figurio --previous
-
-# Check PVC capacity
-kubectl get pvc -n figurio
-kubectl describe pvc figurio-postgres-pvc -n figurio
+kubectl scale deployment/figurio-backend --replicas=0 -n figurio
 ```
 
-Common causes:
-- **PVC full** — expand the PVC or delete old WAL files; restart pod.
-- **OOMKilled** — increase memory limits in Helm values; restart pod.
-- **CrashLoopBackOff after deploy** — roll back Helm release.
+### 4. Communicate
 
-Never delete the PostgreSQL PVC. Escalate to CTO before any destructive
-database operation.
+Send updates every 30 minutes for SEV-1, every hour for SEV-2, until resolved.
 
----
+**Customer-facing status page update template:**
+```
+[Time] We are currently experiencing issues with [feature].
+Our team is investigating. Orders placed during this time will be processed normally
+once the issue is resolved. We will update this page every 30 minutes.
+```
 
-## Post-Mortem Template
+**Internal update template (Slack #incidents):**
+```
+[Time] SEV-X Update
+Status: Investigating / Identified / Mitigating / Resolved
+Impact: [what is broken, how many users]
+Cause: [hypothesis or confirmed root cause]
+Next action: [what is happening now]
+ETA: [estimate or "unknown"]
+```
 
-Write a post-mortem for every SEV-1 and any SEV-2 that was unresolved for
-more than 30 minutes. Post to `#ops` and file in the GitHub repository under
-`docs/post-mortems/YYYY-MM-DD-<slug>.md`.
+### 5. Resolve
+
+- Confirm all health checks pass (see deployment-runbook)
+- Confirm Sentry error rate returns to baseline
+- Post resolution message in `#incidents`:
+  ```
+  [Time] RESOLVED — SEV-X [description]
+  Duration: Xh Xm | Root cause: [summary] | Fix: [summary]
+  Postmortem: [link or "to follow within 48h"]
+  ```
+
+## Postmortem Format
+
+Write a postmortem for every SEV-1 and SEV-2. Publish within 48 hours of resolution in the team wiki.
 
 ```markdown
-## Post-Mortem: <Short Title>
+# Postmortem: [Incident Title]
+Date: YYYY-MM-DD
+Severity: SEV-X
+Duration: Xh Xm
+Author: [name]
 
-**Date:** YYYY-MM-DD
-**Severity:** SEV-1 / SEV-2
-**Duration:** HH:MM (detection time to resolution time)
-**Services affected:** frontend / backend / postgres / payments
-**Author:** DevOps Engineer
+## Summary
+One paragraph. What happened, what was the impact, how was it resolved.
 
-### Summary
+## Timeline (UTC)
+- HH:MM — First alert / user report
+- HH:MM — Incident declared
+- HH:MM — Root cause identified
+- HH:MM — Fix applied
+- HH:MM — Resolved and verified
 
-One paragraph. What broke, what the user impact was, how long it lasted.
+## Root Cause
+Technical description of why the failure occurred.
 
-### Timeline
+## Impact
+- Users affected: [estimate]
+- Orders affected: [count or "none"]
+- Revenue impact: [estimate or "none"]
 
-| Time (UTC) | Event |
-|------------|-------|
-| HH:MM | First Sentry alert / user report |
-| HH:MM | DevOps Engineer begins investigation |
-| HH:MM | Root cause identified |
-| HH:MM | Fix applied / rollback executed |
-| HH:MM | Service confirmed healthy |
+## What Went Well
+- [item]
 
-### Root Cause
+## What Went Wrong
+- [item]
 
-Specific technical explanation. No vague language.
-
-### Contributing Factors
-
-What conditions allowed this to happen (missing alert, untested code path, etc.)
-
-### Resolution
-
-Exact steps taken to restore service.
-
-### Action Items
-
+## Action Items
 | Action | Owner | Due |
 |--------|-------|-----|
-| Add alert for X | DevOps Engineer | YYYY-MM-DD |
-| Fix Y in code | Backend Engineer | YYYY-MM-DD |
+| [item] | [name] | [date] |
 ```
+
+## Runbooks for Common Scenarios
+
+### Stripe webhook failures
+
+1. Check `kubectl logs -n figurio deploy/figurio-backend | grep stripe`
+2. Verify the Stripe webhook secret in the Kubernetes secret: `kubectl get secret figurio-backend-secrets -n figurio -o yaml`
+3. Check Stripe dashboard for webhook delivery failures
+4. Re-enable failed webhooks from Stripe dashboard if needed
+
+### Zásilkovna order export stuck
+
+1. Check the export job logs in the backend service
+2. Verify Zásilkovna API credentials have not expired
+3. Contact COO to notify Zásilkovna if orders are delayed >2 hours
+
+### GKE node out of resources
+
+```bash
+kubectl describe nodes | grep -A5 "Allocated resources"
+kubectl top nodes
+# If a node is at capacity, check for resource leaks:
+kubectl top pods -n figurio --sort-by=memory
+```
+
+Scale up the node pool via Terraform if sustained load requires it — do not do this manually through GCP console.

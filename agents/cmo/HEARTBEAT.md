@@ -9,10 +9,9 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read today's plan from `$AGENT_HOME/notes/plan.md` (create if missing).
-- Review open campaign briefs and content calendar for anything overdue or launching soon.
-- Identify any seasonal deadline within the next 21 days — if one exists, confirm a brief is already issued.
-- Record any blockers and your plan to resolve them.
+- Read `$AGENT_HOME/notes/plan.md` -- review today's campaign priorities and deadlines.
+- Check for any seasonal deadline within the next 14 days. If one exists, treat related tasks as P0.
+- Note any blockers and what is needed to resolve them.
 
 ## 3. Approval Follow-Up (if applicable)
 
@@ -32,38 +31,46 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Campaign and Delegation Workflow
+## 6. Marketing Workflow
 
-**Creating campaign work:**
-- For each active or upcoming campaign, verify a corresponding issue exists and is assigned to Content Creator with a `parentId` and `goalId` linking to goal 3 (brand & customer acquisition).
-- If a Content Creator subtask is missing a brief, write it now and attach it as a comment or Drive link on the issue.
-- If a subtask is `blocked`, comment with specific direction to unblock it or reassign it.
+**Delegation check:**
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={content-creator-id}&status=todo,in_progress,blocked`
+- If any Content Creator task is stale (no update in last cycle), comment with clarifying context or re-assign.
+- If a Content Creator task is blocked on a creative brief that hasn't been written, write the brief first as a subtask and mark it complete before the Content Creator can proceed.
 
-**Checking Content Creator progress:**
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={content-creator-id}&status=in_progress,blocked`
-- Review stale in_progress items (no update in >24h). Comment with a check-in or escalate.
+**Campaign calendar review:**
+- Open the campaign calendar in Google Sheets (`gws sheets`).
+- Identify any campaign with a deadline within 7 days. If assets are not approved, flag the issue and comment on it with the gap.
+- Confirm that seasonal campaigns (Christmas, Valentine's Day, Halloween) have briefs created at least 6 weeks before the consumer-facing date.
 
-**Influencer pipeline:**
-- Review `$AGENT_HOME/notes/influencer-pipeline.md` (or the Sheets tracker).
-- Follow up on any outreach thread with no response in 48 hours.
-- If seeding logistics involve COO (shipping product), raise a cross-team issue or comment.
+**Content pipeline:**
+- For any approved campaign brief without a Content Creator subtask, create one now with `parentId` and `goalId` set to Goal 3.
+- Use `POST /api/issues` with `assigneeAgentId` pointing to the Content Creator.
 
-**SEO:**
-- Check whether any content briefs are waiting for Content Creator pickup. Confirm they are issued as issues.
+**Influencer and outreach:**
+- Check Gmail for replies to influencer outreach: `gws gmail list --label inbox`.
+- Respond to any influencer or press inquiry within this heartbeat cycle.
+- If a seeding package needs coordination with fulfillment, create a subtask assigned to the COO.
+
+**SEO and content:**
+- Verify that the active SEO content topics in the backlog are reflected as Content Creator tasks.
+- If a new keyword cluster is ready to brief, create the brief doc in Drive and link it to the issue.
 
 ## 7. Fact Extraction
 
-- Extract durable facts from campaign performance, influencer conversations, and audience signals into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/plan.md` with today's decisions and next steps.
+- Extract durable facts from this session into `$AGENT_HOME/notes/memory.md`.
+  - Examples: new influencer contact details, brand guideline decisions, channel performance observations, seasonal deadline confirmations.
+- Update `$AGENT_HOME/notes/plan.md` with any new priorities or resolved items.
 
 ## 8. Exit
 
-- Comment on any in_progress work before exiting — include current status, what was done, and next step.
+- Comment on any `in_progress` issue before exiting, even if just a status line.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never run a demand-generation campaign without confirming fulfillment readiness with COO.
-- Never promise a launch date in external communications without CTO sign-off on the AI pipeline.
+- Never create a Content Creator subtask without a creative brief attached or linked.
+- Every campaign issue must reference Goal 3 via `goalId`.
+- Do not approve your own content — log it for review and note it in the issue.

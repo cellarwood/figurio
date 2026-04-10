@@ -1,151 +1,155 @@
 ---
 name: tech-decisions
 description: >
-  Framework for build-vs-buy and vendor selection decisions at Figurio.
-  Covers text-to-3D API evaluation (Meshy vs. Tripo3D), mesh repair tooling
-  choices, infrastructure decisions under microk8s, and the ADR format used
-  to record decisions.
+  Framework for build-vs-buy decisions, tech stack evaluations, and vendor selection
+  for Figurio — covering AI 3D generation APIs (Prompt to Print pipeline), print
+  partners beyond MCAE, and infrastructure/tooling choices within the React/FastAPI/K8s stack.
 allowed-tools:
   - Read
   - Grep
-  - Glob
 metadata:
   paperclip:
     tags:
       - engineering
       - architecture
-      - decisions
+      - vendor
 ---
 
 # Tech Decisions
 
-Use this skill when Figurio needs to choose between vendors, libraries, or
-build-vs-buy options. It defines the evaluation criteria, the current
-decisions already made, and the ADR format for recording new ones.
-
 ## When to Use
 
-- Evaluating a new text-to-3D API provider
-- Choosing between mesh repair approaches (open-source vs. hosted)
-- Adding or replacing infrastructure components (ingress, monitoring, queue)
-- Deciding whether to build a capability in-house or adopt a third-party tool
-- Revisiting an existing vendor decision due to cost, quality, or reliability
+Invoke this skill when evaluating:
+- Whether to build a capability in-house or buy/integrate a third-party service
+- New AI 3D generation APIs or model providers for the Prompt to Print pipeline
+- Alternative or additional print partners (beyond MCAE)
+- Infrastructure tooling (queues, observability, storage, CDN)
+- Frontend or backend library additions
 
-## Current Standing Decisions
+## Decision Framework
 
-| Domain | Decision | Rationale |
-|---|---|---|
-| Text-to-3D (primary) | Meshy API | Faster turnaround, higher quality figurines in testing |
-| Text-to-3D (fallback) | Tripo3D API | Redundancy; used when Meshy fails or is degraded |
-| Mesh repair | In-pipeline post-process step | Keeps the repair logic versioned alongside the pipeline |
-| Frontend | React + TypeScript + shadcn | DX consistency; shadcn gives unstyled composable primitives |
-| Backend | Python + FastAPI + uv | Async-native, fast iteration, uv for reproducible envs |
-| Database | PostgreSQL | Single reliable datastore; avoids operational complexity of polyglot |
-| Payments | Stripe | PCI compliance, webhook reliability, D2C track record |
-| Container runtime | microk8s | Self-hosted K8s on existing hardware; avoids managed K8s cost at current scale |
-| Ingress | Traefik | Native K8s CRD support, automatic TLS, lightweight |
-| Error monitoring | Sentry | Covers both React and FastAPI with one vendor |
-| CI/CD | GitHub Actions | Co-located with source; no separate CI infrastructure |
+Every significant tech decision at Figurio follows this structure:
 
-## Build vs. Buy Criteria
+### 1. Define the Problem Scope
 
-When evaluating a new capability, score it against these axes:
+State precisely what is needed, not what solution is assumed. Example: "We need geometry validation for AI-generated models before sending to MCAE" — not "We need to evaluate Blender vs. Trimesh."
 
-### Buy (use a vendor or open-source library) when:
-- The problem is not core to Figurio's competitive differentiation (3D
-  generation and the ordering experience are core; email delivery is not).
-- Maintaining the capability in-house would cost more engineering time than
-  the vendor cost.
-- Regulatory or compliance requirements are involved (payments, PCI, GDPR).
-- Time-to-market pressure is high and the vendor integration is well-documented.
+### 2. Build vs. Buy Criteria
 
-### Build when:
-- The capability is tightly coupled to Figurio's AI pipeline or 3D asset
-  format specifics (e.g., custom mesh repair heuristics for figurine geometry).
-- No vendor offers the required quality level (evaluate at least two providers).
-- The vendor's pricing model becomes prohibitive beyond current scale
-  projections (model out 12-month volume).
+| Factor | Build | Buy / Integrate |
+|--------|-------|-----------------|
+| Core IP | Logic that is our competitive differentiator | Generic infrastructure (auth, email, payments) |
+| Maintenance cost | Team has deep domain expertise | Ongoing updates are low-value distraction |
+| Time to market | Acceptable delay | Urgent launch requirement |
+| Vendor lock-in risk | High risk to core pipeline | Swappable via adapter layer |
+| Volume/cost | SaaS pricing exceeds build cost at our scale | Build cost exceeds SaaS at our scale |
 
-## Text-to-3D Provider Evaluation
+**Figurio defaults to buy for**: payments (Stripe), shipping logistics (Zásilkovna), transactional email, observability (Datadog/Grafana), CDN.
 
-When assessing a new or replacement text-to-3D provider, test against these
-criteria using a fixed set of 20 figurine prompts:
+**Figurio defaults to build for**: 3D model post-processing logic, order state machine, print job orchestration, customer-facing UI.
 
-| Criterion | Target |
-|---|---|
-| Mesh quality (manifold, watertight) | > 85% of outputs pass mesh repair without manual touch |
-| Generation latency (p50) | < 60 s |
-| Generation latency (p99) | < 180 s |
-| API reliability (30-day uptime) | > 99% |
-| Cost per generation | Compare at 1k, 10k, 100k volume |
-| Format support | `.glb` required; `.obj` preferred as fallback |
-| Webhook / polling support | Must support async status polling |
+**Evaluate carefully (neither default)**: AI 3D generation APIs, new print partners, 3D preview rendering.
 
-Document results in `references/provider-eval-<provider>-<YYYY-MM>.md` before
-raising an ADR.
+### 3. Evaluation Dimensions
 
-## Mesh Repair Tooling
+For each candidate option, score on:
 
-Current approach: custom post-process step in the AI pipeline using open-source
-geometry processing. When evaluating alternatives:
+- **Quality of output** — does it meet the bar for Figurio figurine fidelity?
+- **API maturity** — REST/gRPC with versioning, not beta-only
+- **Pricing model** — per-generation vs. per-seat vs. volume tiers; model at 1k, 10k, 100k orders/month
+- **Data residency** — EU data residency required (Czech Republic, GDPR)
+- **SLA / uptime** — minimum 99.5% for anything in the checkout or print path
+- **Integration effort** — estimate days to production-ready adapter, not just proof-of-concept
+- **Exit cost** — how hard is it to swap this vendor if needed in 12 months?
 
-- Must handle the specific failure modes of Meshy/Tripo3D output (non-manifold
-  edges, inverted normals, disconnected shells).
-- Hosted repair services are acceptable only if they do not retain mesh data
-  (IP/privacy concern for customer-submitted designs).
-- Benchmark repair success rate and latency against the current step before
-  switching.
+### 4. Decision Record Format
 
-## ADR Format
+Every decision with > 1 week implementation effort or > €500/month expected cost gets a written record:
 
-Every significant tech decision gets an ADR (Architecture Decision Record)
-stored at `docs/adr/NNNN-<slug>.md`.
+```
+## Decision: [short title]
+Date: YYYY-MM-DD
+Status: proposed | accepted | superseded
 
-```markdown
-# NNNN — Title of the Decision
+### Context
+[Why are we making this decision now?]
 
-**Date:** YYYY-MM-DD
-**Status:** Proposed | Accepted | Deprecated | Superseded by [NNNN]
+### Options Considered
+1. [Option A] — [one-line summary]
+2. [Option B] — [one-line summary]
 
-## Context
+### Decision
+[Which option, and the primary reason]
 
-What is the problem or opportunity? What constraints apply (cost, timeline,
-team size, existing stack)?
+### Trade-offs Accepted
+[What we are giving up with this choice]
 
-## Options Considered
-
-### Option A — <name>
-- Pros: ...
-- Cons: ...
-
-### Option B — <name>
-- Pros: ...
-- Cons: ...
-
-## Decision
-
-Which option was chosen and why.
-
-## Consequences
-
-What becomes easier and what becomes harder as a result of this decision.
-Include known trade-offs.
+### Review Trigger
+[Condition that would prompt revisiting — e.g., "if monthly cost exceeds €2k" or "if MCAE SLA drops below 99%"]
 ```
 
-### ADR Numbering
+Store decision records in `docs/decisions/` in the repo.
 
-- ADRs are numbered sequentially starting from `0001`.
-- Once accepted, an ADR is never deleted — mark it Deprecated or Superseded.
-- Link the superseding ADR number when deprecating.
+## AI 3D Generation API Evaluation
 
-## Decision Review Triggers
+The Prompt to Print pipeline is core IP — the generation API is a dependency, not the differentiator.
 
-Revisit a standing decision when any of the following occur:
+### Mandatory Requirements
 
-- A vendor raises pricing by > 30% or changes reliability SLA materially.
-- A new provider scores > 15% better than the current primary on the
-  figurine prompt benchmark.
-- The current solution requires > 1 week of unplanned engineering per quarter
-  to maintain.
-- The team size or order volume crosses a 10x threshold from when the original
-  decision was made.
+- REST or gRPC API (no browser-only SDKs)
+- Returns standard 3D formats: GLB, OBJ, or STL — must be compatible with MCAE ingestion
+- EU data processing option (user prompts may contain PII — names, likenesses)
+- Per-generation pricing available (not seat-only)
+- Geometry quality sufficient for MCAE MCAE full-color 3D printing (watertight meshes, manifold geometry)
+
+### Evaluation Process
+
+1. Run 20 standardized test prompts (figurine-style: character descriptions, poses, styles)
+2. Validate output geometry with automated checks (manifold, vertex count, printability score)
+3. Submit 5 outputs to MCAE for test prints — assess physical output quality
+4. Benchmark latency: p50 and p99 generation time
+5. Calculate total cost at 500 generations/month and 5,000 generations/month
+
+### Current Integration: [to be filled per active vendor]
+
+The adapter lives in `app/services/ai_generation/`. Swapping providers requires only replacing the adapter, not the order flow.
+
+## Print Partner Evaluation
+
+MCAE is the primary print partner. Any additional or alternative partner must meet:
+
+- Full-color 3D printing (multi-material or powder-based color — no single-color FDM)
+- API for job submission and status tracking (no email-based workflows)
+- Production in Czech Republic or EU (shipping cost and lead time SLA)
+- Turnaround: standard ≤ 5 business days, express ≤ 2 business days
+- File format acceptance: STL or GLB
+- Minimum order: compatible with D2C single-unit orders
+
+## Infrastructure & Tooling Decisions
+
+### Approved Stack (no re-evaluation needed)
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| Payments | Stripe | Best-in-class DX, Czech CZK support, strong webhook reliability |
+| Shipping | Zásilkovna | Dominant Czech parcel network, pickup point density |
+| Container orchestration | Kubernetes | Already operational, team proficiency |
+| DB | PostgreSQL | Relational model fits order/catalog domain well |
+| Frontend component lib | shadcn/ui | Owned components, no vendor lock-in, Tailwind-compatible |
+
+### Evaluate Before Adding
+
+Before adding any new dependency (library, SaaS, managed service):
+
+- Is there an existing approved tool that covers 80% of the need?
+- Will this add a new runtime language or paradigm? (Requires CTO sign-off)
+- Does it have an active maintainer and > 1k GitHub stars or commercial support?
+- Is the license compatible with commercial use (no AGPL without review)?
+
+## Anti-patterns
+
+- Choosing a vendor based on a demo or prototype without running real figurine prompts through it
+- Integrating an AI generation API without an adapter abstraction layer — direct calls in business logic lock us in
+- Selecting infrastructure tools that lack EU region options
+- Making a build-vs-buy call without estimating cost at realistic Figurio order volumes
+- Adding a new Python dependency without checking for conflicts with existing FastAPI/Pydantic versions

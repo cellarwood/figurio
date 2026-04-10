@@ -1,14 +1,12 @@
 ---
 name: api-design
 description: >
-  REST API conventions for the Figurio D2C figurine platform. Covers endpoint
-  naming, request/response shapes, pagination, error responses, JWT
-  authentication, Stripe payment integration, and the order lifecycle endpoint
-  contract.
+  REST API conventions for Figurio's FastAPI backend — endpoint naming,
+  pagination, error responses, authentication patterns, and integration
+  specifics for Stripe payments and Zásilkovna shipping.
 allowed-tools:
   - Read
   - Grep
-  - Write
 metadata:
   paperclip:
     tags:
@@ -18,196 +16,122 @@ metadata:
 
 # API Design
 
-Conventions for every FastAPI route handler in the Figurio backend. Follow these when building new endpoints or reviewing existing ones.
+Figurio's backend is a Python/FastAPI service. All endpoints live under `/api/v1/`.
 
 ## URL Structure
 
-All public endpoints are versioned under `/api/v1/`. Admin-only endpoints live under `/api/v1/admin/`.
+Follow resource-oriented naming. Collections are plural nouns; identifiers go at the end.
 
 ```
-/api/v1/products                      # catalog collection
-/api/v1/products/{product_id}         # single product
-/api/v1/products/{product_id}/variants
-/api/v1/orders                        # customer order collection
-/api/v1/orders/{order_id}
-/api/v1/orders/{order_id}/transitions # trigger a state change
-/api/v1/payments/checkout             # create Stripe checkout session
-/api/v1/payments/refund
-/api/v1/users/me
-/api/v1/users/me/orders
-/api/v1/admin/orders                  # admin order management
-/api/v1/admin/orders/{order_id}/override
-/api/v1/admin/catalog                 # admin catalog management
-/webhooks/stripe                      # NOT under /api — Stripe webhooks
+GET    /api/v1/products                   # catalog listing
+GET    /api/v1/products/{sku}             # single product by SKU
+POST   /api/v1/orders                     # place an order
+GET    /api/v1/orders/{order_id}          # fetch order
+PATCH  /api/v1/orders/{order_id}          # update order fields
+GET    /api/v1/users/{user_id}/orders     # orders scoped to a user
+
+POST   /api/v1/figurines/generate         # AI Prompt to Print job submit
+GET    /api/v1/figurines/{figurine_id}    # AI-generated figurine detail
 ```
 
-Rules:
-- Resource names are plural nouns, kebab-case (`/size-tiers`, not `/sizeTiers`).
-- Actions that are not CRUD go on sub-resources (`/transitions`, `/refund`), not verbs on the root.
-- The Stripe webhook endpoint is at `/webhooks/stripe` (top-level, no version prefix).
+Nested resources are acceptable only one level deep. Prefer query params for filtering.
 
-## Request and Response Shapes
+## Authentication
 
-Use Pydantic models for all request bodies and response schemas. Never return raw ORM objects.
+All non-public endpoints require a Bearer JWT in `Authorization: Bearer <token>`.
 
-**Collection response:**
-```python
-class PaginatedResponse(BaseModel, Generic[T]):
-    items: list[T]
-    total: int
-    page: int
-    page_size: int
-    has_next: bool
-```
-
-**Single-resource response:** return the resource schema directly (no wrapper).
-
-**Request body:** name schemas `{Resource}Create`, `{Resource}Update`, `{Resource}Response`.
+- Tokens are issued by Figurio's own auth service (not a third-party IdP).
+- Token payload must include `sub` (user UUID), `role` (`customer` | `admin`), `exp`.
+- Public endpoints (product catalog, health checks) require no token.
+- Admin-only endpoints (`/api/v1/admin/...`) enforce `role == "admin"` in a FastAPI dependency.
 
 ```python
-class OrderResponse(BaseModel):
-    id: UUID
-    status: OrderStatus          # enum, not raw string
-    created_at: datetime
-    updated_at: datetime
-    total_amount_cents: int      # always store/return money as integer cents
-    currency: str                # ISO 4217, e.g. "usd"
-    line_items: list[LineItemResponse]
+# Standard auth dependency
+async def require_customer(token: str = Depends(oauth2_scheme)) -> TokenPayload:
+    ...
 
-    model_config = ConfigDict(from_attributes=True)
+async def require_admin(token: str = Depends(oauth2_scheme)) -> TokenPayload:
+    payload = decode_token(token)
+    if payload.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return payload
 ```
-
-Money is **always in cents as `int`**. Never use `float` for currency values.
 
 ## Pagination
 
-All collection endpoints accept `page` (1-indexed) and `page_size` (default 20, max 100) as query parameters.
+All collection endpoints paginate using `limit` / `offset` query params.
 
-```python
-@router.get("/products", response_model=PaginatedResponse[ProductResponse])
-async def list_products(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    db: AsyncSession = Depends(get_db),
-):
-    ...
+- Default `limit`: 24 (one catalog page)
+- Max `limit`: 100
+- Response envelope:
+
+```json
+{
+  "items": [...],
+  "total": 312,
+  "limit": 24,
+  "offset": 0
+}
 ```
+
+Never return bare arrays at the top level.
 
 ## Error Responses
 
-All errors use a consistent envelope:
+All errors follow a single envelope shape:
 
 ```json
 {
   "error": {
-    "code": "order_not_found",
+    "code": "ORDER_NOT_FOUND",
     "message": "Order abc123 does not exist.",
-    "details": {}
+    "detail": {}
   }
 }
 ```
 
-Standard codes and HTTP status mappings:
+- `code` is a screaming-snake string constant — define in `app/errors/codes.py`.
+- `message` is human-readable and safe to surface in the frontend.
+- `detail` carries extra structured data (e.g., validation field errors).
+- HTTP status follows standard semantics: 400 bad input, 401 unauthenticated, 403 forbidden, 404 not found, 409 conflict, 422 validation, 500 internal.
 
-| Code | HTTP | When |
-|------|------|------|
-| `not_found` | 404 | Resource missing |
-| `validation_error` | 422 | Pydantic / business rule violation |
-| `unauthorized` | 401 | Missing or invalid JWT |
-| `forbidden` | 403 | Valid JWT but wrong role |
-| `invalid_transition` | 409 | Illegal order state change |
-| `payment_failed` | 402 | Stripe charge declined |
-| `stripe_signature_invalid` | 400 | Webhook HMAC mismatch |
-| `internal_error` | 500 | Unhandled exception |
+Do NOT return FastAPI's default 422 Unprocessable Entity envelope directly — wrap it in the standard shape via an exception handler.
 
-Use `HTTPException` with a detail dict matching the envelope, or a custom exception handler that converts domain exceptions to this shape.
+## Stripe Integration
 
-## Authentication
+Stripe is the sole payment processor. Keep Stripe-specific logic inside `app/integrations/stripe/`.
 
-JWT-based. Two roles: `customer` and `admin`.
+Key conventions:
 
-```python
-# Dependency for any authenticated route
-async def current_user(token: str = Depends(oauth2_scheme), db=...) -> User:
-    ...
+- Create a `PaymentIntent` when the order is confirmed; store `stripe_payment_intent_id` on the order row.
+- Expose `POST /api/v1/payments/webhook` for Stripe webhooks. Verify signatures with `stripe.Webhook.construct_event` before processing any event.
+- Never log or return raw Stripe objects — map them to internal types.
+- Idempotency: pass `idempotency_key=order_id` when creating PaymentIntents to prevent double-charges on retries.
 
-# Dependency that additionally enforces admin role
-async def require_admin(user: User = Depends(current_user)) -> User:
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail={"error": {"code": "forbidden", ...}})
-    return user
-```
+Webhook events to handle:
 
-- Tokens: short-lived access token (15 min) + refresh token (7 days).
-- Issue tokens at `POST /api/v1/auth/token`.
-- Refresh at `POST /api/v1/auth/refresh`.
-- Do not put secrets or PII in the JWT payload — only `user_id`, `role`, and standard claims (`iat`, `exp`).
+| Event | Action |
+|---|---|
+| `payment_intent.succeeded` | Move order to `payment_confirmed` |
+| `payment_intent.payment_failed` | Move order to `payment_failed`, notify user |
+| `charge.refunded` | Move order to `refunded`, update payment record |
 
-## Stripe Payment Integration
+## Zásilkovna (Packeta) Integration
 
-**Checkout session creation (`POST /api/v1/payments/checkout`):**
+Zásilkovna is the shipping carrier. Integration lives in `app/integrations/zasílkovna/`.
 
-```python
-session = stripe.checkout.Session.create(
-    mode="payment",
-    payment_method_types=["card"],
-    line_items=[...],
-    metadata={"order_id": str(order.id)},   # always attach order_id
-    idempotency_key=str(order.id),            # prevent duplicate sessions
-    success_url=...,
-    cancel_url=...,
-)
-```
+Key conventions:
 
-**Webhook handler (`POST /webhooks/stripe`):**
+- Use the Packeta REST API v5 (`https://api.packeta.com/v5/`). Authenticate with the Figurio API key stored in env var `ZASÍLKOVNA_API_KEY`.
+- Create a shipment via `POST /api/v1/orders/{order_id}/shipment` which calls Packeta's packet creation endpoint.
+- Store `zasílkovna_packet_id` and `tracking_number` on the order row after successful creation.
+- Expose a webhook receiver at `POST /api/v1/shipping/webhook` for Packeta status push events; update `shipment_status` on the order.
 
-```python
-@router.post("/webhooks/stripe")
-async def stripe_webhook(request: Request):
-    payload = await request.body()
-    sig = request.headers.get("stripe-signature")
-    try:
-        event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
-    except stripe.error.SignatureVerificationError:
-        raise HTTPException(status_code=400, detail={"error": {"code": "stripe_signature_invalid", ...}})
-
-    # Acknowledge immediately, process after
-    await handle_stripe_event(event)
-    return {"received": True}
-```
-
-Signature verification is **mandatory** — never bypass it except in isolated test environments with explicit CTO approval.
-
-Idempotency: use the Stripe event `id` as the idempotency key when recording payment events. Check whether the event has already been processed before executing side effects.
-
-## Order Lifecycle Endpoints
-
-Order status enum: `placed` → `paid` → `preparing` → `printing` → `shipped` → `delivered`.
-Failure branches: `payment_failed`, `cancelled`.
+## Health and Observability
 
 ```
-POST   /api/v1/orders                          # create order (status: placed)
-GET    /api/v1/orders/{order_id}               # fetch order + current status
-POST   /api/v1/orders/{order_id}/transitions   # trigger state change
-GET    /api/v1/admin/orders/{order_id}/audit   # full audit log
-POST   /api/v1/admin/orders/{order_id}/override # admin-only manual override
+GET /api/v1/health        # liveness — returns {"status": "ok"}
+GET /api/v1/health/ready  # readiness — checks DB connection
 ```
 
-Transition request body:
-```json
-{
-  "to_status": "preparing",
-  "reason": "Payment confirmed via Stripe event evt_xxx"
-}
-```
-
-Return `409 invalid_transition` if the transition is not permitted from the current state. Every successful transition must write an `order_audit_log` row before returning.
-
-## Anti-patterns
-
-- Do not expose SQLAlchemy model objects directly in responses — always use Pydantic schemas.
-- Do not use `float` for money amounts — use integer cents.
-- Do not skip `idempotency_key` on Stripe calls.
-- Do not perform destructive DB operations in route handlers — call a service layer function.
-- Do not mix admin and customer logic in the same router file.
-- Do not return a 200 when an error occurred — use the correct HTTP status code.
+Include `X-Request-ID` in every response (generate via middleware if absent in request headers). Log request ID with every structured log entry.

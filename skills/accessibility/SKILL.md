@@ -1,10 +1,10 @@
 ---
 name: accessibility
 description: >
-  WCAG 2.1 AA compliance checklist and implementation patterns for the Figurio
-  storefront. Covers keyboard navigation, screen reader support, color contrast,
-  and focus management across the product catalog, cart drawer, Stripe Elements
-  checkout flow, 3D model viewer, and order tracking pages.
+  WCAG 2.1 AA compliance checklist for the Figurio e-commerce storefront —
+  covers form labeling, keyboard navigation, product image alt text, checkout
+  flow focus management, and screen reader support for the cart drawer and
+  3D model viewer.
 allowed-tools:
   - Read
   - Grep
@@ -13,239 +13,111 @@ metadata:
     tags:
       - engineering
       - frontend
-      - accessibility
+      - review
 ---
 
 # Accessibility
 
-## When to Use
+WCAG 2.1 AA requirements as applied to the Figurio React storefront. Follow
+these rules during implementation and use them as a review checklist before
+marking any frontend PR ready for merge.
 
-Apply this skill when building any Figurio storefront component, running an accessibility audit, reviewing a PR, or fixing a reported a11y issue. All pages must reach WCAG 2.1 AA before merging to main.
+## Forms
 
-## Core Requirements
+All forms (checkout, contact, newsletter signup) MUST:
 
-- **Color contrast:** text on background ≥ 4.5:1 (normal text), ≥ 3:1 (large text / UI components)
-- **Keyboard navigation:** every interactive element reachable and operable with keyboard alone
-- **Focus management:** focus moves predictably when overlays open/close
-- **Screen reader support:** all content has a meaningful accessible name
-- **No keyboard traps:** focus never gets stuck in a region
-- **Motion:** respect `prefers-reduced-motion` for GSAP animations and carousel auto-play
+- Associate every `<input>`, `<select>`, and `<textarea>` with a visible `<label>`
+  via `htmlFor` / `id` — never rely on `placeholder` alone as a label.
+- Use shadcn `FormMessage` to surface validation errors; the error element MUST be
+  linked to its input with `aria-describedby`.
+- Mark required fields with `aria-required="true"` and a visible indicator (an
+  asterisk `*` with a legend: `"* required field"`).
+- Never use color alone to signal an error — pair color change with an icon (`AlertCircle`)
+  and text.
+- The Zásilkovna iframe in `ShippingStep` MUST have a `title` attribute:
+  `title="Zásilkovna pickup point selector"`.
 
-## Color Contrast
+### Checkout Flow Focus Management
 
-Figurio's Tailwind config uses semantic tokens (`foreground`, `muted-foreground`, `primary`). The minimum ratios for each token pair are verified in the design system. When extending with custom colors always run the new pair through a contrast checker before using.
+- On step transition (1 → 2 → 3), move focus to the new step's heading using
+  `ref.current.focus()` — the heading MUST have `tabIndex={-1}`.
+- On Stripe payment error, move focus to the `CardElement` container and announce
+  the error via an `aria-live="assertive"` region.
+- After successful order submission, focus the confirmation heading on the success page.
 
-Tokens that pass AA by default:
-- `text-foreground` on `bg-background` — passes
-- `text-muted-foreground` on `bg-muted` — passes (check if override applied)
-- `text-primary-foreground` on `bg-primary` — passes
+## Navigation
 
-Do not use `text-muted-foreground` for interactive elements (links, buttons) — it often falls short of 4.5:1 in the light theme.
+- The top navigation MUST be wrapped in `<nav aria-label="Main navigation">`.
+- The cart icon button MUST have `aria-label="Open cart"` and update to
+  `aria-label="Open cart, {n} items"` when the cart is non-empty (use
+  `useCartStore` count).
+- Skip-to-content link: render `<a href="#main-content" className="sr-only focus:not-sr-only ...">Skip to content</a>`
+  as the very first element in `<body>`; the main content container MUST have `id="main-content"`.
+- Keyboard users MUST be able to open/close the `CartDrawer` (`Sheet`) with `Escape`
+  — shadcn `Sheet` handles this by default; do not suppress it.
 
-## Keyboard Navigation
+## Product Images & 3D Viewer
 
-### General Rules
+- Every `<img>` in `ProductCard` and on the product detail page MUST have a
+  descriptive `alt` that names the figurine and angle:
+  - Good: `alt="Dragon Warrior figurine — side view, blue and gold paint scheme"`
+  - Bad: `alt="product"` or `alt=""`
+- Decorative images (background textures, dividers) MUST use `alt=""` and `role="presentation"`.
+- The `<model-viewer>` web component MUST have an `aria-label` describing the
+  figurine: `aria-label="Interactive 3D view of Dragon Warrior figurine"`.
+- Provide a static fallback image via `poster` — this also serves as the visible
+  content when JS is disabled or the WebGL context fails.
+- Do not autoplay rotation on the 3D viewer without a pause control — users with
+  vestibular disorders can be affected. Provide a visible "Pause rotation" toggle button.
 
-- All `onClick` handlers on non-button elements must have a keyboard equivalent (`onKeyDown` for Enter/Space) — prefer using `<button>` or `<a>` instead
-- Tab order must follow visual reading order; use `tabIndex` only to restore order when DOM order and visual order diverge
-- Visible focus ring on every interactive element — never `outline: none` without a replacement (`focus-visible:ring-2 focus-visible:ring-ring` in Tailwind)
+## Color & Contrast
 
-### Product Catalog
-
-- Each `ProductCard` is a single tab stop; the card `<Link>` is the primary focusable element
-- The "Add to Cart" button inside the card is a separate tab stop — do not nest focusable elements inside a focusable container without testing with a screen reader
-- Filter checkboxes and select dropdowns use shadcn `Checkbox` and `Select` which inherit Radix keyboard behavior (arrows, Enter, Space, Escape)
-
-### Cart Drawer
-
-The `Sheet` (Radix `Dialog`) handles focus trapping automatically. Verify:
-- Focus moves to the first focusable element inside `SheetContent` on open (`SheetTitle` or first close button)
-- On close, focus returns to the element that triggered open (the cart icon in the nav)
-- Radix `Sheet` does this out of the box via `returnFocus` — do not override it
-
-```tsx
-// Ensure the trigger has a ref Radix can return focus to
-<SheetTrigger asChild>
-  <Button variant="ghost" size="icon" aria-label="Open cart">
-    <ShoppingCart className="h-5 w-5" />
-    {itemCount > 0 && (
-      <span className="sr-only">, {itemCount} items</span>
-    )}
-  </Button>
-</SheetTrigger>
-```
-
-### Checkout Flow
-
-Focus management between checkout steps is manual — Radix does not own it here.
-
-On step transition:
-1. Move focus to the heading of the newly active section using a `ref` and `.focus()`
-2. Announce the transition to screen readers with a live region
-
-```tsx
-const stepHeadingRef = useRef<HTMLHeadingElement>(null)
-
-useEffect(() => {
-  stepHeadingRef.current?.focus()
-}, [currentStep])
-
-// In JSX
-<h2 ref={stepHeadingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
-  {stepLabel[currentStep]}
-</h2>
-```
-
-Add a live region near the checkout root for status messages (validation errors, payment processing):
-
-```tsx
-<div aria-live="polite" aria-atomic="true" className="sr-only">
-  {statusMessage}
-</div>
-```
-
-Stripe `PaymentElement` is an iframe — it manages its own focus internally. Do not attempt to manage focus inside it. Announce payment errors via the live region, not by moving focus into the iframe.
-
-### Order Tracking Page
-
-The `OrderTimeline` list must convey current status without relying on color alone:
-
-```tsx
-<ol aria-label="Order status">
-  {STATUS_STEPS.map((step, idx) => {
-    const isComplete = idx < currentIdx
-    const isCurrent = idx === currentIdx
-    return (
-      <li
-        key={step}
-        aria-current={isCurrent ? 'step' : undefined}
-      >
-        <StatusDot completed={isComplete} current={isCurrent} />
-        <span>{STATUS_LABELS[step]}</span>
-        {isComplete && <span className="sr-only">(completed)</span>}
-        {isCurrent && <span className="sr-only">(current)</span>}
-      </li>
-    )
-  })}
-</ol>
-```
+- Body text on white backgrounds: minimum contrast ratio 4.5:1 (WCAG AA).
+- Large text (≥ 18 pt / 24 px or ≥ 14 pt bold): minimum 3:1.
+- Interactive elements (buttons, links): borders or underlines must meet 3:1 against
+  adjacent background — do not rely on color alone to distinguish links from body text.
+- Price text (muted CZK secondary): verify the muted Tailwind color (`text-muted-foreground`)
+  passes 4.5:1 against the card background — if not, step up to `text-foreground/70`.
 
 ## Screen Reader Support
 
-### Images and Media
+- `CartDrawer` (`Sheet`): when opened, the drawer MUST trap focus inside; shadcn
+  `Sheet` does this via Radix UI — do not remove `FocusTrap`.
+- Empty cart state: announce with `aria-live="polite"` when items are removed
+  and the cart becomes empty.
+- Loading states: use `aria-busy="true"` on the parent container while data fetches;
+  `Skeleton` placeholders are visual only and MUST have `aria-hidden="true"`.
+- Toast notifications (order confirmed, added to cart): rendered via shadcn `Toaster`
+  which uses `role="status"` and `aria-live="polite"` — do not replace with custom
+  alert components.
+- Quantity stepper buttons (`+` / `−`) in cart line items MUST have explicit
+  `aria-label`: `"Increase quantity of Dragon Warrior figurine"`,
+  `"Decrease quantity of Dragon Warrior figurine"`.
 
-- Product images: `alt` must describe the figurine, not be generic (`alt="Dragon figurine, 15cm, matte grey"` not `alt="product"`)
-- Decorative images (backgrounds, dividers): `alt=""`
-- 3D model viewer: `alt` on `<model-viewer>` is the accessible description of the model; write it as you would alt text for a photo
+## Keyboard Interaction Table
 
-### Interactive Labels
+| Component | Expected keyboard behavior |
+|---|---|
+| `ProductCard` | `Enter` / `Space` on "Add to Cart" button triggers add |
+| `CartDrawer` | `Escape` closes; focus returns to the cart trigger button |
+| `CheckoutForm` steps | `Tab` moves forward, `Shift+Tab` backward through fields |
+| `ModelViewer` | `Tab` into viewer; arrow keys orbit (built into `model-viewer`) |
+| Zásilkovna iframe | `Tab` enters iframe; `Escape` should return focus to page |
 
-Every icon-only button must have `aria-label`:
+## Testing Checklist (Pre-merge)
 
-```tsx
-<Button variant="ghost" size="icon" aria-label="Remove item from cart">
-  <Trash2 className="h-4 w-4" aria-hidden="true" />
-</Button>
-```
-
-Icons inside labeled buttons use `aria-hidden="true"` to avoid double-announcing.
-
-### Price Display
-
-Screen readers should read prices naturally. Do not split currency symbol and amount into separate elements without `aria-label`:
-
-```tsx
-// Bad — reads "$ 49 . 99"
-<span>$</span><span>49</span><span>.99</span>
-
-// Good
-<span aria-label="$49.99">$49.99</span>
-```
-
-For "from" pricing on product cards:
-
-```tsx
-<span aria-label={`From $${lowestPrice}`}>
-  <span aria-hidden="true">From </span>${lowestPrice}
-</span>
-```
-
-### Loading States
-
-Skeleton screens are visual only — add a screen-reader announcement when data loads:
-
-```tsx
-{isLoading ? (
-  <>
-    <ProductGridSkeleton />
-    <span className="sr-only" aria-live="polite">Loading products...</span>
-  </>
-) : (
-  <>
-    <ProductGrid products={products} />
-    <span className="sr-only" aria-live="polite">{products.length} products loaded.</span>
-  </>
-)}
-```
-
-## 3D Model Viewer Accessibility
-
-The `<model-viewer>` custom element has limited built-in accessibility. Compensate by:
-
-1. Always providing a descriptive `alt` attribute on the element
-2. Adding a visible "View 3D model" label above the viewer so the section is reachable by screen reader users navigating by heading/landmark
-3. Wrapping in a `<figure>` with `<figcaption>` for the product detail page
-4. Providing a static fallback image gallery alongside or below the viewer — 3D is an enhancement, not the sole presentation of the product
-
-```tsx
-<figure aria-label={`3D model of ${product.name}`}>
-  <ModelViewer src={product.modelUrl} alt={`Interactive 3D view of ${product.name}`} />
-  <figcaption className="sr-only">{product.name} — use mouse or touch to rotate the model</figcaption>
-</figure>
-```
-
-## Reduced Motion
-
-Wrap all GSAP animations in a motion check:
-
-```ts
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-if (!prefersReducedMotion) {
-  gsap.to(element, { duration: 0.4, y: -8, opacity: 1 })
-} else {
-  gsap.set(element, { opacity: 1 }) // instant, no movement
-}
-```
-
-For Tailwind transition classes, use `motion-safe:` prefix:
-
-```html
-<img class="motion-safe:transition-transform motion-safe:group-hover:scale-105" />
-```
-
-## Audit Checklist
-
-Run this before marking a component done:
-
-- [ ] All images have meaningful `alt` text (or `alt=""` for decorative)
-- [ ] Every interactive element has a visible focus ring
-- [ ] Icon-only buttons have `aria-label`
-- [ ] Color is not the sole means of conveying information (status, error, current step)
-- [ ] Text contrast meets 4.5:1 (use Chrome DevTools Accessibility panel)
-- [ ] Keyboard tab order matches visual reading order
-- [ ] Modals/drawers trap focus and return focus on close
-- [ ] Form inputs have associated `<label>` elements (not just `placeholder`)
-- [ ] Stripe payment form errors are surfaced via live region, not only visual
-- [ ] `prefers-reduced-motion` respected for GSAP and Tailwind transitions
-- [ ] Page has a single `<h1>` and heading hierarchy is logical (no skipped levels)
-- [ ] Landmark regions present: `<header>`, `<main>`, `<nav>`, `<footer>`
+- [ ] Run `axe-core` via `@axe-core/react` in dev mode — zero violations at AA level.
+- [ ] Tab through the full checkout flow without a mouse — every field reachable.
+- [ ] Test with VoiceOver (macOS) or NVDA (Windows) on the cart drawer and checkout.
+- [ ] Verify all `<img>` elements have non-empty, descriptive `alt` text.
+- [ ] Confirm focus is visible (not just browser default outline) on all interactive elements
+      — Figurio's shadcn theme MUST NOT set `outline: none` without a custom
+      focus-visible replacement.
 
 ## Anti-patterns
 
-- `onClick` on a `<div>` or `<span>` without keyboard handling — use `<button>`
-- `aria-label` duplicating visible text — redundant, skip it
-- `tabIndex={0}` on non-interactive elements to make them focusable — make the element interactive instead
-- Removing focus outlines with `focus:outline-none` alone — always pair with `focus-visible:ring-*`
-- Using color alone to indicate required fields — pair with text ("Required") or `aria-required`
-- Moving focus on every polling update in order tracking — only announce status changes, do not steal focus
+- Do not use `onClick` on `<div>` or `<span>` — use `<button>` or `<a>` elements.
+- Do not suppress the browser focus ring globally (`*:focus { outline: none }`).
+- Do not use `tabIndex={0}` on non-interactive elements to make them focusable.
+- Do not remove `role="dialog"` or `aria-modal` from shadcn `Dialog`/`Sheet` — these
+  are required for screen readers to understand the modal context.

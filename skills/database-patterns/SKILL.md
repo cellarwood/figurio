@@ -1,14 +1,12 @@
 ---
 name: database-patterns
 description: >
-  PostgreSQL schema and SQLAlchemy patterns for Figurio — product catalog with
-  size tier pricing, order lifecycle state machine, payment records, user
-  accounts, and 3D model metadata. Covers Alembic migration conventions and
-  ORM best practices.
+  PostgreSQL patterns for Figurio's backend — product catalog schema, order
+  state machine, payment records, user accounts, and 3D model metadata for
+  both the standard catalog and AI "Prompt to Print" figurines.
 allowed-tools:
   - Read
   - Grep
-  - Write
 metadata:
   paperclip:
     tags:
@@ -19,214 +17,175 @@ metadata:
 
 # Database Patterns
 
-PostgreSQL schema design and SQLAlchemy conventions for the Figurio backend.
+Figurio uses PostgreSQL. Migrations run via Alembic. All tables use UUID primary keys generated server-side (`gen_random_uuid()`). Use `TIMESTAMPTZ` for all timestamps, stored in UTC.
 
-## Base Model
+## Naming Conventions
 
-All tables inherit from a shared base that provides `id`, `created_at`, and `updated_at`:
-
-```python
-import uuid
-from datetime import datetime
-from sqlalchemy import DateTime, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID
-
-class Base(DeclarativeBase):
-    pass
-
-class TimestampMixin:
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-```
-
-Use `UUID` primary keys everywhere. Never use integer auto-increment IDs for entities exposed in the API.
+- Tables: `snake_case`, plural (`products`, `orders`, `users`)
+- Columns: `snake_case`
+- Foreign keys: `{referenced_table_singular}_id` (e.g., `user_id`, `order_id`)
+- Indexes: `ix_{table}_{column(s)}`
+- Unique constraints: `uq_{table}_{column(s)}`
 
 ## User Accounts
 
-```python
-class User(TimestampMixin, Base):
-    __tablename__ = "users"
-
-    email: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
-    hashed_password: Mapped[str] = mapped_column(nullable=False)
-    role: Mapped[str] = mapped_column(nullable=False, default="customer")  # "customer" | "admin"
-    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
-    stripe_customer_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
+```sql
+CREATE TABLE users (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email           TEXT NOT NULL,
+    password_hash   TEXT NOT NULL,
+    role            TEXT NOT NULL DEFAULT 'customer',  -- 'customer' | 'admin'
+    full_name       TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_users_email UNIQUE (email)
+);
 ```
 
-Index `email` and `stripe_customer_id`. Store only `hashed_password` — never plaintext.
+- Never store plaintext passwords — always bcrypt hash.
+- `role` is enforced at the app layer; no PostgreSQL row-level security needed yet.
 
 ## Product Catalog
 
-```python
-class Product(TimestampMixin, Base):
-    __tablename__ = "products"
+```sql
+CREATE TABLE products (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sku             TEXT NOT NULL,
+    name            TEXT NOT NULL,
+    description     TEXT,
+    price_czk       NUMERIC(10, 2) NOT NULL,  -- Czech Koruna, two decimals
+    weight_grams    INTEGER,
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_products_sku UNIQUE (sku)
+);
 
-    slug: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
-    name: Mapped[str] = mapped_column(nullable=False)
-    description: Mapped[str | None]
-    category: Mapped[str] = mapped_column(nullable=False)  # "catalog" | "custom"
-    is_available: Mapped[bool] = mapped_column(nullable=False, default=True)
-
-    variants: Mapped[list["ProductVariant"]] = relationship(back_populates="product")
-
-
-class ProductVariant(TimestampMixin, Base):
-    __tablename__ = "product_variants"
-
-    product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"), nullable=False, index=True)
-    size_tier: Mapped[str] = mapped_column(nullable=False)   # "small" | "medium" | "large" | "xl"
-    price_cents: Mapped[int] = mapped_column(nullable=False) # always integer cents
-    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
-    sku: Mapped[str] = mapped_column(unique=True, nullable=False)
-    is_available: Mapped[bool] = mapped_column(nullable=False, default=True)
-
-    product: Mapped["Product"] = relationship(back_populates="variants")
+CREATE INDEX ix_products_is_active ON products (is_active);
 ```
 
-Size tier pricing lives on `ProductVariant`, not on `Product`. Each variant has its own `price_cents` and `sku`.
+- Prices are stored in CZK as `NUMERIC` — never `FLOAT`.
+- Soft-delete with `is_active = FALSE`; never hard-delete catalog rows.
 
 ## 3D Model Metadata
 
-Custom figurine orders carry a reference to a generated mesh. Store metadata — not the file — in Postgres; actual mesh files live in object storage.
+Both catalog products and AI-generated figurines link to a model file record.
 
-```python
-class FigurineModel(TimestampMixin, Base):
-    __tablename__ = "figurine_models"
+```sql
+CREATE TABLE model_files (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    storage_key     TEXT NOT NULL,        -- object key in internal object store
+    file_format     TEXT NOT NULL,        -- 'stl' | 'obj' | '3mf'
+    file_size_bytes BIGINT,
+    color_profile   TEXT,                 -- MCAE print color profile identifier
+    is_printable    BOOLEAN NOT NULL DEFAULT FALSE,  -- validated by slicer check
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
-    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, unique=True)
-    prompt_text: Mapped[str] = mapped_column(nullable=False)
-    storage_key: Mapped[str] = mapped_column(nullable=False)      # S3/GCS object key
-    file_format: Mapped[str] = mapped_column(nullable=False)      # "stl" | "obj" | "3mf"
-    mesh_repair_status: Mapped[str] = mapped_column(nullable=False, default="pending")
-    # "pending" | "passed" | "failed"
-    moderation_status: Mapped[str] = mapped_column(nullable=False, default="pending")
-    # "pending" | "approved" | "rejected"
-    moderation_reason: Mapped[str | None]
-    polygon_count: Mapped[int | None]
+-- AI-generated figurines
+CREATE TABLE figurines (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES users (id),
+    prompt          TEXT NOT NULL,
+    model_file_id   UUID REFERENCES model_files (id),
+    generation_status TEXT NOT NULL DEFAULT 'pending',
+        -- 'pending' | 'processing' | 'ready' | 'failed'
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX ix_figurines_user_id ON figurines (user_id);
+CREATE INDEX ix_figurines_generation_status ON figurines (generation_status);
 ```
-
-## Orders
-
-```python
-class Order(TimestampMixin, Base):
-    __tablename__ = "orders"
-
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(nullable=False, default="placed", index=True)
-    total_amount_cents: Mapped[int] = mapped_column(nullable=False)
-    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
-    stripe_checkout_session_id: Mapped[str | None] = mapped_column(unique=True, nullable=True)
-
-    line_items: Mapped[list["OrderLineItem"]] = relationship(back_populates="order")
-    payments: Mapped[list["PaymentRecord"]] = relationship(back_populates="order")
-    audit_logs: Mapped[list["OrderAuditLog"]] = relationship(back_populates="order")
-
-
-class OrderLineItem(TimestampMixin, Base):
-    __tablename__ = "order_line_items"
-
-    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
-    variant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("product_variants.id"), nullable=False)
-    quantity: Mapped[int] = mapped_column(nullable=False)
-    unit_price_cents: Mapped[int] = mapped_column(nullable=False)  # snapshot at time of order
-    currency: Mapped[str] = mapped_column(nullable=False, default="usd")
-```
-
-`unit_price_cents` is snapshotted at order creation — do not join to `product_variants.price_cents` to reconstruct historical totals.
 
 ## Order State Machine
 
-Valid transitions (enforced in the service layer, not in the DB):
+Orders follow a linear state machine. Store the current state in `status`; never delete or overwrite history.
+
+Valid transitions:
 
 ```
-placed       → paid | payment_failed | cancelled
-paid         → preparing | cancelled
-preparing    → printing
-printing     → shipped
-shipped      → delivered
-payment_failed → (terminal)
-cancelled    → (terminal)
+draft → confirmed → payment_pending → payment_confirmed → printing → shipped → delivered
+                                    ↘ payment_failed
+                          (any state) → cancelled
+                          (any state) → refunded
 ```
 
-Every transition writes an `OrderAuditLog` row atomically in the same transaction:
+```sql
+CREATE TABLE orders (
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                     UUID NOT NULL REFERENCES users (id),
+    status                      TEXT NOT NULL DEFAULT 'draft',
+    total_czk                   NUMERIC(10, 2) NOT NULL,
+    shipping_address            JSONB NOT NULL,
+    stripe_payment_intent_id    TEXT,
+    zasílkovna_packet_id        TEXT,
+    tracking_number             TEXT,
+    shipment_status             TEXT,
+    notes                       TEXT,
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
-```python
-class OrderAuditLog(Base):
-    __tablename__ = "order_audit_logs"
+CREATE INDEX ix_orders_user_id ON orders (user_id);
+CREATE INDEX ix_orders_status  ON orders (status);
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
-    from_status: Mapped[str] = mapped_column(nullable=False)
-    to_status: Mapped[str] = mapped_column(nullable=False)
-    actor: Mapped[str] = mapped_column(nullable=False)    # "system" | "admin:{user_id}" | "webhook"
-    reason: Mapped[str | None]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-
-    order: Mapped["Order"] = relationship(back_populates="audit_logs")
+CREATE TABLE order_items (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id        UUID NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
+    product_id      UUID REFERENCES products (id),      -- null for AI figurines
+    figurine_id     UUID REFERENCES figurines (id),     -- null for catalog items
+    quantity        INTEGER NOT NULL DEFAULT 1,
+    unit_price_czk  NUMERIC(10, 2) NOT NULL,            -- snapshot at time of order
+    CONSTRAINT chk_order_items_source CHECK (
+        (product_id IS NOT NULL) != (figurine_id IS NOT NULL)  -- exactly one source
+    )
+);
 ```
 
-`OrderAuditLog` has no `updated_at` — audit rows are immutable.
+- `shipping_address` is JSONB (name, street, city, postal_code, country).
+- `unit_price_czk` is a snapshot — do not join back to `products.price_czk` for financial reporting.
 
 ## Payment Records
 
-```python
-class PaymentRecord(TimestampMixin, Base):
-    __tablename__ = "payment_records"
-
-    order_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("orders.id"), nullable=False, index=True)
-    stripe_event_id: Mapped[str] = mapped_column(unique=True, nullable=False)  # idempotency key
-    stripe_payment_intent_id: Mapped[str | None] = mapped_column(nullable=True)
-    event_type: Mapped[str] = mapped_column(nullable=False)  # e.g. "checkout.session.completed"
-    amount_cents: Mapped[int] = mapped_column(nullable=False)
-    currency: Mapped[str] = mapped_column(nullable=False)
-    status: Mapped[str] = mapped_column(nullable=False)  # "succeeded" | "failed" | "refunded"
-
-    order: Mapped["Order"] = relationship(back_populates="payments")
+```sql
+CREATE TABLE payments (
+    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id                    UUID NOT NULL REFERENCES orders (id),
+    stripe_payment_intent_id    TEXT NOT NULL,
+    amount_czk                  NUMERIC(10, 2) NOT NULL,
+    currency                    TEXT NOT NULL DEFAULT 'czk',
+    status                      TEXT NOT NULL,
+        -- mirrors Stripe: 'requires_payment_method' | 'processing' | 'succeeded' | 'canceled'
+    stripe_event_id             TEXT,           -- idempotency: last processed Stripe event
+    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uq_payments_stripe_payment_intent_id UNIQUE (stripe_payment_intent_id)
+);
 ```
 
-`stripe_event_id` has a unique constraint — use it to detect duplicate webhook deliveries before processing.
+- One payment row per PaymentIntent. Append a new row for re-attempts, do not overwrite.
+- Store `stripe_event_id` to deduplicate webhook deliveries.
 
-## Alembic Conventions
+## General Patterns
 
-- One migration per logical change. Do not bundle unrelated schema changes.
-- Migration filenames: Alembic's default timestamp prefix is fine.
-- Always provide a `downgrade()` that fully reverses the `upgrade()`.
-- For data migrations, use raw SQL via `op.execute()` — do not import ORM models inside migration files (they may not exist at downgrade time).
-- New columns on existing tables: add as `nullable=True` or with a server default so the migration runs without locking the table.
-- Index creation: use `op.create_index(..., postgresql_concurrently=True)` for large tables in production migrations.
+**updated_at trigger** — apply to every mutable table:
 
-## Query Patterns
+```sql
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = now();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-Async sessions everywhere:
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
-async def get_order(db: AsyncSession, order_id: uuid.UUID) -> Order | None:
-    result = await db.execute(select(Order).where(Order.id == order_id))
-    return result.scalar_one_or_none()
+CREATE TRIGGER trg_orders_updated_at
+    BEFORE UPDATE ON orders
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 ```
 
-Avoid N+1 queries — use `selectinload` or `joinedload` when you know you need relationships:
+**No soft-delete by default** — only `products` uses `is_active`. Other tables retain rows permanently for audit purposes.
 
-```python
-result = await db.execute(
-    select(Order)
-    .options(selectinload(Order.line_items))
-    .where(Order.id == order_id)
-)
-```
-
-Never call `db.commit()` inside a route handler directly — commit in the service layer or use a dependency that commits on success.
-
-## Anti-patterns
-
-- Do not use `Float` or `Numeric` for money columns — use `Integer` (cents).
-- Do not import ORM models inside Alembic migration files.
-- Do not store raw Stripe webhook payloads — store only the verified event fields.
-- Do not add business logic to SQLAlchemy event hooks — keep transitions in the service layer.
-- Do not skip the unique constraint on `stripe_event_id` — it is the idempotency guard.
+**JSONB vs columns** — use JSONB only for genuinely variable-shape data (shipping addresses, print settings). Keep all queryable/filterable fields as proper columns.

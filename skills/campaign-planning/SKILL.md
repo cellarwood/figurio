@@ -1,10 +1,9 @@
 ---
 name: campaign-planning
 description: >
-  Plan marketing campaigns for Figurio, the D2C 3D-printed figurine brand.
-  Covers figurine product launches, seasonal promotions (Christmas, Valentine's,
-  Halloween), influencer partnerships, and social commerce loops on Instagram
-  and TikTok — all targeting Figurio's first 500 customers.
+  Campaign planning framework for Figurio — seasonal themes (Christmas, Valentine's Day,
+  Halloween), channel strategy across Instagram and TikTok, budget allocation, and
+  conversion KPIs for D2C figurine sales.
 allowed-tools:
   - Read
   - Write
@@ -13,96 +12,86 @@ metadata:
   paperclip:
     tags:
       - marketing
-      - social
+      - campaigns
       - planning
 ---
 
 # Campaign Planning
 
-## When to Use
+Figurio runs four to five major campaigns per year, anchored to seasonal gift-buying moments. Every campaign is planned in full before creative production begins.
 
-Use this skill when planning any Figurio marketing campaign: new figurine launches, seasonal promotions, influencer partnerships, or TikTok/Instagram social commerce pushes.
+## Seasonal Campaign Calendar
 
-## Campaign Types
+| Campaign | Window | Primary Angle |
+|---|---|---|
+| Valentine's Day | Jan 20 – Feb 14 | Couples figurines, "print your love" |
+| Easter / Spring | Mar 10 – Apr 10 | Family gifts, custom characters |
+| Halloween | Oct 1 – Oct 31 | Monster figurines, limited horror edition |
+| Christmas | Nov 15 – Dec 23 | Gift figurines, "Prompt to Print" as the hero product |
+| New Year / Jan Sale | Dec 26 – Jan 15 | Clearance + introduce new catalog pieces |
 
-### Product Launches
+Christmas is the highest-revenue campaign and receives ~40% of the annual paid budget. Valentine's Day is the second priority.
 
-Figurio has two product lines that require different launch approaches:
+## Campaign Brief Template
 
-**Catalog figurines** (viral, seasonal, collectible)
-- Tease 3-5 days before availability with "coming soon" reels/stories
-- Drop at Tuesday or Thursday 11am EST for maximum reach
-- Pair each launch with a user-generated content (UGC) prompt ("show us where you'd put it")
-- Pin the launch post and link to product page in bio
+Every campaign starts with a written brief covering:
 
-**AI Custom figurines** (prompt-to-print)
-- Lead with the transformation: raw prompt text → finished figurine photo
-- Run a "first 20 orders" early-access window to drive urgency
-- Capture before/after content from early customers to fuel second-wave posts
+1. **Theme** — one-sentence creative anchor (e.g., "Give someone a miniature of themselves")
+2. **Hero product** — catalog figurine OR Prompt to Print custom order
+3. **Channels** — which of: Instagram feed, Instagram Reels, TikTok, email newsletter, paid Meta ads
+4. **Offer / hook** — discount, free shipping threshold, limited edition, bundle
+5. **Timeline** — teaser start date, launch date, last-order date for delivery guarantee, close date
+6. **Budget** — total campaign envelope and split across paid / organic / email
+7. **KPIs** — see section below
 
-### Seasonal Promotions
+## Channel Strategy
 
-| Season | Window | Angle |
-|--------|--------|-------|
-| Valentine's Day | Jan 20 – Feb 13 | "Print someone you love" — couple figurines, pet figurines |
-| Halloween | Oct 1 – Oct 30 | Limited spooky catalog drops + costume custom figurines |
-| Christmas | Nov 15 – Dec 20 | Gift-focused messaging, bundle offers, gifting guides |
+### Instagram
+- Feed posts: polished product photography, 3–5 per campaign
+- Reels: behind-the-scenes printing, time-lapses, unboxings — 2–3 per campaign
+- Stories: countdown stickers, polls, swipe-up to product page
 
-Each seasonal campaign runs in three phases:
-1. **Awareness** (2–3 weeks before): organic content + influencer seeding
-2. **Conversion** (1 week before peak): paid boost + discount code or bundle
-3. **Last-chance** (final 48–72 hours): urgency posts, countdown stories
+### TikTok
+- Focus on the "reveal" moment — unwrapping or printing time-lapse
+- Trending audio preferred; partner with micro-influencers in CZ/SK market
+- 1–2 hero videos per campaign, supported by 3–4 shorter supporting clips
 
-### Influencer Partnerships
+### Email
+- 3-email sequence per major campaign: teaser (D-14), launch (D-0), last-chance (D-3 before cutoff)
+- Subject lines reference the specific seasonal hook, not generic "sale"
+- Include Zásilkovna delivery guarantee date prominently in last-chance email
 
-Target profile: micro-influencers (10k–150k followers) in niches that overlap with Figurio customers:
-- 3D printing / maker community
-- Collectible toys / anime figures
-- Gift guides / lifestyle (especially Valentine's and Christmas seasons)
-- Custom portrait art and personalization
+### Paid (Meta Ads)
+- Retargeting to site visitors and past Stripe customers is always on
+- Prospecting budget activates 2 weeks before campaign peak
+- Creative: video outperforms static; use organic TikTok/Reels winners as paid creative
 
-Partnership brief template:
-- Send the influencer a free figurine (catalog or custom of themselves)
-- Ask for one honest unboxing reel and one "in my space" static post
-- Provide discount code `[INFLUENCER_HANDLE]15` for their audience
-- Track conversions via UTM link per partner
+## Budget Allocation (by campaign tier)
 
-### Social Commerce Loops
+**Tier A — Christmas, Valentine's Day**
+- 60% paid (Meta), 25% influencer/partnership, 15% production
 
-The Figurio social commerce loop runs on Instagram and TikTok:
+**Tier B — Halloween, Easter**
+- 40% paid (Meta), 30% influencer, 30% production
 
-```
-Hook post (product/transformation) → CTA to link in bio / TikTok Shop
-→ Customer receives order → DM outreach asking for UGC
-→ Repost UGC with tag → New customers discover via UGC
-→ Loop repeats
-```
+**Tier C — New Year Sale**
+- 80% paid (retargeting only), 20% email
 
-Every campaign should be designed to feed this loop — include a UGC ask in packaging inserts, order confirmation emails, and caption CTAs.
+## Conversion KPIs
 
-## Campaign Brief Structure
+Track these per campaign at launch, mid-point, and close:
 
-When drafting a campaign brief, include:
+| KPI | Target (Tier A) | Target (Tier B) |
+|---|---|---|
+| Add-to-cart rate | ≥ 8% | ≥ 5% |
+| Checkout conversion | ≥ 3% | ≥ 2% |
+| Email open rate | ≥ 35% | ≥ 28% |
+| Email click-to-open | ≥ 12% | ≥ 8% |
+| ROAS (paid) | ≥ 4× | ≥ 3× |
+| CAC | ≤ 350 CZK | ≤ 500 CZK |
 
-1. **Goal** — what metric defines success (orders, followers, UGC posts)
-2. **Product** — which figurine(s) or line is featured
-3. **Timeline** — start, peak, end dates
-4. **Channels** — Instagram, TikTok, email, or combination
-5. **Content plan** — post types, cadence, who creates
-6. **Influencer slots** — how many partners, seeding deadline
-7. **Offer** — discount, bundle, limited edition, or none
-8. **Tracking** — UTM params, discount codes, order tags
+Prompt to Print orders count double in revenue reporting (higher margin than catalog).
 
-## Cadence Guidelines
+## Campaign Closure
 
-- Minimum 3 organic posts per week during active campaigns
-- Stories daily during launch and final-push phases
-- Email: 1 announcement + 1 last-chance per campaign (do not over-email)
-- TikTok: prioritize frequency over polish — 1 rough authentic reel beats 0 polished ones
-
-## Anti-patterns
-
-- Do not plan campaigns without a UGC collection mechanism built in
-- Do not run more than two seasonal campaigns in overlap
-- Do not use influencers with follower counts above 500k — CPM is too high for 500-customer phase
-- Do not launch a catalog drop without product photos and a working product page URL
+After each campaign, the analytics-reporter subagent produces a post-campaign report within 5 business days covering: spend vs. budget, KPI performance, top-performing content, and one improvement recommendation for next year's equivalent campaign.

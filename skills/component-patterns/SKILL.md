@@ -1,14 +1,14 @@
 ---
 name: component-patterns
 description: >
-  React/TypeScript component conventions for the Figurio storefront. Covers file
-  structure, naming, prop typing in strict mode, and implementation patterns for
-  product cards, cart drawer, Stripe Elements checkout flow, 3D model viewer,
-  and order tracking components using shadcn-ui and Radix UI primitives.
+  React/shadcn-ui component conventions for the Figurio storefront — covers
+  product cards, cart drawer, checkout form, 3D model viewer, and responsive
+  grid layouts for the D2C 3D-printed figurine catalog and AI "Prompt to Print"
+  custom flow.
 allowed-tools:
   - Read
   - Grep
-  - Glob
+  - Write
 metadata:
   paperclip:
     tags:
@@ -18,262 +18,120 @@ metadata:
 
 # Component Patterns
 
-## When to Use
+Conventions for building React + TypeScript components on the Figurio storefront
+using shadcn/ui primitives. Every component lives under `src/components/` and is
+co-located with its own `*.test.tsx` file.
 
-Apply this skill whenever creating or modifying React components for the Figurio storefront — product catalog, cart, checkout, 3D viewer, order tracking, or account pages.
+## General Rules
 
-## File Structure
+- Use **shadcn/ui** primitives (`Button`, `Card`, `Dialog`, `Sheet`, `Form`, etc.)
+  as the base; extend with Tailwind utility classes — do not write custom CSS files.
+- All props interfaces are named `<ComponentName>Props` and exported.
+- Use `React.forwardRef` only when the parent genuinely needs a DOM ref (e.g., scroll
+  targets, focus management).
+- Prefer composition over configuration — pass children or slot props rather than
+  boolean variant flags where the variants are structurally different.
+- Use `cn()` (from `lib/utils`) to merge class names; never string-concatenate classes.
 
-```
-src/
-  components/
-    ui/                  # shadcn-ui generated primitives (do not hand-edit)
-    catalog/
-      ProductCard.tsx
-      ProductGrid.tsx
-      ProductFilters.tsx
-    cart/
-      CartDrawer.tsx
-      CartLineItem.tsx
-      CartSummary.tsx
-    checkout/
-      CheckoutForm.tsx
-      StripePaymentElement.tsx
-      OrderConfirmation.tsx
-    viewer/
-      ModelViewer.tsx
-      ModelViewerSkeleton.tsx
-    tracking/
-      OrderTimeline.tsx
-      OrderStatusBadge.tsx
-    shared/
-      PriceDisplay.tsx
-      SizeTierSelector.tsx
-  hooks/
-    useCart.ts
-    useOrderStatus.ts
-    useModelViewer.ts
-  types/
-    product.ts
-    order.ts
-    cart.ts
-```
+## Product Card (`ProductCard`)
 
-## Naming Conventions
-
-- Component files: PascalCase (`ProductCard.tsx`)
-- Hook files: camelCase prefixed with `use` (`useCart.ts`)
-- All components export as named exports — no default exports
-- Types live in `src/types/`, imported as `import type { Product } from '@/types/product'`
-
-## TypeScript Conventions
-
-Always use strict prop interfaces, never `any`:
+Used in catalog grids and search results to display a single figurine SKU.
 
 ```tsx
-// Good
 interface ProductCardProps {
-  product: Product;
-  onAddToCart: (productId: string, sizeSlug: string) => void;
-  className?: string;
-}
-
-export function ProductCard({ product, onAddToCart, className }: ProductCardProps) {
-  // ...
-}
-```
-
-- Use `interface` for component props, `type` for unions and mapped types
-- Prefer explicit return types on hooks: `function useCart(): CartState`
-- Use `React.ComponentPropsWithoutRef<'button'>` for forwarded HTML element props
-
-## shadcn/Radix Usage
-
-Import shadcn components from `@/components/ui/`. Extend variants via `className` — never modify the `ui/` source files directly.
-
-```tsx
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
-
-// Extend via className with Tailwind
-<Button className="w-full" variant="default">Add to Cart</Button>
-```
-
-Use Radix primitives directly when shadcn doesn't cover the use case (e.g., `@radix-ui/react-visually-hidden` for screen-reader-only labels in the 3D viewer).
-
-## Product Card
-
-The `ProductCard` renders in the catalog grid. It uses shadcn `Card` as the container with a fixed aspect-ratio image area.
-
-Key patterns:
-- Image with `aspect-ratio: 4/3`, `object-fit: cover` via Tailwind `aspect-[4/3] object-cover`
-- Size tier badge uses shadcn `Badge` with `variant="secondary"`
-- "Add to cart" triggers immediately — no modal — for catalog cards
-- Link wraps the card via React Router `<Link>`, with the CTA button stopping propagation
-
-```tsx
-export function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  return (
-    <Card className="group overflow-hidden">
-      <Link to={`/products/${product.slug}`}>
-        <div className="aspect-[4/3] overflow-hidden bg-muted">
-          <img
-            src={product.thumbnailUrl}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-          />
-        </div>
-        <CardContent className="p-4">
-          <h3 className="font-semibold text-sm">{product.name}</h3>
-          <PriceDisplay priceFrom={product.priceTiers[0].price} />
-        </CardContent>
-      </Link>
-      <CardFooter className="p-4 pt-0">
-        <Button
-          size="sm"
-          className="w-full"
-          onClick={(e) => { e.preventDefault(); onAddToCart(product.id, product.priceTiers[0].sizeSlug) }}
-        >
-          Add to Cart
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+  sku: string;
+  name: string;
+  priceEur: number;          // display in EUR with CZK secondary label
+  thumbnailUrl: string;
+  badge?: 'new' | 'sale' | 'custom'; // 'custom' = AI Prompt to Print eligible
+  onAddToCart: (sku: string) => void;
 }
 ```
 
-## Cart Drawer
+- Wrap in shadcn `Card` with `overflow-hidden rounded-2xl`.
+- Thumbnail uses `<img>` with `aspect-ratio: 1/1` and `object-fit: cover`; always
+  include a descriptive `alt` string (e.g., `"Mage figurine — front view"`).
+- Price: render `€{priceEur.toFixed(2)}` as primary, `~{czk} Kč` as secondary muted text.
+- The "Add to Cart" `Button` is `variant="default" size="sm"` and emits `onAddToCart(sku)`.
+- The `badge` renders as a shadcn `Badge` positioned `absolute top-2 left-2`.
 
-Use shadcn `Sheet` with `side="right"` for the cart drawer. Cart state lives in a Zustand store accessed via `useCart()`.
+## Cart Drawer (`CartDrawer`)
 
-Key patterns:
-- `SheetTrigger` is the header cart icon; controlled open state in the store
-- `CartLineItem` handles quantity +/- with optimistic updates
-- Show empty state with a CTA to the catalog when `cart.items.length === 0`
-- Footer shows subtotal + "Proceed to Checkout" button that navigates to `/checkout`
+Slides in from the right using shadcn `Sheet` (`side="right"`).
+
+- Triggered globally via `useCartStore` (Zustand); do not pass open state as props.
+- Line items rendered in a `ScrollArea` capped at `max-h-[60vh]`.
+- Each line item shows: thumbnail (40 × 40 px), name, quantity stepper (`+ / −` buttons),
+  unit price, and a remove icon (`Trash2` from lucide-react).
+- Footer: subtotal, a Zásilkovna shipping estimate label, and a full-width
+  `Button` "Proceed to Checkout" linking to `/checkout`.
+- Empty state: centered illustration + "Your cart is empty" + `Button` "Browse Figurines"
+  linking to `/catalog`.
+
+## Checkout Form (`CheckoutForm`)
+
+Multi-step form: **1 — Contact → 2 — Shipping → 3 — Payment**.
+
+- Use shadcn `Form` backed by `react-hook-form` + `zod` schema validation.
+- Each step is a separate named component: `ContactStep`, `ShippingStep`, `PaymentStep`.
+- Navigation uses a local `step` state (1–3); do not use a router for step transitions.
+- Stripe Elements (`CardElement`) are mounted in `PaymentStep` — wrap in a
+  `<Elements stripe={stripePromise}>` boundary at the `CheckoutForm` level.
+- Zásilkovna pickup-point selector lives in `ShippingStep` as `<ZasilkovnaWidget>` — it
+  renders an iframe; wrap with a `Suspense` boundary and a `Skeleton` fallback.
+- On submit, call `POST /api/v1/orders` — handle `4xx` errors inline on the relevant
+  step field using `setError` from `react-hook-form`.
+
+### Field validation rules (shared zod schema)
+
+| Field | Rule |
+|---|---|
+| Email | `z.string().email()` |
+| Phone | Czech/EU format: `z.string().regex(/^\+?[0-9\s\-]{7,15}$/)` |
+| Postal code | `z.string().regex(/^\d{3}\s?\d{2}$/)` (Czech PSČ) |
+| Card (Stripe) | Validated by Stripe Elements; show `stripeError.message` in a `FormMessage` |
+
+## 3D Model Viewer (`ModelViewer`)
+
+Used on the product detail page and the AI "Prompt to Print" preview.
 
 ```tsx
-export function CartDrawer() {
-  const { isOpen, closeCart, items, subtotal } = useCart()
-
-  return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && closeCart()}>
-      <SheetContent side="right" className="flex flex-col w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>Your Cart ({items.length})</SheetTitle>
-        </SheetHeader>
-        {/* line items */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-4">
-          {items.map((item) => <CartLineItem key={item.id} item={item} />)}
-        </div>
-        {/* footer */}
-        <div className="border-t pt-4 space-y-3">
-          <CartSummary subtotal={subtotal} />
-          <Button asChild className="w-full">
-            <Link to="/checkout" onClick={closeCart}>Proceed to Checkout</Link>
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
+interface ModelViewerProps {
+  modelUrl: string;     // URL to .glb file
+  posterUrl?: string;   // static fallback image while model loads
+  autoRotate?: boolean; // default true on detail page, false in cart
 }
 ```
 
-## Checkout Flow
+- Renders `<model-viewer>` (Google `@google/model-viewer` web component).
+- Declare the custom element type in `src/types/model-viewer.d.ts` to satisfy TS.
+- Always provide `poster` prop — shown while the WASM runtime boots.
+- Set `camera-controls`, `shadow-intensity="1"`, `ar` (for mobile AR quick-look).
+- Wrap with a fixed-aspect container (`aspect-[4/3]`) using a `div`; never let
+  the viewer dictate its own dimensions.
+- Lazy-load the `@google/model-viewer` script via dynamic `import()` inside a
+  `useEffect` so it does not block initial bundle parse.
 
-The checkout is a single `/checkout` page with three logical sections: address, payment (Stripe Elements), and order review. Do not split into multi-step routes — manage step state locally with `useState`.
+## Responsive Grid
 
-```tsx
-type CheckoutStep = 'address' | 'payment' | 'review'
-```
-
-Stripe Elements integration:
-- Wrap the page in `<Elements stripe={stripePromise} options={elementsOptions}>`
-- Use `<PaymentElement>` — not the older `<CardElement>` — for PCI-compliant rendering
-- On submit, call `stripe.confirmPayment()` with `return_url: window.location.origin + '/order-confirmation'`
-- Stripe redirects back on success; read `payment_intent_client_secret` from query params on the confirmation page
-
-```tsx
-// In CheckoutForm.tsx
-const { stripe, elements } = useStripe(), useElements()
-
-async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault()
-  if (!stripe || !elements) return
-  setIsSubmitting(true)
-  const { error } = await stripe.confirmPayment({
-    elements,
-    confirmParams: { return_url: `${window.location.origin}/order-confirmation` },
-  })
-  if (error) setPaymentError(error.message ?? 'Payment failed')
-  setIsSubmitting(false)
-}
-```
-
-## 3D Model Viewer
-
-`ModelViewer` wraps the `<model-viewer>` web component (Google's `@google/model-viewer` package). Because it is a custom element, declare it in `src/types/model-viewer.d.ts`.
-
-Key patterns:
-- Show `ModelViewerSkeleton` (animated Tailwind `animate-pulse` placeholder) while the model loads
-- Expose `autoRotate` and `cameraControls` as props — default both to `true` on detail pages
-- For the cart drawer thumbnail, set `autoRotate={false}` and disable camera controls
+Catalog pages use a CSS grid via Tailwind:
 
 ```tsx
-export function ModelViewer({ src, alt, autoRotate = true, cameraControls = true }: ModelViewerProps) {
-  const [loaded, setLoaded] = useState(false)
-  return (
-    <div className="relative aspect-square w-full bg-muted rounded-lg overflow-hidden">
-      {!loaded && <ModelViewerSkeleton />}
-      <model-viewer
-        src={src}
-        alt={alt}
-        auto-rotate={autoRotate || undefined}
-        camera-controls={cameraControls || undefined}
-        onLoad={() => setLoaded(true)}
-        style={{ width: '100%', height: '100%' }}
-      />
-    </div>
-  )
-}
+<div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+  {products.map((p) => <ProductCard key={p.sku} {...p} />)}
+</div>
 ```
 
-## Order Tracking
-
-`OrderTimeline` renders the status steps for an order. Status values come from the backend `Order` type and map to human-readable labels.
-
-```tsx
-const STATUS_STEPS: OrderStatus[] = ['paid', 'preparing', 'printing', 'shipped', 'delivered']
-
-export function OrderTimeline({ currentStatus }: { currentStatus: OrderStatus }) {
-  const currentIdx = STATUS_STEPS.indexOf(currentStatus)
-  return (
-    <ol className="flex flex-col gap-3">
-      {STATUS_STEPS.map((step, idx) => (
-        <li key={step} className={cn('flex items-center gap-3', idx <= currentIdx ? 'text-foreground' : 'text-muted-foreground')}>
-          <StatusDot completed={idx <= currentIdx} />
-          <span className="text-sm font-medium capitalize">{step}</span>
-        </li>
-      ))}
-    </ol>
-  )
-}
-```
-
-Use `useOrderStatus(orderId)` hook which polls `/api/v1/orders/{id}` every 30 seconds while status is not `delivered`.
-
-## Tailwind Conventions
-
-- Use `cn()` (from `@/lib/utils`) to merge conditional class strings — never string concatenation
-- Prefer Tailwind spacing scale (`p-4`, `gap-3`) over arbitrary values
-- Responsive prefix order: mobile-first base → `sm:` → `md:` → `lg:`
-- Color tokens: use design-system semantic tokens (`text-foreground`, `bg-muted`, `border`) not raw Tailwind palette colors
+- Mobile: 2 columns (figurines are visually rich — 1 column feels sparse).
+- Tablet (md): 3 columns.
+- Desktop (lg+): 4–5 columns.
+- Use `Skeleton` placeholders during loading — same grid, `ProductCard` replaced by
+  a `Card` with `animate-pulse` children matching the card's visual weight.
 
 ## Anti-patterns
 
-- Do not use `React.FC` — declare components as plain functions with typed props
-- Do not put cart or order state in component-local state — use the Zustand stores
-- Do not import from `@radix-ui/*` for anything shadcn already wraps
-- Do not use inline `style={{}}` except for the `<model-viewer>` web component dimensions
-- Do not skip loading and error states on async data — every fetch needs a skeleton and error boundary
+- Do not use `styled-components` or any CSS-in-JS — Tailwind + shadcn only.
+- Do not lift cart state into component props — always consume `useCartStore`.
+- Do not import `model-viewer` at the module top level — it registers a global custom
+  element and breaks SSR/test environments.
+- Do not display raw CZK-only prices — always show EUR as primary for the EU market.

@@ -1,60 +1,55 @@
 schema: agentcompanies/v1
-slug: figurio
+kind: adapter-config
+adapter: paperclip
 
-adapterConfig:
-  env:
-    GH_TOKEN:
-      kind: secret
-      description: GitHub personal access token for gh CLI
-    DOCKER_HUB_USERNAME:
-      kind: secret
-      description: Docker Hub username for image push/pull
-    DOCKER_HUB_TOKEN:
-      kind: secret
-      description: Docker Hub access token
-    STRIPE_SECRET_KEY:
-      kind: secret
-      description: Stripe secret API key
-    STRIPE_WEBHOOK_SECRET:
-      kind: secret
-      description: Stripe webhook signing secret
-    DATABASE_URL:
-      kind: secret
-      description: PostgreSQL connection string
-    GEMINI_API_KEY:
-      kind: secret
-      description: Google Gemini API key for media generation
-    ELEVENLABS_API_KEY:
-      kind: secret
-      description: ElevenLabs API key for text-to-speech
-    SENTRY_DSN:
-      kind: plain
-      description: Sentry error tracking DSN
-    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
-      kind: plain
-      description: Path to GWS service account JSON
-      default: /paperclip/.gws/figurio.json
-    MEDIA_OUTPUT_DIR:
-      kind: plain
-      description: Output directory for generated media files
-      default: /tmp/media-output
+# Company identity
+company:
+  slug: figurio
+  name: Figurio
 
-agents:
-  ceo:
-    budget: 10000
-  cto:
-    budget: 15000
-  cmo:
-    budget: 10000
-  coo:
-    budget: 8000
-  backend-engineer:
-    budget: 10000
-  frontend-engineer:
-    budget: 10000
-  devops-engineer:
-    budget: 10000
-  content-creator:
-    budget: 5000
-  product-manager:
-    budget: 8000
+# Default budget for all agents (in cents/month)
+defaultBudget: 10000
+
+# Per-agent budget overrides
+agentBudgets:
+  ceo: 10000
+  cto: 15000
+  backend-engineer: 10000
+  frontend-engineer: 10000
+  ml-ai-engineer: 10000
+  devops-engineer: 8000
+  cmo: 10000
+  content-creator: 6000
+  head-of-operations: 8000
+
+# Environment variable inputs — secrets injected at deploy time
+env:
+  secrets:
+    - GH_TOKEN
+    - DOCKER_HUB_USERNAME
+    - DOCKER_HUB_TOKEN
+    - STRIPE_SECRET_KEY
+    - STRIPE_WEBHOOK_SECRET
+    - DATABASE_URL
+    - GEMINI_API_KEY
+    - ELEVENLABS_API_KEY
+  plain:
+    - SENTRY_DSN
+    - MEDIA_OUTPUT_DIR
+    - GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE
+
+# Slack integration
+slack:
+  workspace: 00aiworkspace.slack.com
+
+# Infrastructure references
+infrastructure:
+  github:
+    org: cellarwood
+    repo: figurio
+  dockerHub:
+    username: lukekelle00
+  kubernetes:
+    context: microk8s-local
+  stripe:
+    account: Cellarwood

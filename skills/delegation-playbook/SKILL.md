@@ -1,14 +1,14 @@
 ---
 name: delegation-playbook
 description: >
-  Rules for Figurio's CEO agent when delegating tasks to CTO, CMO, COO, and
-  Product Manager. Covers when to delegate vs. handle personally, how to frame
-  assignments, escalation criteria, and follow-up cadence across the 9-agent
-  e-commerce team.
+  Rules for the Figurio CEO on delegating tasks to CTO, CMO, and Head of
+  Operations. Covers routing logic by work type, when to delegate vs handle
+  personally, how to write delegation-ready issues, escalation criteria, and
+  follow-up cadence.
 metadata:
   paperclip:
     tags:
-      - leadership
+      - executive
       - delegation
       - operations
 ---
@@ -17,96 +17,89 @@ metadata:
 
 ## When to Use
 
-Use this skill any time the CEO needs to assign work, respond to an escalation,
-or decide whether to handle something directly or route it to a functional lead.
+Use this skill whenever you need to assign work to a direct report, decide whether to handle something yourself, or determine whether an escalation from a direct report warrants a decision from you.
 
-## Delegation Targets
+## Routing Table
 
-Figurio has four primary delegation targets for the CEO:
+Route every task to the single correct owner. If a task spans two domains, assign the primary owner and add a dependency comment for the secondary team.
 
-| Agent | Domain | Owns |
-|-------|--------|------|
-| **CTO** | Engineering | Backend, frontend, DevOps, AI pipeline, infra |
-| **CMO** | Marketing | Brand, campaigns, content, acquisition, social |
-| **COO** | Operations | Fulfillment, suppliers, SLAs, cost tracking |
-| **Product Manager** | Product | Feature roadmap, sprint planning, backlog |
+| Work type | Owner |
+|-----------|-------|
+| React/TS frontend, Python/FastAPI backend, GKE infrastructure, PostgreSQL, Terraform, security, AI pipeline engineering | CTO |
+| Brand identity, marketing campaigns, content, social media, SEO, paid ads, customer acquisition, influencer coordination | CMO |
+| MCAE production coordination, print job tracking, Zásilkovna fulfillment, vendor SLA management, customer support escalations | Head of Operations |
+| Board communication, company OKR registry, IP compliance, final trade-off decisions, budget anomalies | CEO (you) |
 
-Each of these agents can further delegate to their sub-agents (e.g., CTO →
-Backend Engineer or DevOps Engineer).
+When in doubt, check: does this require writing code, designing a campaign, or coordinating a shipment? If yes — delegate.
 
-## Delegate vs. Handle Personally
+## What You Handle Personally
 
-### Delegate when:
-- The work falls squarely within one functional domain (engineering, marketing,
-  operations, or product).
-- The decision does not set company strategy or affect more than one domain.
-- The task is repeatable or process-driven (reporting, content scheduling,
-  infra provisioning, supplier follow-up).
-- The CEO's involvement would create a bottleneck without adding unique value.
+You personally own a narrow set of tasks. Do not delegate these:
 
-### Handle personally when:
-- The decision crosses two or more domains and requires trade-offs only the CEO
-  can make (e.g., delay launch to fix fulfillment vs. launch with manual
-  workaround).
-- The task involves external parties at a company-representation level
-  (investor updates, key partner negotiations).
-- A goal-level reprioritization is needed (see `strategy-review` skill).
-- Two agents are in conflict over resources or priorities.
+- Decomposing company-level goals into assignable issues
+- Final decisions on irreversible trade-offs escalated by direct reports
+- Board updates and executive communication (Gmail)
+- IP and third-party compliance flags
+- Budget posture monitoring and anomaly escalation
+- Leadership sync preparation and facilitation
 
-## How to Frame a Delegation
+## How to Write a Delegation-Ready Issue
 
-Every delegated task must include:
+Every issue you create for a direct report must have:
 
-1. **What** — clear description of the output or action required.
-2. **Why** — which of the 5 company goals it serves (be explicit).
-3. **By when** — deadline or expected check-in point.
-4. **Success criteria** — how you'll know it's done correctly.
-5. **Constraints** — budget limits, technical constraints, dependencies to be
-   aware of.
+- **Title**: imperative verb + specific outcome ("Integrate Zásilkovna webhook for order status updates")
+- **Success criterion**: one measurable condition that proves the work is done
+- **`goalId`**: mapped to one of Figurio's four strategic goals
+- **`assigneeAgentId`**: the direct report's agent ID — never leave unassigned
+- **Due date**: a realistic date, not "ASAP"
+- **Context block**: 2-4 bullets with relevant constraints (e.g., "MCAE sends status via email today — no API available yet")
 
-Example delegation to CMO:
-> "Run a paid social test targeting custom figurine gift buyers on Instagram.
-> Goal: acquire first 50 customers toward the 500-customer target. Budget: $500.
-> By end of week. Success: at least 10 conversions at CAC ≤ $50. Constraint:
-> use only approved brand assets from the `/brand` drive folder."
+Do not specify implementation approach in the issue body unless a specific constraint applies. Own the destination, not the path.
+
+## When to Delegate vs Handle Personally
+
+Delegate when:
+- The work touches engineering, marketing, or operations domains (see routing table)
+- The decision is reversible and the direct report has the context to make it
+- The task is repeatable and the direct report should own the pattern going forward
+
+Handle personally when:
+- The decision is irreversible (new vendor contract, pricing strategy, architectural pivot)
+- The issue requires board-level communication
+- A cross-functional blocker can only be resolved by a CEO-level call
+- Two direct reports are in conflict about scope or priority
 
 ## Escalation Criteria
 
-An agent should escalate to the CEO (and the CEO should expect it) when:
+Accept an escalation from a direct report when they flag:
 
-| Trigger | Example |
-|---------|---------|
-| Blocker that will slip a goal milestone | Stripe integration broken 3 days before launch |
-| Decision requires budget above agent's authority | CMO wants to double ad spend beyond approved ceiling |
-| Cross-agent dependency is unresolved | PM needs backend API that CTO says is 2 weeks out |
-| External risk with company-wide impact | Supplier can't fulfill orders for 2 weeks |
-| Two agents disagree on priority | CTO and PM disagree on whether to fix tech debt or ship feature |
+- A decision that requires CEO authority (budget > threshold, vendor commitment, scope change that affects another team)
+- A cross-functional conflict that cannot be resolved at the DR level
+- A risk that was not in scope when the issue was created (e.g., MCAE capacity constraint affects launch date)
+- A compliance or IP concern
 
-When an escalation arrives, the CEO must respond with a decision — not a
-question back to the agent — within the same working cycle.
+Reject or redirect an escalation when:
+- The direct report has the information and authority to decide themselves
+- The escalation is a status update disguised as a question — respond with "Your call, let me know what you decide"
+- The issue is implementation detail — do not re-enter domains you have delegated
+
+When you accept an escalation, respond with a decision within the same heartbeat. Do not park escalations.
 
 ## Follow-up Cadence
 
-| Delegation type | Check-in frequency |
-|-----------------|-------------------|
-| Strategic initiative (multi-week) | Weekly, at strategy review |
-| Sprint-level task | Mid-sprint and end of sprint |
-| Urgent / time-boxed task (< 3 days) | At deadline only, unless blocker raised |
-| Recurring process (reports, campaigns) | Review output; follow up only if quality issue |
+| Time since assignment | Action |
+|-----------------------|--------|
+| 0-2 heartbeats | No follow-up needed — allow the direct report to work |
+| 2 heartbeats, no status comment | Post a check-in comment on the issue |
+| 3 heartbeats, no update | Mark the issue as a review priority in the weekly digest; raise in leadership sync |
+| Issue is `blocked` | Intervene immediately — see strategy-review skill for blocker resolution steps |
 
-Do not micromanage agents between check-ins. If an agent has not raised a
-blocker, assume work is proceeding. Intervene only when a deadline is missed or
-a risk is surfaced.
+Never DM direct reports outside the issue thread. All follow-ups happen as issue comments so the record is preserved.
 
 ## Anti-patterns
 
-- Delegating without success criteria — agents will deliver something, but it
-  may not be what was needed.
-- Delegating cross-domain decisions — "figure it out between yourselves" without
-  CEO resolution leads to deadlock.
-- Skipping the "why" — agents make better decisions when they understand which
-  company goal the task serves.
-- Re-delegating an escalation back to the agent who escalated it — if they
-  escalated, they need a CEO decision, not a referral.
-- Over-following-up on routine tasks — it signals distrust and consumes agent
-  cycles that should go toward execution.
+- Do not perform engineering, marketing, or operations work yourself — even when it feels faster. It undermines ownership and creates shadow work outside the issue tracker.
+- Do not create issues without a `goalId` — unlinked work is invisible to strategic review.
+- Do not assign the same issue to multiple direct reports — one owner per issue, always.
+- Do not revise the implementation approach mid-issue unless a hard external constraint has changed. Trust the assignee's judgment on the how.
+- Do not accept an escalation silently — always respond with either a decision or a redirect.

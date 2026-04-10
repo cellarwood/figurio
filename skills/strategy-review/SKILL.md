@@ -1,109 +1,126 @@
 ---
 name: strategy-review
 description: >
-  Weekly strategic review process for Figurio's CEO agent. Evaluates progress
-  against the 5 company goals (MVP launch, AI pipeline, brand/500 customers,
-  fulfillment operations, unit economics), surfaces blockers across the 9-agent
-  team, and reprioritizes work for the coming week.
+  Weekly strategic review process for the Figurio CEO. Covers how to evaluate
+  progress across CTO, CMO, and Head of Operations, surface stale or blocked
+  issues, reprioritize against Figurio's four strategic goals, and produce a
+  board-ready weekly digest.
+allowed-tools:
+  - Bash
+  - Read
+  - Write
 metadata:
   paperclip:
     tags:
       - strategy
-      - leadership
-      - planning
+      - executive
+      - weekly
 ---
 
 # Strategy Review
 
 ## When to Use
 
-Run this skill every week (Monday or start of sprint) to assess company health,
-align agent priorities, and decide what changes — if any — need to be made to
-the current plan.
+Run this skill once per week as part of the weekly strategic review cycle — typically triggered by a scheduled heartbeat or a calendar reminder. Also run it when the company enters a new milestone phase or after a significant external event (MCAE delivery failure, Stripe integration issue, major customer complaint).
 
-Also invoke it when a significant event occurs mid-week: a major blocker is
-escalated, a goal milestone is hit, or external conditions shift (e.g., a
-supplier issue, a spike in ad spend, a technical incident).
+## Figurio's Four Strategic Goals
 
-## Figurio's 5 Company Goals
+Every issue reviewed must map to one of these goals. If it does not, flag it for closure or re-scoping.
 
-Evaluate each goal in order — they are roughly sequential but run in parallel:
-
-1. **Launch MVP** — React/TS storefront + FastAPI backend live, Stripe checkout
-   functional, at least one product SKU orderable end-to-end.
-2. **AI Pipeline** — Automated 3D model generation pipeline operational;
-   customer upload → render → fulfillment without manual intervention.
-3. **Brand & 500 Customers** — 500 paying customers acquired; brand identity
-   established (visual system, tone, social presence).
-4. **Operationalize Fulfillment** — Print-to-ship SLA defined and met
-   consistently; packaging, quality checks, and returns process documented.
-5. **Unit Economics** — CAC, LTV, COGS, and contribution margin tracked weekly;
-   path to profitability clear.
+1. **Launch e-commerce platform** — catalog browsing, Stripe checkout, order management live for customers
+2. **Launch Prompt to Print AI pipeline** — end-to-end custom figurine flow: prompt → AI model → MCAE print job → fulfillment
+3. **Build brand presence and acquire first customers** — marketing, SEO, social, launch campaign, first 100 orders
+4. **Establish reliable production and fulfillment operations** — MCAE SLA adherence, Zásilkovna integration, support operations
 
 ## Review Process
 
-### 1. Collect Status (before the session)
+### Step 1 — Pull All Active Issues
 
-Pull updates from each agent's last output or heartbeat:
-- CTO / Backend Engineer / Frontend Engineer → engineering progress
-- CMO / Content Creator → marketing metrics, campaign status
-- DevOps Engineer → infrastructure health, deployment status
-- Product Manager → feature backlog, sprint completion rate
-- COO / Operations → fulfillment SLA, supplier status
+Query all issues assigned to direct reports with status `todo`, `in_progress`, or `blocked`:
 
-### 2. Score Each Goal
+```
+GET /api/companies/{companyId}/issues?status=todo,in_progress,blocked
+```
 
-For each of the 5 goals assign a traffic-light status:
+Group by assignee: CTO, CMO, Head of Operations.
 
-| Status | Meaning |
-|--------|---------|
-| Green | On track, no intervention needed |
-| Yellow | At risk — needs attention this week |
-| Red | Blocked or significantly behind — requires immediate reprioritization |
+### Step 2 — Assess Each Issue Against Four Criteria
 
-### 3. Identify Blockers
+For every `in_progress` issue, ask:
 
-A blocker is anything that prevents a goal from progressing. Categorize by
-domain:
+| Criterion | Pass | Flag |
+|-----------|------|------|
+| Maps to a strategic goal (`goalId` set) | Yes | Missing `goalId` — add or close |
+| Has a status comment within the last 2 heartbeats | Yes | Stale — post follow-up |
+| Not blocked without an owner on the blocker | Clear | Blocked silently — intervene |
+| Due date is realistic given current velocity | Yes | Slipping — reprioritize or descope |
 
-- **Engineering blockers** — unfinished infra, API gaps, unresolved bugs
-- **Marketing blockers** — no creative assets, unclear targeting, budget not
-  approved
-- **Operations blockers** — supplier delays, fulfillment process undefined,
-  tooling not in place
-- **Cross-agent blockers** — dependency between two agents that is unresolved
+### Step 3 — Handle Stale Issues
 
-For each blocker record: what it is, which agent owns it, and what unblocks it.
+If an issue has been `in_progress` for 2+ heartbeats with no status comment, post:
 
-### 4. Reprioritize
+```
+Status check: this issue has had no update in 2+ cycles.
+- Current status?
+- Any blockers I should know about?
+- Do you need a decision from me to unblock?
+```
 
-After scoring and surfacing blockers, decide:
+Tag the assignee. Do not change the status yet — wait for their response.
 
-- Should any agent shift focus this week? (e.g., pull backend engineer off new
-  features to fix a fulfillment integration bug)
-- Is any goal being over-resourced relative to its current bottleneck?
-- Is there a cross-agent coordination problem that only the CEO can resolve?
+### Step 4 — Resolve or Escalate Blockers
 
-Output a ranked list of the top 3-5 priorities for the week across the team.
+For each `blocked` issue, determine blocker type:
 
-### 5. Communicate Decisions
+- **Decision blocker** — the direct report needs a call from you (vendor choice, trade-off, scope cut). Make the call immediately and comment the decision.
+- **External blocker** — depends on MCAE, Zásilkovna, Stripe, or another vendor. Contact the external party directly or assign a vendor follow-up task to Head of Operations.
+- **Cross-functional blocker** — one team is waiting on another (e.g., CMO waiting on CTO for landing page API). Create a dependency comment on both issues and set a resolution deadline.
 
-Summarize the review in a short memo format:
-- Goal statuses (traffic light)
-- Top blockers and owners
-- Priority changes for the week
-- Any decisions that need agent acknowledgment
+Never let a `blocked` issue sit without a comment or action for more than one review cycle.
 
-Send to relevant agents via the appropriate channel (Google Chat, task update,
-or direct assignment).
+### Step 5 — Reprioritize
+
+After reviewing all issues, assess the overall picture:
+
+- Are any goals underserved (no active `in_progress` issues)?
+- Are too many issues clustered in one area while another goal stalls?
+- Does any `todo` issue need to be promoted to `in_progress` immediately?
+
+Adjust by commenting priority changes on issues and notifying the relevant direct report.
+
+### Step 6 — Draft the Weekly Digest
+
+Create or update the weekly digest doc in Google Drive using `gws docs`.
+
+**Digest structure:**
+
+```
+Week of [DATE] — Figurio Strategic Digest
+
+## Goal Progress
+- E-commerce platform: [status, key milestone hit or missed]
+- Prompt to Print: [status]
+- Brand & acquisition: [status]
+- Production & fulfillment: [status]
+
+## This Week's Wins
+- [bullet]
+
+## Active Blockers
+- [issue title] — [blocker description] — [owner of resolution]
+
+## Decisions Made
+- [decision] — [rationale in one sentence]
+
+## Next Week's Focus
+- [top 3 priorities]
+```
+
+Send the digest summary to the board via `gws gmail send` to `board@cellarwood.org`.
 
 ## Anti-patterns
 
-- Reviewing status without making a decision — every review must produce at
-  least one action or confirmation that no change is needed.
-- Treating all 5 goals as equally urgent every week — at any given time, one
-  or two goals dominate; focus effort there.
-- Waiting for complete data before reviewing — use best available information
-  and flag gaps as part of the output.
-- Conflating "busy" with "progress" — agent activity is not the same as goal
-  advancement; tie everything back to the 5 goals.
+- Do not write the digest before reviewing all issues — the review drives the content.
+- Do not leave blockers unaddressed in the digest — every blocker must have a named resolution owner.
+- Do not use the review to micromanage implementation — flag the what, not the how.
+- Do not skip the goal-mapping check — issues without `goalId` are invisible to strategic tracking.

@@ -1,157 +1,123 @@
 ---
 name: content-style-guide
 description: >
-  Writing style guide for Figurio — D2C e-commerce for high-quality 3D-printed figurines.
-  Covers brand voice, product descriptions for catalog and AI-custom figurines, blog posts
-  about 3D printing and collectibles, social media captions (Instagram, TikTok), and
-  email campaign copy. Use this skill whenever drafting or reviewing any Figurio-facing copy.
+  Writing style and content standards for Figurio — a Czech D2C e-commerce brand
+  selling full-color 3D-printed figurines. Covers tone of voice, product description
+  conventions, blog post structure, social media captions, and email copy rules.
 metadata:
   paperclip:
-    tags: [content, brand, copy, social, email]
+    tags:
+      - content
+      - marketing
+      - brand
 ---
 
 # Content Style Guide
 
-## Brand Voice
+## Voice and Tone
 
-Figurio's voice is **playful, creative, and premium-but-accessible**. Every piece of copy should feel like it was written by someone who genuinely loves figurines, collectibles, and the magic of bringing something into physical form.
+Figurio's voice is **precise, warm, and quietly confident.** It does not shout. It does not hedge. It describes real things in clear language and trusts the reader to feel the excitement without being told to feel it.
 
-| Trait | What it means in practice |
-|---|---|
-| Playful | Light wordplay, pop-culture nods, a sense of delight. Never sarcastic or ironic at the customer's expense. |
-| Creative | Lean into the craft — 3D printing, the design process, the tactile quality. Make the process sound fascinating. |
-| Premium | Clear, confident sentences. No filler words ("just", "very", "really"). Proper grammar always. |
-| Accessible | Avoid jargon (PolyJet, infill density, mesh topology) unless explaining it. Prices and product names are always visible upfront. |
+Core rules:
+- Write short sentences for product copy and social captions.
+- Write medium-length sentences for blog posts — enough rhythm to keep readers moving, short enough to stay scannable.
+- Avoid passive voice.
+- Avoid abstract nouns when a concrete noun exists.
+- Never use "unique" as a selling point on its own — show what makes it unique.
 
-**We do not sound like:** a generic Shopify dropship store, a clinical manufacturing company, or an edgy streetwear brand.
+**Good:** "A figurine of your dog, printed in full color at 1:6 scale."
+**Bad:** "A personalized keepsake product."
 
 ---
 
 ## Product Descriptions
 
-### Catalog Figurines ("Ready to Print")
+Target audience: gifters, collectors, tabletop gamers, and anyone who wants a physical object that didn't exist before.
 
-- Open with what makes this design special — the cultural moment, the collectible angle, or the visual hook.
-- Mention the size tier naturally in context: "Standing at 15 cm tall, this…"
-- Emphasize full-color PolyJet quality without using technical jargon. Use phrases like "vivid, painted-quality color" or "crisp, gallery-worthy detail."
-- Close with the giftability or display angle — where does it live? On a shelf, a desk, as a gift?
+Structure every product description in this order:
+1. **Lead line** — what the object is, in concrete terms. No filler. Make the reader picture it.
+2. **Print quality details** — reference the Stratasys J55 PolyJet process, full-color accuracy, material finish where relevant.
+3. **Size and scale** — always state dimensions. "1:6 scale" or exact cm measurements.
+4. **Use cases or gifting context** — one sentence max. Don't over-explain.
+5. **CTA or catalog link** — "Order yours" or "Customize this model."
 
-**Template:**
-```
-[Hook — what is this and why does it matter?]
-[Visual detail — what does it look like? What makes it impressive?]
-[Size + quality signal — how big, how detailed, how color-accurate?]
-[Use case — who is it for? Gift? Self-treat? Collector's piece?]
-```
-
-**Example:**
-```
-The internet's favorite shrugging guy, now immortalized in full color.
-This fan-favorite meme figurine captures the classic pose down to
-the raised eyebrows and upturned palms — rendered in vivid,
-painted-quality detail at 15 cm tall. Perfect for your desk, a
-friend who gets the joke, or anyone who just needs a little
-"I dunno" energy in their life.
-```
-
-### AI Custom Figurines ("Prompt to Print")
-
-- Lead with the empowerment angle — *you* describe it, *we* make it real.
-- Briefly explain the two-step process (preview approval before final print) in one sentence to set expectations.
-- Tone is excited and encouraging. This is a unique, personalized object — treat it as special.
-- Avoid overpromising on AI output fidelity. Use language like "your concept brought to life" rather than "pixel-perfect recreation."
-
-**Example blurb (PDP or email):**
-```
-Describe your idea — a dragon wearing a suit, your dog as a knight,
-a gift that no store could ever carry — and we'll generate a 3D preview
-for your approval before it goes to print. Your concept, made real.
-```
+Vocabulary to use: figurine, full-color, 3D-printed, scale, layer, detail, finish, pose, print run, MCAE.
+Vocabulary to avoid: "unique," "amazing," "state-of-the-art," "cutting-edge," "innovative."
 
 ---
 
 ## Blog Posts
 
-Figurio's blog targets collectors, gift buyers, and 3D-printing enthusiasts. Posts should be useful or genuinely interesting — not just SEO filler.
+Blog posts are the primary SEO acquisition channel. Every post must have a keyword target and internal link plan before drafting begins — apply the `seo-checklist` skill first.
 
-### Structure
-1. **Hook paragraph** — a question, a surprising fact, or a strong visual image. No "In today's post we will…"
-2. **Body sections** — H2 headings, 2–4 paragraphs each. Keep sections scannable.
-3. **Figurio connection** — weave in Figurio naturally where relevant. Never feel forced.
-4. **CTA** — end with a single, clear call to action (browse the catalog, start a custom order, etc.)
+Approved blog categories:
+- **3D printing explainers** — how PolyJet works, color accuracy, materials
+- **Figurine culture** — tabletop gaming, miniature collecting, custom gifts
+- **Behind the scenes** — MCAE production, print process, quality control
+- **Gift guides** — seasonal, occasion-based, audience-specific
 
-### Tone
-- Write like you're explaining something cool to a friend, not a press release.
-- First-person plural ("we") is fine when talking about Figurio. Second-person ("you") when addressing the reader.
-- Use contractions. "It's", "you'll", "we're" — reads more naturally.
-
-### Topics that work well
-- Seasonal gifting guides ("Best Collectible Gifts Under €50")
-- Behind-the-scenes 3D printing explainers
-- "How it's made" process walkthroughs
-- Collectible culture and community
-- AI custom figurine use cases (weddings, gaming, pets)
+Structure:
+- H1: target keyword included, declarative
+- Intro paragraph: 2-3 sentences, state the point immediately
+- H2/H3 subheadings: scannable, descriptive (not clever)
+- Body: 600-1200 words for standard posts, 1500-2500 for pillar content
+- Closing: one clear CTA linking to a product page or the Prompt to Print flow
 
 ---
 
-## Social Media Captions
+## Social Media
 
 ### Instagram
 
-- First line is the hook — this is what shows before "more." Make it punchy.
-- 3–5 sentences total. Short paragraphs.
-- 1–2 relevant emojis maximum, used purposefully (not decorative spam).
-- Hashtags at the end, 5–10, mix of niche (#3dprinted #figurines #collectibles) and broad (#giftideas #madetoorder).
-- Always include a CTA: "Link in bio", "DM us to order", "Shop now."
-
-**Caption structure:**
-```
-[Hook — one punchy line]
-
-[2–3 sentences describing the product or moment]
-
-[CTA]
-
-#hashtags
-```
+- Caption length: 1-3 sentences for the visible preview, expand only if the content earns it.
+- Match caption energy to the visual — a technical print shot gets a crisp single line; a playful unboxing gets playful copy.
+- Hashtags go at the end in a clean block, never embedded mid-sentence.
+- Approved hashtags: `#3dprinting #figurine #customfigurine #3dprinted #polyjet #tabletopgaming #giftsforgeeks #prompttoprint`
+- No emoji chains. One emoji maximum per caption if used at all.
 
 ### TikTok
 
-- Captions are short — 1–2 sentences max. The video carries the content.
-- Match the energy of the video: hype, satisfying reveal, humor, or "wow" moment.
-- Use trending sounds when relevant. Don't force trends that don't fit.
-- CTA: "Order in bio" or "Check the link."
+- Write a full script with shot list — never submit a TikTok script without specifying the visual.
+- Hook in the first 2 seconds — state the payoff immediately ("We printed a 1:6 scale figurine of someone's cat. Here's how.").
+- Length: 30-60 seconds for standard posts, up to 90 seconds for process walkthroughs.
+- Voiceover text and on-screen text must be provided alongside the script.
 
 ---
 
-## Email Campaigns
+## Email Copy
 
-### Subject Lines
-- 40 characters or under when possible (mobile preview).
-- Specificity beats cleverness: "Your custom figurine preview is ready" outperforms "Something special just for you."
-- Use the customer's name for triggered emails (order updates, preview ready).
+- **Subject lines:** declarative or intriguingly specific. Never clickbait-vague.
+  - Good: "Your custom figurine is in production"
+  - Good: "Gift idea: a 3D-printed figurine of their DnD character"
+  - Bad: "You won't believe what we made"
+- **Opening line:** lead with the product, the offer, or the story — never a greeting or preamble.
+- **Body:** short paragraphs, one idea per paragraph. Max 3-4 paragraphs for promotional emails.
+- **CTA:** one primary CTA per email. Button text is a verb phrase: "Order now," "See the catalog," "Start your custom figurine."
 
-### Body Copy
-- One email, one goal. Don't stack promotions.
-- Lead with the value or news. Save the backstory for lower in the email.
-- Paragraphs are 2–3 sentences. Use bullet lists only for feature comparisons or step-by-step flows.
-- CTA button label: action-oriented verb + object ("See Your Preview", "Shop New Arrivals", "Claim Your Discount").
-
-### Tone by email type
-| Type | Tone |
+Email types and their primary goals:
+| Type | Goal |
 |---|---|
-| Order confirmation | Warm, reassuring, excited |
-| Preview ready (custom) | Exciting, personal, clear next step |
-| Promotional / sale | Energetic but not desperate |
-| Abandoned cart | Friendly nudge, light humor |
-| Shipping confirmation | Efficient, clear, with a dash of anticipation |
+| Welcome sequence (email 1) | Establish brand, show print quality |
+| Welcome sequence (email 2) | Explain Prompt to Print process |
+| Launch announcement | Drive first orders |
+| Promotion | Convert fence-sitters with time pressure |
+| Re-engagement | Re-surface value, invite back |
 
 ---
 
-## Anti-Patterns
+## Formatting Rules
 
-- Do not use: "world-class", "cutting-edge", "revolutionary", "game-changer"
-- Do not lead product descriptions with size specs or SKUs
-- Do not use passive voice in CTAs ("can be ordered" → "order now")
-- Do not write captions entirely in emojis or ALL CAPS
-- Do not explain PolyJet or Stratasys to customers — they don't care; focus on the output
+- Spell out Czech Republic (not CZ or Czechia) in body copy; CZ is acceptable in metadata/labels.
+- Prices in CZK for Czech market, EUR for EU-wide campaigns. Never mix in a single piece.
+- "Prompt to Print" is always title-cased and treated as a product name.
+- "MCAE" is always uppercase — it is the printing partner, not a generic term.
+- Stratasys J55 PolyJet — spell out in full on first mention per page; J55 is acceptable on subsequent mentions.
+
+---
+
+## Anti-patterns
+
+- Do not publish any content without a matching visual brief. Visual and written content are one deliverable.
+- Do not use filler openers: "In today's world…", "As we all know…", "We're excited to share…"
+- Do not use generic superlatives: "best," "highest quality," "world-class" — back claims with specifics or cut them.
+- Do not mark content done until both copy and visual requirement are accounted for.

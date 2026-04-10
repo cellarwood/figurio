@@ -4,16 +4,16 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin@claude-my-marketplace` | Code execution, file editing, shell commands, test running, linting — the full local development loop |
-| `infra-plugin@claude-my-marketplace` | Inspect and interact with infrastructure resources: containers, environment configs, service health |
+| `dev-tools-plugin` | Run tests, lint, format code, execute shell commands in the project environment, read and write source files |
+| `infra-plugin` | Inspect Kubernetes workloads (GKE), view pod logs, check deployment status, query Terraform state for infrastructure context |
 
 ## Usage Guidelines
 
-- Always invoke `uv` for package management — `uv add <package>`, `uv run pytest`, `uv run ruff check`. Never call `pip` or `python -m pip` directly.
-- Use `dev-tools` to run Alembic migrations in sequence: generate the revision first, inspect it, then apply. Never auto-generate and apply in a single unreviewed step.
-- Use `dev-tools` to execute the full test suite (`uv run pytest`) before marking any backend task complete. A task is not done until tests pass.
-- Use `infra` to verify Docker service health (PostgreSQL, the API container) when debugging environment-level failures rather than assuming the problem is in application code.
-- When using shell access via `dev-tools`, prefer absolute paths. The working directory is not guaranteed between tool calls.
+- Use `dev-tools-plugin` to run `pytest` and confirm all tests pass before marking any backend issue done. Never ship untested handlers.
+- Use `dev-tools-plugin` to run Alembic migration commands (`alembic upgrade head`, `alembic downgrade -1`) in a dev environment before declaring a migration ready.
+- Use `infra-plugin` to check pod logs when diagnosing a production or staging issue -- do not guess at runtime behavior, read the logs.
+- Use `infra-plugin` for read-only infrastructure inspection only. Do not apply Terraform changes or modify Kubernetes resources without an explicit board-level request.
+- Keep secrets out of tool inputs. Pass credentials via environment variables, not as inline arguments to shell commands.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

@@ -1,10 +1,10 @@
 ---
 name: architecture-review
 description: >
-  Review system architecture decisions for Figurio — a D2C e-commerce platform
-  for 3D-printed figurines. Covers the FastAPI backend, React/TS frontend,
-  text-to-3D AI pipeline (Meshy/Tripo3D), Stripe payments, PostgreSQL data
-  model, and Docker/K8s (microk8s) deployment topology.
+  Review system architecture decisions for the Figurio platform — a D2C e-commerce
+  for 3D-printed figurines. Covers API design between React/FastAPI layers, PostgreSQL
+  schema design, service boundary decisions, and integration patterns for the MCAE
+  print pipeline, Stripe payments, and Zásilkovna shipping.
 allowed-tools:
   - Read
   - Grep
@@ -19,113 +19,137 @@ metadata:
 
 # Architecture Review
 
-Use this skill when evaluating proposed or existing architecture changes across
-the Figurio platform — new services, integration patterns, data model changes,
-AI pipeline adjustments, or infrastructure topology shifts.
-
 ## When to Use
 
-- A new feature requires a decision that spans multiple layers (frontend, API,
-  DB, AI pipeline, infra)
-- A service boundary is being added, split, or merged
-- An external API or vendor is being introduced or replaced
-- Performance, reliability, or cost concerns require structural changes
-- A PR introduces architectural drift from established patterns
+Invoke this skill when evaluating or proposing:
+- New FastAPI service endpoints or restructuring existing ones
+- PostgreSQL schema changes (new tables, migrations, index strategy)
+- Service boundary decisions (what lives in the API vs. a background worker vs. a pipeline step)
+- Integration patterns for external systems: MCAE print pipeline, Stripe, Zásilkovna
+- AI "Prompt to Print" pipeline architecture (prompt → 3D model generation → print queue)
 
-## System Map
+## Core Architecture Overview
+
+Figurio runs on:
+- **Frontend**: React + TypeScript, shadcn/ui components, hosted separately
+- **Backend**: Python/FastAPI — single deployable service, versioned under `/api/v1/`
+- **Database**: PostgreSQL — one primary DB, migrations via Alembic
+- **Infrastructure**: Docker containers orchestrated with Kubernetes (GKE or similar)
+- **Payments**: Stripe (checkout sessions + webhooks)
+- **Shipping**: Zásilkovna API (parcel label generation, tracking)
+- **Print**: MCAE pipeline integration — orders submitted as print jobs, status polled or webhoooked back
+
+## API Design Conventions
+
+### Endpoint Structure
 
 ```
-Browser (React/TS + shadcn)
-  │
-  ▼
-Traefik (ingress, TLS termination)
-  │
-  ├─▶ FastAPI (Python, uv) — REST API + background tasks
-  │       │
-  │       ├─▶ PostgreSQL  (primary datastore)
-  │       ├─▶ Stripe      (payments, webhooks)
-  │       └─▶ AI Pipeline (text-to-3D)
-  │               ├─▶ Meshy API   (primary)
-  │               └─▶ Tripo3D API (fallback / comparison)
-  │                       │
-  │                       └─▶ Mesh Repair (post-process)
-  │
-microk8s cluster — Docker containers, GitHub Actions CI/CD
-Sentry — error monitoring (frontend + backend)
+/api/v1/{resource}            # collections (GET list, POST create)
+/api/v1/{resource}/{id}       # single item (GET, PATCH, DELETE)
+/api/v1/{resource}/{id}/{sub} # nested sub-resource
 ```
 
-## Review Dimensions
+Domain-specific examples:
+- `/api/v1/products` — catalog listings
+- `/api/v1/orders/{order_id}` — order detail
+- `/api/v1/orders/{order_id}/print-jobs` — print jobs for an order
+- `/api/v1/generations` — AI prompt-to-3D generation requests
+- `/api/v1/generations/{generation_id}/preview` — 3D preview asset
 
-### 1. Layering and Service Boundaries
+### Response Shape
 
-- FastAPI is the single backend — avoid introducing a second Python service
-  unless the workload is clearly separate (e.g., a long-running mesh repair
-  worker).
-- React/TS is the single frontend — no micro-frontends.
-- Background tasks (AI job polling, mesh repair) belong in FastAPI background
-  tasks or a dedicated worker pod, not in request handlers.
+All responses use a consistent envelope:
+```json
+{
+  "data": { ... },
+  "meta": { "page": 1, "total": 120 }   // list endpoints only
+}
+```
 
-### 2. Data Model (PostgreSQL)
+Errors follow RFC 9457 (Problem Details):
+```json
+{
+  "type": "https://figurio.cz/errors/print-job-rejected",
+  "title": "Print job rejected",
+  "status": 422,
+  "detail": "MCAE pipeline rejected model: non-manifold geometry"
+}
+```
 
-- Migrations must be versioned (Alembic). No schema changes outside migrations.
-- Orders, figurines, mesh assets, and Stripe objects are the core entities.
-  New entities must justify foreign key relationships to these four.
-- Avoid storing raw mesh binary in PostgreSQL — use object storage; store only
-  the reference URL.
+### Authentication
 
-### 3. AI Pipeline
+- Customer-facing routes: JWT bearer tokens issued at login
+- Webhook routes (Stripe, MCAE callback): HMAC signature verification middleware, not JWT
+- Internal service-to-service: mTLS or shared secret via Kubernetes secrets
 
-- Text-to-3D requests are async — never block the HTTP response waiting for
-  Meshy/Tripo3D to complete.
-- The pipeline must handle provider failure gracefully: queue the job, expose
-  status polling, and support retry.
-- Mesh repair runs after generation; failures here should not fail the order —
-  flag for manual review instead.
-- New providers must implement the same job-status interface before being
-  merged into the pipeline.
+## Database Schema Guidelines
 
-### 4. Payments (Stripe)
+### Naming
 
-- All Stripe state changes are driven by webhooks, not by API response alone.
-- Idempotency keys are required on all Stripe API calls.
-- Order fulfillment (triggering the AI pipeline) only starts after a
-  `payment_intent.succeeded` webhook is confirmed.
+- Tables: `snake_case`, plural nouns (`orders`, `print_jobs`, `ai_generations`)
+- Foreign keys: `{table_singular}_id` (e.g., `order_id`, `product_id`)
+- Timestamps: always include `created_at`, `updated_at` (with DB-level defaults)
+- Soft deletes: use `deleted_at` nullable timestamp, not a boolean flag
 
-### 5. Deployment (microk8s)
+### Key Tables and Boundaries
 
-- Every service ships as a Docker image built by GitHub Actions.
-- Config and secrets are injected via Kubernetes Secrets/ConfigMaps — never
-  baked into images.
-- Traefik handles routing; do not expose new ports directly — add Ingress rules.
-- New workloads must include resource requests/limits and a liveness probe.
+| Domain | Tables | Notes |
+|--------|--------|-------|
+| Catalog | `products`, `product_variants` | SKU lives on variant |
+| Orders | `orders`, `order_items` | Stripe `payment_intent_id` stored on `orders` |
+| Print | `print_jobs` | FK to `order_items`; MCAE job ID tracked here |
+| AI Gen | `ai_generations` | FK to `orders` when converted to order item |
+| Shipping | `shipments` | Zásilkovna parcel ID, tracking URL |
 
-### 6. Observability
+### Indexing
 
-- Sentry is the error sink for both React (frontend SDK) and FastAPI
-  (Sentry Python SDK). New services must initialise Sentry on startup.
-- Structured logging (JSON) to stdout — no custom log aggregators.
+- Always index FK columns used in JOIN-heavy queries
+- Add partial index on `print_jobs.status` for polling queries: `WHERE status IN ('pending', 'processing')`
+- `ai_generations` table: index `(user_id, created_at DESC)` for customer history queries
+
+## Service Boundary Rules
+
+### What Stays in FastAPI
+
+- Request validation (Pydantic models)
+- Business rule enforcement (e.g., order state machine transitions)
+- Stripe checkout session creation and webhook handling
+- Zásilkovna label generation requests
+- Serving product catalog and order history
+
+### What Goes to Background Workers (Celery/ARQ)
+
+- Polling MCAE print job status (do not block API request/response)
+- Sending transactional emails (order confirmation, shipping notification)
+- Post-processing AI-generated 3D models (geometry validation, thumbnail render)
+- Retrying failed Zásilkovna API calls
+
+### 3D Print Pipeline Integration
+
+The MCAE integration is async by nature — do not make synchronous HTTP calls to MCAE from API request handlers.
+
+Flow:
+1. Order confirmed (Stripe webhook) → API writes `print_job` row with `status=pending`
+2. Background worker picks up pending jobs → submits to MCAE API → updates `status=submitted`, stores MCAE job ID
+3. MCAE sends webhook callback (or worker polls) → updates `status=printing|completed|rejected`
+4. On completion: trigger shipment creation via Zásilkovna
 
 ## Review Checklist
 
-When evaluating a proposal, work through these questions:
+When reviewing an architecture proposal, verify:
 
-- [ ] Does this fit within the existing service boundary, or does it require a
-      new service? If new, is the justification clear?
-- [ ] What is the failure mode? Is it recoverable without human intervention?
-- [ ] Does it introduce a new external dependency? What is the fallback?
-- [ ] Are database changes backwards-compatible during a rolling deploy?
-- [ ] Does the AI pipeline change preserve the async/status-poll contract?
-- [ ] Are secrets managed via Kubernetes Secrets?
-- [ ] Is Sentry instrumented for new error paths?
-- [ ] Are there resource implications (DB connections, memory for mesh files)?
+- [ ] Endpoints follow `/api/v1/` conventions; no business logic leaking into URL design
+- [ ] Async operations (MCAE, email) are offloaded to workers, not blocking API handlers
+- [ ] Stripe and MCAE webhook handlers verify signatures before processing
+- [ ] New tables have `created_at`, `updated_at`, proper FK indexes
+- [ ] No direct DB calls from the AI generation pipeline — goes through the API layer
+- [ ] Service boundaries are respected: workers write to DB, API reads from DB, never reversed for critical paths
+- [ ] Schema migrations are additive where possible (backward-compatible with running pods during rolling deploy)
 
-## Common Anti-patterns
+## Anti-patterns
 
-- Synchronous waits on Meshy/Tripo3D in an HTTP handler — pipeline jobs take
-  10–120 seconds.
-- Direct Stripe charge on frontend — all payment intent creation must go
-  through the FastAPI backend.
-- Storing 3D mesh files (`.glb`, `.obj`) in PostgreSQL as bytea.
-- Hardcoded provider choice (Meshy-only) — the pipeline must remain
-  provider-agnostic at the interface level.
-- Skipping Alembic for "quick" schema additions.
+- Synchronous HTTP calls to MCAE or Zásilkovna inside API request handlers
+- Storing Stripe secret keys or MCAE credentials in environment variables without Kubernetes Secrets
+- Fat endpoints that mix catalog logic with order logic — keep domain boundaries in router modules
+- Polling print job status from the frontend — status should be pushed via websocket or SSE from the backend
+- Nullable columns used as soft deletes instead of `deleted_at`

@@ -9,66 +9,73 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/plan.md` (today's strategic plan and open threads).
-- Review progress since last heartbeat. Note any goal areas without recent movement.
-- Resolve any blockers that are within your authority to unblock now.
-- Record updates and decisions in daily notes.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review in-progress items. Resolve any blockers you can resolve unilaterally.
+- Record updates and intentions before moving on.
 
 ## 3. Approval Follow-Up
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
-- If the approval requires a board-level decision, draft a response and send via Gmail if appropriate.
+- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval and linked issues.
+- If approved: confirm the assignee has been notified or the issue status has advanced.
+- If denied: comment with the rationale and either close or reassign the issue.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+- Prioritize: `in_progress` first, then `todo`. Attempt to unblock `blocked` issues before skipping them.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above all others.
 
 ## 5. Checkout and Work
 
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+- Never retry a 409 -- that task belongs to someone else, move on.
+- Do the work. Update status and post a comment when done.
 
-## 6. Strategic Oversight and Delegation
+## 6. CEO-Specific Workflow
 
-**Goal coverage check.** For each of the five company goals, check whether there is at least one active `in_progress` or `todo` issue assigned to a direct report. If a goal has no active work, create a new issue to address the gap and assign it to the appropriate direct report (CTO, CMO, COO, or Product Manager).
+### Goal Decomposition
+- For any new company-level goal or initiative, break it into concrete issues with:
+  - A clear success criterion
+  - An assigned direct report (CTO, CMO, or Head of Operations)
+  - A `goalId` linking it to the relevant strategic goal
+  - A realistic due date
+- Use `parentId` to nest subtasks under the parent strategic issue.
 
-**Stale issue follow-up.** For each direct report, find issues that have been `in_progress` or `blocked` for more than two heartbeats without a new comment. Post a follow-up comment requesting a status update or escalation path.
+### Delegation Boundaries
+- Engineering tasks (platform, AI pipeline, infra, security) → CTO
+- Marketing tasks (campaigns, content, acquisition, brand) → CMO
+- Operations tasks (MCAE coordination, fulfillment, vendor SLAs, support escalations) → Head of Operations
+- Do NOT perform any of these tasks yourself. Create the issue and assign it.
 
-**Cross-team blockers.** If a direct report is blocked by a dependency owned by another direct report, create a coordination issue with both agents as stakeholders, or resolve the dependency directly at the CEO level.
+### Weekly Strategic Review
+- Review all issues across CTO, CMO, and Head of Operations.
+- Surface issues that are stale (no update in 2+ heartbeats) and post a follow-up comment.
+- Identify cross-functional blockers and resolve or escalate them.
+- Draft a weekly digest in Google Docs and send a summary to the board via Gmail.
 
-**Delegation rules:**
-- Engineering work → CTO
-- Marketing and brand work → CMO
-- Production, fulfillment, MCAE coordination → COO
-- Feature scope and roadmap → Product Manager
-- Do NOT do any of the above yourself.
+### Board Communication
+- Use `gws gmail send` to send executive updates to board contacts.
+- Use `gws docs` to draft board decks and strategic memos stored in Drive.
 
-**Financial and compliance tasks.** If any financial modeling, pricing review, IP compliance check, or board communication is due, handle it directly.
+### Leadership Sync
+- Use `gws calendar` to check for upcoming syncs.
+- Use `gws meet` to schedule or link video calls.
+- Prepare meeting agendas using the `gws-workflow-meeting-prep` skill before each sync.
 
-## 7. Google Workspace Sweep
+## 7. Fact Extraction
 
-- Check Gmail (`gws gmail triage`) for board correspondence, MCAE communications, or Stripe notifications requiring a CEO response.
-- Check Calendar (`gws calendar agenda`) for upcoming strategic reviews, board meetings, or deadlines. Create any missing recurring events.
-- If a weekly strategic review is due, prepare a brief agenda in Google Docs summarizing goal status across all five goals and share with direct reports.
+- Extract durable facts (decisions made, blockers resolved, new constraints) from conversations into `$AGENT_HOME/memory/`.
+- Update `$AGENT_HOME/notes/daily.md` with what was accomplished and what is pending.
 
-## 8. Fact Extraction
+## 8. Exit
 
-- Extract durable facts from this session (decisions made, constraints discovered, new assumptions) into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/plan.md` with any new priorities or resolved items.
-
-## 9. Exit
-
-- Comment on any `in_progress` work before exiting to record state.
-- If no assignments and no valid mention-handoff, exit cleanly.
+- Comment on any `in_progress` issue before exiting to record current state.
+- If no assignments and no valid mention-handoff, exit cleanly with a brief log entry.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never work on tasks assigned to a direct report. Create sub-issues or delegate.
-- Every decision that affects more than one team must be recorded as a comment on the relevant issue or in a strategy document.
+- Every issue you create must have a `goalId` mapping it to one of Figurio's four strategic goals.
+- Never assign work to yourself that belongs to a direct report.

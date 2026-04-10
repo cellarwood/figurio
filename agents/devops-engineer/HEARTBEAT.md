@@ -6,82 +6,78 @@ Run this checklist on every heartbeat.
 
 - `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
-- If `PAPERCLIP_WAKE_REASON` is `mention`, locate the comment that triggered the wake and read it fully before doing anything else.
+- Note your reportsTo: cto. Escalate blockers and completed milestones upward.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/daily.md` for today's date entry.
-- Review any in-flight work: open deploys, pending rollouts, active incidents, scheduled maintenance.
-- If an incident is open, skip to step 6 immediately.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review progress against open infra tasks.
+- Identify any blockers (missing secrets, pending GCP IAM grants, upstream code changes).
+- Record updates and reprioritize if needed.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review what was approved and the linked issue.
-- If the approval gates a deploy, execute the deploy now and update the issue with the result.
-- Close resolved issues or comment on what still blocks closure.
+- Review the approval and its linked issues.
+- If it covers a Terraform apply or a production deployment, confirm the plan output is still current before proceeding.
+- Close resolved issues or comment on what remains open.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Touch `blocked` only if you can immediately unblock it.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can now unblock it.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, treat it as highest priority.
 
 ## 5. Checkout and Work
 
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else right now.
-- Work the task. When done, update status to `done` and post a completion comment.
+- Never retry a 409 -- that task belongs to someone else.
+- Do the work. Update status and comment when done.
+- For deployments: record the deployed image tag, target environment, and a link to health-check or monitoring output in your completion comment.
 
-## 6. Infrastructure and Deploy Workflow
+## 6. Infrastructure and Deployment Workflow
 
-### Active Incident
-- If an incident is active, all other work pauses.
-- Assess impact: which service, which users, what is the blast radius.
-- Decide: roll forward with a fix or roll back to last known good image.
-- Default to **rollback** if the root cause is unknown.
-- Execute: `kubectl rollout undo deployment/{name} -n {namespace}` or `helm rollback {release}`.
-- Post a status update to the incident issue every 15 minutes until resolved.
-- Write a post-mortem comment when closed: timeline, root cause, remediation, prevention.
+### CI/CD
+- Check GitHub Actions run status for recent commits. If a pipeline is red, treat it as `in_progress` until fixed.
+- Workflow order: test → build → push to Docker Hub (`lukekelle00/{service}:{tag}`) → deploy.
+- Never push or deploy images tagged `latest` to production.
 
-### Routine Deploy
-- Verify the GitHub Actions workflow completed successfully for the target commit.
-- Check image exists in Docker Hub: `lukekelle00/{service}:{tag}`.
-- Apply via Helm: `helm upgrade --install {release} ./charts/{chart} -f values/{env}.yaml --set image.tag={tag}`.
-- Monitor rollout: `kubectl rollout status deployment/{name} -n {namespace}`.
-- Confirm Sentry shows no new error spike in the 5 minutes post-deploy.
-- Comment on the issue with: deploy tag, rollout status, Sentry check result.
+### Kubernetes
+- For GKE changes, confirm the correct `kubectl` context before running any mutating command.
+- For microk8s local dev changes, note they should mirror GKE configuration to preserve dev/prod parity.
+- Helm chart upgrades: run `helm diff upgrade` before applying; include diff in your issue comment.
 
-### CI/CD Pipeline Health
-- Spot-check recent GitHub Actions runs for failures or unusual durations.
-- If a workflow is consistently failing on a step unrelated to application code, investigate and fix the workflow file.
+### Terraform
+- Always run `terraform plan` first. Post the plan summary as an issue comment before applying in production.
+- State is remote -- confirm the correct workspace/backend before any apply.
 
-### Cluster Health Check (when no active incident or deploy)
-- `kubectl get nodes` -- confirm all nodes are Ready.
-- `kubectl get pods -A | grep -v Running | grep -v Completed` -- flag any CrashLoopBackOff or Pending pods.
-- Check PVC health: `kubectl get pvc -A` -- all should be Bound.
-- Review resource pressure: `kubectl top nodes` and `kubectl top pods -A`.
-- Confirm PostgreSQL backup CronJob last run succeeded: `kubectl get jobs -n {db-namespace}`.
+### Traefik / TLS
+- After ingress changes, verify TLS certificate issuance and endpoint reachability.
+- Check Traefik dashboard or logs for routing errors.
 
-### Traefik and SSL
-- If any TLS certificate is within 14 days of expiry, trigger renewal or investigate cert-manager.
-- Verify IngressRoute entries match currently deployed services.
+### Sentry
+- After any deployment, confirm Sentry is receiving events from the new release.
+- Check that release tags in Sentry match the deployed image tag.
 
-## 7. Fact Extraction
+### Health Checks and Uptime
+- After any production change, verify health-check endpoints return 200 before closing the task.
+- Review any open uptime alerts from the previous period and create issues if not already tracked.
 
-- Extract durable facts from this session: new config values, decisions made, runbook changes, lessons from incidents.
-- Append to `$AGENT_HOME/notes/daily.md` under today's date.
-- Update relevant runbook files in `$AGENT_HOME/runbooks/` if procedures changed.
+## 7. Runbook and Playbook Maintenance
+
+- If you executed a non-trivial deployment or responded to an incident, update or create the relevant runbook before exiting.
+- Runbooks live in `$AGENT_HOME/runbooks/`. Link them from issue comments when relevant.
+- Extract durable facts (e.g., cluster names, registry paths, Helm release names) into `$AGENT_HOME/memory/infra-facts.md`.
 
 ## 8. Exit
 
-- Comment on any `in_progress` issue before exiting, even if work is not complete.
-- Record what is left to do and any context the next run needs.
+- Comment on any in_progress work before exiting, including current state and next steps.
 - If no assignments and no valid mention-handoff, exit cleanly.
+- Do not leave a deployment in a partially-applied state without a blocking comment on the issue.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never leave a cluster in a degraded state without an open issue tracking it.
-- Secrets are never logged, printed, or included in comments.
+- Never apply destructive Terraform or kubectl commands in production without an explicit board request.
+- Dry-run first, apply second -- always.

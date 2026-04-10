@@ -1,9 +1,9 @@
 ---
 name: brand-voice
 description: >
-  Figurio brand voice guide for all customer-facing content — playful, creative,
-  and premium-but-accessible. Covers tone rules, vocabulary, and channel-specific
-  guidance for product descriptions, Instagram/TikTok captions, email, and ads.
+  Figurio brand voice guide — tone (playful, artisanal, premium), visual identity,
+  and messaging pillars for marketing 3D-printed figurines and the Prompt to Print
+  custom order product.
 allowed-tools:
   - Read
   - Write
@@ -11,120 +11,77 @@ metadata:
   paperclip:
     tags:
       - marketing
-      - content
       - brand
+      - content
 ---
 
 # Brand Voice
 
-## Voice in One Line
+Figurio sells full-color MCAE 3D-printed figurines — catalog pieces and fully custom "Prompt to Print" orders. The brand sits at the intersection of craft, technology, and emotional gifting.
 
-Figurio sounds like a creative friend who happens to make really beautiful things — enthusiastic without being loud, premium without being stiff.
+## Tone Pillars
 
-## The Three Pillars
+### 1. Playful — but not childish
+Figurio products are fun and surprising. Copy should feel light and joyful, not corporate. However, Figurio is a premium product; avoid cheap-sounding language.
 
-| Pillar | What it means | What it doesn't mean |
-|--------|--------------|----------------------|
-| **Playful** | Warm, witty, uses light humor | Goofy, slapstick, or try-hard |
-| **Creative** | Celebrates imagination and craft | Jargon-heavy or overly technical |
-| **Premium-but-accessible** | Quality is evident, price is not a barrier to conversation | Cold luxury tone, exclusionary, or gatekeeping |
+- Yes: "Turn your best memories into something you can actually hold."
+- No: "Cool figurines for everyone!!!"
 
-## Tone Rules
+### 2. Artisanal — the craft matters
+Figurio printing is full-color MCAE — not cheap resin. The detail, the texture, the color accuracy — these are selling points. Reference the craft without being technical.
 
-1. **Write to one person.** Use "you" and "your," not "our customers" or "users."
-2. **Lead with delight.** Open with the emotion or outcome, not the product spec.
-3. **Keep sentences short.** One idea per sentence on social. Two max in email body copy.
-4. **Earn the exclamation mark.** Use it once per caption maximum — if at all.
-5. **Never punch down.** Humor is inclusive, never at the customer's expense.
-6. **Avoid corporate filler.** Cut "innovative," "seamless," "best-in-class," "leverage," "utilize."
+- Yes: "Every layer, every color, exactly as you imagined it."
+- No: "3D printed using industry-standard technology."
 
-## Vocabulary Guide
+### 3. Premium — justify the price
+Figurines start at a meaningful price point. Copy should establish value, not apologize for it. Figurio is a considered purchase, not an impulse buy.
 
-**Use these words:**
-- bring to life, printed, crafted, one-of-a-kind, yours, imagine, custom, collectible, tiny, perfect, detail
+- Yes: "A gift they'll keep for years — not another thing they'll forget."
+- No: "Affordable figurines for any budget."
 
-**Avoid:**
-- disruptive, synergy, innovative, luxury (say "quality" instead), unique (overused — show don't tell), figurine "product" or "item" (say "figurine" or "piece")
+## Messaging Pillars
 
-## Channel-Specific Guidance
+These are the core ideas all Figurio content should connect to:
 
-### Instagram Captions
+1. **Personalization is the product** — the magic of Figurio is that it is *yours*. Even catalog figurines are positioned as "chosen for you," not mass-produced.
+2. **The reveal moment** — opening the box, seeing yourself in 3D for the first time. This emotional beat is Figurio's best content hook.
+3. **Gifting context first** — most buyers are gift-givers. Lead with the recipient's reaction, not the technical specs.
+4. **Czech craftsmanship** — Figurio prints in the Czech Republic via MCAE. "Made here" is a trust signal and a differentiator from generic dropship figurine shops.
 
-- First line is the hook — make it a question, a bold claim, or a vivid image
-- 3–5 lines max before the "more" fold
-- End with a soft CTA ("link in bio" or a question to drive comments)
-- Hashtags: 5–8, appended after a line break — not inline
+## Prompt to Print Voice
 
-Example:
-```
-Your pet. Life-size? No. Shelf-size? Absolutely.
+The AI-custom product ("Prompt to Print") gets slightly more tech-forward language — the audience is curious and digitally native. But keep wonder > jargon.
 
-We 3D-printed Biscuit the golden retriever and now he lives on a bookshelf forever.
+- Yes: "Describe your character. We print it. It's genuinely magic."
+- No: "Our AI-powered text-to-3D pipeline generates printable mesh files."
 
-Drop your pet's name below — we want to see them. 🐾
+## Seasonal Tone Adjustments
 
-[link in bio to order a custom figurine]
+| Campaign | Tone shift |
+|---|---|
+| Christmas | Warmer, nostalgia-forward. "The gift they'll still have in 20 years." |
+| Valentine's Day | Intimate, slightly romantic. Couples and best-friend angles. |
+| Halloween | Lean into the playful pillar. Monsters, self-parody, dark humor is OK. |
+| Easter / Spring | Family-focused. Light, cheerful. Kids as subject of figurines. |
 
-#customfigurine #3dprinting #petgift #figurio
-```
+## Language Rules
 
-### TikTok Captions
+- Write in Czech for CZ/SK social content and email. Write in English for international ads and product descriptions.
+- Use "figurína" in Czech, "figurine" in English — never "model" (too technical) or "toy" (too cheap).
+- Zásilkovna shipping: never lead with logistics. Mention delivery in close/urgency context only.
+- Stripe / payments: never mention the payment provider in customer-facing copy.
+- Avoid superlatives like "best," "world-class," "revolutionary" — show it, don't claim it.
 
-- 1–2 lines only — the video carries the story
-- CTA should be a question or instruction ("comment your idea")
-- No hashtag stuffing — 3–5 relevant tags
+## Visual Identity Notes (for copy pairing)
 
-### Product Descriptions
-
-Structure: **Emotion hook → What it is → Why it's special → How to get it**
-
-Example:
-```
-Some gifts you keep forever. This is one of them.
-
-The Classic Portrait Figurine is a hand-detailed 3D print of a face you love —
-rendered at 1:6 scale with careful attention to features, expression, and hair.
-
-Each piece is printed to order and ships in 5–7 business days.
-
-Choose your size, upload a photo, and we'll take it from there.
-```
-
-- Avoid bullet-list-only descriptions — lead with a sentence or two of copy
-- Mention material only if it adds to the story (e.g., "matte resin finish" vs. "PLA plastic")
-- Sizing and technical specs go below the narrative copy, not before
-
-### Email
-
-**Subject lines:**
-- 6–9 words, active voice
-- Avoid ALL CAPS and excessive punctuation
-- Good: "Your custom figurine is almost here" / "New drop: the Halloween collection"
-- Avoid: "🚨 LIMITED TIME OFFER — DON'T MISS OUT!!!"
-
-**Body copy:**
-- Open with one warm sentence that earns the reader's attention
-- One primary CTA per email — do not bury it
-- Sign off as "The Figurio team" (not a fake first name)
-
-### Paid Ads
-
-- Match the energy of the platform (TikTok = casual/lo-fi, Instagram = slightly more polished)
-- State the product and the benefit in the first 3 seconds of video
-- Discount or offer goes at the end — earn it with storytelling first
-
-## Examples of Voice in Practice
-
-| Generic | Figurio voice |
-|---------|--------------|
-| "Order a custom figurine today." | "Turn someone you love into a collectible." |
-| "High-quality 3D printing." | "Every detail — down to the smile lines." |
-| "Limited time offer." | "This one's only here until Halloween." |
-| "Fast shipping available." | "Order by Dec 18 and it's under the tree." |
+- Photography style: clean white or warm-wood backgrounds, natural light, human hands in frame to convey scale
+- Video style: slow reveal, macro close-ups of texture, final pull-back to show full figurine
+- Color palette: off-white, warm terracotta, deep teal — avoid harsh primary colors in brand assets
+- Font pairing: serif headline + clean sans-serif body — positions Figurio as editorial, not retail
 
 ## Anti-patterns
 
-- Do not write in passive voice ("a figurine can be ordered by you")
-- Do not describe the technology — describe the result
-- Do not use urgency language that feels manufactured ("HURRY — ONLY 3 LEFT")
-- Do not switch tone mid-post from playful to corporate
+- Do not compare Figurio to cheaper alternatives by name
+- Do not use countdown-timer pressure language in organic content (acceptable only in last-chance paid ads)
+- Do not use AI-generated imagery of figurines in marketing — always use real print photography
+- Do not describe the printing process in detail unless the audience is press or B2B

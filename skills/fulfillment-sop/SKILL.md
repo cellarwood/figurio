@@ -1,187 +1,209 @@
 ---
 name: fulfillment-sop
 description: >
-  Standard operating procedures for Figurio order fulfillment — from Stripe
-  payment confirmation through order routing to MCAE, print file preparation,
-  QA checks, branded packaging, shipping handoff via Zásilkovna or DHL, and
-  customer notifications at each stage.
+  Standard operating procedures for end-to-end Figurio order fulfillment —
+  from print file preparation and MCAE handoff, through QA inspection and
+  branded packaging, to Zásilkovna shipping label generation and returns handling.
+  Applies to both catalog figurines and AI custom "Prompt to Print" orders.
 allowed-tools:
   - Read
+  - Write
   - Grep
 metadata:
   paperclip:
     tags:
       - operations
       - fulfillment
-      - sop
+      - quality
+      - shipping
 ---
 
-# Fulfillment SOP — Figurio Order Lifecycle
+# Fulfillment SOP
 
-## Overview
+## When to Use
 
-Every Figurio order follows a linear pipeline from prepaid Stripe checkout to
-doorstep delivery. All printing is outsourced to MCAE (mcae.cz). This SOP
-defines the exact steps, responsible parties, and decision points at each
-stage. Deviations from this process must be logged and reviewed by the COO.
-
----
-
-## Stage 1 — Order Confirmation
-
-**Trigger:** Stripe webhook fires `payment_intent.succeeded`.
-
-Steps:
-1. System creates an order record with status `CONFIRMED`.
-2. Customer receives automated **Order Confirmation** email with order ID and
-   expected delivery window.
-3. 3D model file attached to the customer's order is validated:
-   - File format accepted (STL or OBJ).
-   - File is not corrupted or zero-byte.
-   - Dimensions fall within the selected size tier tolerance.
-4. If validation fails, flag order as `NEEDS_REVIEW` and notify the COO queue
-   within 30 minutes. Do not route to MCAE until resolved.
+Invoke this skill when:
+- Processing a new production batch for MCAE handoff
+- Performing QA inspection on incoming figurines from MCAE
+- Packaging and dispatching orders via Zásilkovna
+- Handling a return or reprint request from a customer
 
 ---
 
-## Stage 2 — Print File Preparation
+## Order Types
 
-**Owner:** Operations (COO agent or human ops)
-
-Steps:
-1. Export the validated 3D model as a print-ready file per MCAE's accepted
-   format (confirm current spec with MCAE — typically `.wrl` or `.3mf` with
-   embedded color).
-2. Apply any scale correction to hit the nominal tier height:
-   - Small: ~8 cm
-   - Medium: ~15 cm
-   - Large: ~25 cm
-3. Attach a **print spec sheet** to the file bundle:
-   - Order ID
-   - Tier (small / medium / large)
-   - Special instructions if noted by customer
-4. Save the file bundle to the designated MCAE transfer folder.
+| Type | Source | Key Difference |
+|------|--------|---------------|
+| Catalog | Customer selects existing figurine SKU | Print files are pre-validated, stored in production file library |
+| AI Custom ("Prompt to Print") | Customer submits prompt; AI generates 3D model | Print file requires additional validation before handoff |
 
 ---
 
-## Stage 3 — Routing to MCAE
+## Stage 1 — Print File Preparation
 
-Steps:
-1. Upload the print file bundle to the MCAE portal (or transfer via agreed
-   SFTP path).
-2. Send MCAE the print order confirmation with:
-   - Figurio order ID
-   - Tier and quantity
-   - Required ship date (based on SLA: 3 BD small, 4 BD medium, 5–6 BD large)
-   - Shipping carrier selection (Zásilkovna or DHL — see Stage 5)
-3. Update order status to `IN_PRODUCTION`.
-4. Send customer **In Production** notification with updated delivery estimate.
-5. Log MCAE submission timestamp — this starts the SLA clock once MCAE
-   confirms file is print-ready.
+### Catalog Orders
+
+1. Retrieve the validated `.3mf` or `.stl` print file from the production file library using the order's SKU.
+2. Confirm file version matches the current approved revision (check revision log).
+3. Group orders by size tier (Small / Medium / Large) for batch efficiency.
+4. No reprep required unless MCAE flags a file issue on receipt.
+
+### AI Custom Orders
+
+1. Retrieve the AI-generated 3D model from the order record.
+2. Run automated mesh validation checks (watertight mesh, minimum wall thickness ≥ 1.5 mm, no inverted normals). Flag failures immediately to the backend team.
+3. Apply Figurio's standard orientation and support strategy template for the relevant size tier.
+4. Export as `.3mf` with embedded color data (PolyJet requires per-voxel color encoding — confirm color profile is Stratasys J55 compatible).
+5. Store the validated file in the production handoff folder with filename convention: `CUSTOM-{order_id}-{size_tier}-{YYYYMMDD}.3mf`.
 
 ---
 
-## Stage 4 — QA Check
+## Stage 2 — MCAE Handoff
 
-**Owner:** MCAE performs primary QA; Figurio conducts spot-check audits.
+1. Compile the batch manifest — a CSV with columns: `order_id`, `type` (catalog/custom), `size_tier`, `filename`, `quantity`, `due_date`.
+2. Upload print files and manifest to the agreed MCAE SFTP drop folder by **10:00 CET on business days**.
+3. Send a handoff notification email to the MCAE production contact with the manifest attached.
+4. Log the handoff time and batch ID in the fulfillment tracker (PostgreSQL `production_batches` table or ops spreadsheet).
+5. Await MCAE file acknowledgement within 4 business hours (per vendor SLA). If no acknowledgement is received, follow up directly and log the delay.
 
-MCAE responsibilities:
-- Inspect each unit against Figurio's quality standards before packaging
-  (color accuracy, surface finish, dimensional accuracy, structural integrity,
-  base stability — see `vendor-evaluation` skill for full criteria).
-- Photograph rejects and notify Figurio ops before reprinting.
+### Handoff Checklist
 
-Figurio audit process (sampled, not every order):
-- Request MCAE to include a QA photo of the finished figurine for flagged
-  orders (high-value, large tier, repeat-reject customer).
-- Log any customer-reported quality issues back to MCAE with the order ID
-  and photos within 24 hours of complaint receipt.
+- [ ] All files validated (mesh checks passed)
+- [ ] Manifest CSV complete and accurate
+- [ ] Files uploaded to SFTP before 10:00 CET
+- [ ] Notification email sent to MCAE contact
+- [ ] Batch logged in fulfillment tracker
+- [ ] Acknowledgement received and recorded
 
-If MCAE flags a reject:
-1. Update order status to `QA_FAIL`.
-2. Notify customer of delay with revised delivery estimate.
-3. Confirm MCAE reprint at no charge (covered under SLA terms).
+---
+
+## Stage 3 — Production Tracking
+
+- Check MCAE production status daily via their portal or daily status email.
+- Flag any batch approaching SLA breach (see `vendor-evaluation` skill for thresholds) and contact MCAE proactively.
+- Maintain a "pending production" view in the fulfillment tracker showing expected completion date per batch.
+
+---
+
+## Stage 4 — QA Inspection (Incoming from MCAE)
+
+All figurines are inspected before packaging. Do not skip QA for catalog orders — MCAE issues can affect any batch.
+
+### Inspection Process
+
+For each unit in the incoming delivery:
+
+1. **Visual color check** — Compare against the approved reference render. Color deviation visible at normal viewing distance (≥ 30 cm) fails.
+2. **Surface finish check** — Inspect display surfaces (front, top, sides) for support scarring, layer artifacts, or resin pooling. Any artifact on a display surface fails.
+3. **Dimensional check** — Measure height against size tier spec:
+   - Small: 7.5–8.5 cm
+   - Medium: 14–16 cm
+   - Large: 24–26 cm
+4. **Structural integrity** — Flex test thin elements (weapon tips, wings, antennas). Any cracking or delamination fails.
+
+### QA Outcomes
+
+| Outcome | Action |
+|---------|--------|
+| Pass | Proceed to packaging |
+| Fail — single unit | Set aside, log defect, request MCAE reprint for that unit |
+| Fail — > 5% of batch | Reject full batch, escalate to MCAE, log SLA breach |
+
+Record all QA outcomes in the fulfillment tracker: `order_id`, `pass/fail`, `defect_type` (if applicable), `inspector`, `date`.
 
 ---
 
 ## Stage 5 — Branded Packaging
 
-MCAE packages each figurine in Figurio-supplied branded materials before
-carrier handoff. Packaging spec:
-- Rigid outer box with Figurio branding (supplied to MCAE in bulk).
-- Interior foam insert sized per tier (three SKUs: S-INSERT, M-INSERT,
-  L-INSERT).
-- Printed packing slip inside box (generated per order, includes order ID,
-  customer name, thank-you message).
-- No plain brown box is acceptable — reject any MCAE shipment that leaves in
-  unbranded packaging.
-
-Monitor MCAE's branded packaging inventory. Reorder when stock at MCAE drops
-below a 4-week buffer. COO is notified at 6-week buffer to initiate reorder.
+1. Wrap figurine in acid-free tissue paper — full wrap, no exposed surfaces.
+2. Place in size-appropriate Figurio branded box:
+   - Small: 120×120×120 mm box
+   - Medium: 200×200×200 mm box
+   - Large: 320×320×320 mm box
+3. Fill void space with branded crinkle paper filler (Figurio teal). No polystyrene peanuts.
+4. Insert the printed order card (generated from order record — includes customer name, figurine name, and QR code linking to care instructions).
+5. For AI Custom orders, also insert the "Your Figurio Story" card describing the AI generation process.
+6. Seal box with Figurio branded tape.
+7. Attach Zásilkovna shipping label to the largest flat face of the box.
 
 ---
 
-## Stage 6 — Shipping Carrier Selection
+## Stage 6 — Zásilkovna Shipping
 
-Select carrier at order routing time (Stage 3) based on:
+1. Generate shipping labels via the Zásilkovna API integration (FastAPI service endpoint `/fulfillment/labels`). Input: list of `order_id` values from the current dispatch batch.
+2. Confirm each label is generated with the correct:
+   - Recipient name and address (pulled from order record)
+   - Declared value (required for insurance — use order total in CZK)
+   - Size/weight tier matching the package
+3. Print labels and apply immediately to packaged boxes — do not stockpile unlabelled boxes.
+4. Record tracking number against `order_id` in the fulfillment tracker and update order status to `shipped` in the Figurio backend.
+5. Hand parcels to Zásilkovna courier or deposit at designated drop point by the daily cutoff time (confirm current cutoff with Zásilkovna account contact — typically 15:00 CET).
+6. Trigger the customer shipping confirmation email (via Figurio backend — includes tracking number and Zásilkovna tracking link).
 
-| Condition | Carrier |
-|-----------|---------|
-| Domestic Czech Republic | Zásilkovna |
-| CEE countries in Zásilkovna network | Zásilkovna |
-| International outside Zásilkovna network | DHL |
-| Customer selected express delivery | DHL |
-| Large tier, any destination | DHL (default unless customer chose standard) |
+### Dispatch Checklist
 
-MCAE hands the packaged figurine to the selected carrier on the same business
-day QA passes.
-
----
-
-## Stage 7 — Dispatch and Customer Notification
-
-Steps:
-1. MCAE provides tracking number upon carrier pickup.
-2. Update order status to `SHIPPED`.
-3. Send customer **Shipped** notification with:
-   - Carrier name
-   - Tracking number and link
-   - Estimated delivery date
-4. Log dispatch timestamp. If dispatch is more than 1 BD after QA pass, flag
-   as an MCAE handoff delay.
+- [ ] Labels generated via API (no manual label creation)
+- [ ] Each label verified against order record
+- [ ] Tracking numbers logged in fulfillment tracker
+- [ ] Order status updated to `shipped`
+- [ ] Parcels handed off before daily cutoff
+- [ ] Customer shipping confirmation sent
 
 ---
 
-## Stage 8 — Delivery and Closure
+## Stage 7 — Returns Handling
 
-1. Monitor carrier tracking. If no delivery scan within 2 BD of estimated
-   delivery date, initiate carrier inquiry.
-2. On confirmed delivery (carrier status = delivered), update order status
-   to `DELIVERED`.
-3. Send customer **Delivery Confirmation** email with a review request.
-4. If customer reports non-delivery or damage within 14 days:
-   - Domestic: raise Zásilkovna claim or DHL claim as appropriate.
-   - Authorize reprint or refund per Figurio returns policy.
-   - Log incident against MCAE if damage is production-origin.
+### Eligible Return Reasons
+
+- Defective figurine (QA failure that passed undetected)
+- Significant color mismatch vs. product images (catalog) or AI render preview (custom)
+- Damaged in transit (Zásilkovna damage claim required)
+- Wrong item received
+
+### Process
+
+1. Customer submits return request via Figurio support channel, including photos.
+2. Head of Operations reviews photos and approves or rejects within 1 business day.
+3. **Approved returns:**
+   - Issue Zásilkovna return label to customer (via API — reverse shipment).
+   - On receipt, confirm defect matches reported reason. If mismatch, escalate.
+   - Initiate reprint (catalog) or re-generation + reprint (AI custom) at no charge.
+   - Log root cause: `mcae_defect`, `transit_damage`, `fulfillment_error`, or `customer_expectation`.
+4. **Transit damage:** File Zásilkovna damage claim within 5 business days of delivery. Attach customer photos and tracking record.
+5. Log all returns in the returns register with root cause — reviewed monthly to identify recurring issues.
+
+### Returns Do Not Apply To
+
+- AI Custom orders where the delivered figurine matches the approved AI render preview — customers must review and approve the preview before production.
 
 ---
 
-## Status Reference
+## Fulfillment Tracker Fields (Reference)
 
-| Status | Meaning |
-|--------|---------|
-| `CONFIRMED` | Payment received, file validated |
-| `NEEDS_REVIEW` | File validation failed, ops action required |
-| `IN_PRODUCTION` | Routed to MCAE, printing |
-| `QA_FAIL` | MCAE reject, reprint in progress |
-| `SHIPPED` | Dispatched to carrier |
-| `DELIVERED` | Carrier confirmed delivery |
+Key fields that must be populated at each stage:
+
+| Field | Populated At |
+|-------|-------------|
+| `order_id` | Order creation |
+| `order_type` (catalog/custom) | Order creation |
+| `size_tier` | Order creation |
+| `file_validated_at` | Stage 1 |
+| `mcae_handoff_at` | Stage 2 |
+| `mcae_acknowledged_at` | Stage 2 |
+| `mcae_completed_at` | Stage 3 |
+| `qa_result` | Stage 4 |
+| `qa_defect_type` | Stage 4 (if failed) |
+| `packaged_at` | Stage 5 |
+| `tracking_number` | Stage 6 |
+| `shipped_at` | Stage 6 |
+| `return_reason` | Stage 7 (if applicable) |
 
 ---
 
-## Escalation Contacts
+## Anti-patterns
 
-- MCAE production queries: account manager contact on file with COO
-- Zásilkovna claims: ops portal
-- DHL claims: DHL business account portal
-- Customer escalations exceeding standard resolution: COO
+- Do not hand off AI Custom print files to MCAE without completing mesh validation — invalid files cause wasted production runs
+- Do not skip QA on catalog orders — MCAE batch issues affect catalog and custom equally
+- Do not generate Zásilkovna labels manually outside the API integration — manual labels bypass order status tracking
+- Do not package before QA is complete — once packaged, defect identification becomes slower
+- Do not accept a return without photos — required for MCAE reprint claims and Zásilkovna damage claims
