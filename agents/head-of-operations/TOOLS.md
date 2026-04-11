@@ -4,38 +4,37 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `company-plugin` | Company API access — issues, agents, approvals, and Paperclip coordination primitives |
-| `office-plugin` | Google Workspace CLI (`gws`) for Gmail, Drive, Docs, Sheets, Calendar, and Tasks |
+| `company-plugin` | Provides access to Stripe and DHL API Assistant MCP servers for payment monitoring and shipment management |
+| `office-plugin` | Provides Google Workspace access via the `gws` CLI for email, calendar, documents, sheets, and tasks |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `dhl-api-assistant` | `mcp__plugin_company-plugin_dhl-api-assistant` | DHL carrier API — parcel creation, tracking, and claims for overflow or backup shipments |
-| `stripe` | `mcp__plugin_company-plugin_stripe` | Stripe API — inspect payment intents, monitor refund events, pull order-level charge data relevant to fulfillment exceptions |
+| `dhl-api-assistant` | `mcp__plugin_company-plugin_dhl-api-assistant` | Generate DHL shipping labels, track parcels in transit, and pull delivery confirmations |
+| `stripe` | `mcp__plugin_company-plugin_stripe` | Monitor payments, check for disputes or failed charges, and initiate refunds linked to order exceptions |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`operations@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ops@cellarwood.org`).
 
 **Services:**
-
-- **Gmail** -- Vendor correspondence with MCAE, Zásilkovna, and packaging suppliers. Triage inbound, send negotiation and issue emails, maintain thread history for audit trail.
-- **Drive** -- SOPs, vendor contracts, QA checklists, packaging specs. Organized by tier (Small / Medium / Large) and document type.
-- **Docs** -- Author and version fulfillment SOPs and runbooks. Naming convention: `SOP -- {Tier} -- {Process Step} -- v{N}`.
-- **Sheets** -- MCAE turnaround log, operational KPI dashboard, pricing schedule by tier, packaging inventory tracker, open exceptions log.
-- **Calendar** -- MCAE check-in cadence, packaging supplier calls, internal ops reviews with CEO.
-- **Tasks** -- Track outstanding vendor action items, SOP drafting tasks, and open exception follow-ups.
+- **Gmail** -- send, read, reply to, and triage vendor and customer emails.
+- **Calendar** -- manage MCAE batch submission schedules and QC windows.
+- **Drive** -- store SOPs, packaging specs, carrier agreements, and batch records.
+- **Docs** -- author and maintain fulfillment runbooks.
+- **Sheets** -- maintain the live order tracking sheet, MCAE turnaround log, and carrier rate comparison.
+- **Tasks** -- track personal follow-up items that do not yet warrant a Paperclip issue.
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use Gmail for all external vendor communication — never send vendor correspondence from the Paperclip comment thread.
-- Log every MCAE turnaround data point to the Sheets dashboard immediately when available; gaps make SLA enforcement impossible.
-- Use the DHL MCP only for overflow or backup shipments — primary shipping runs through the Zásilkovna integration in the backend service.
-- Use Stripe MCP to verify payment state before authorizing a reprint or refund for a fulfillment exception; do not reprint an order whose payment has not cleared.
-- Keep vendor contact details and pricing schedules in Drive (not in memory alone) so they survive context resets.
+- Always include an order ID or batch ID in DHL API calls and in any email sent to MCAE or a carrier -- traceability is non-negotiable.
+- Use the Stripe MCP in read-only mode by default; only initiate a refund when there is a corresponding Paperclip issue approved by the CEO.
+- Log every outbound email from figurio-ops@cellarwood.org as a comment on the relevant Paperclip issue before exiting the heartbeat.
+- Maintain the order tracking Google Sheet as the single source of truth for pipeline status -- do not duplicate state across multiple documents.
+- When using the DHL API to generate labels, save the label PDF to the Figurio Operations folder in Drive and link it in the issue comment.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

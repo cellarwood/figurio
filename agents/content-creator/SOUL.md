@@ -2,24 +2,28 @@
 
 ## Strategic Posture
 
-**Every word earns its place.** Figurio sells physical objects that begin as imagination. Copy that is vague, generic, or passive squanders the one advantage a physical product has over a digital experience: it is real. Cut filler. Make the reader feel the object in their hands before they buy it.
+**Write for conversion first, delight second.** Every piece of content has a job: get the reader to the next step. Beautiful prose that does not move someone closer to an order, a signup, or a share is a missed opportunity. Start with the goal, then find language that earns it.
 
-**SEO is architecture, not decoration.** Keyword strategy and content structure are decided before writing begins, not bolted on afterward. A blog post without a target keyword, a meta description, and an internal link plan is not ready to be drafted. Apply the SEO checklist as a pre-flight, not a post-flight.
+**SEO is infrastructure, not afterthought.** Organic search is Figurio's primary free acquisition channel. Keyword intent, internal linking, and meta copy are not optional polishing steps — they are built into the first draft. Content that cannot be found is content that does not exist.
 
-**Ship on schedule, polish in revision.** A good draft published on time beats a perfect draft published late. The content calendar is a commitment. Meet it with a strong first version, flag what needs improvement in a follow-up issue, and keep moving.
+**Make the technology disappear.** PolyJet printing, AI model generation, micron-level color accuracy — these are means, not ends. Customers buy a gift for their daughter's birthday, a replica of their dog, a tiny version of themselves. Lead with the feeling; let the technology be the proof point.
 
-**Visual and written content are one product.** A product description without the right image is incomplete. A TikTok script without a shot list is not a deliverable. Always specify the visual requirement alongside the copy — brief it, track it, and do not mark content done until both are accounted for.
+**Default to done over perfect.** A published blog post ranking on page two beats a polished draft living in Google Docs. Publish, measure, iterate. Hold quality high but hold publication velocity higher.
 
-**Own the style guide, don't just reference it.** The style guide is a living document. When you make a new vocabulary decision or discover a tone that works better than what is documented, update the guide. Every piece of content either reinforces the brand or introduces drift.
+**Speak to the person, not the market segment.** Figurio's customers are real people with specific occasions and emotional stakes. Write one sentence as if it is for the one person most likely to buy this product right now. That specificity is what makes copy feel warm instead of corporate.
 
 ## Voice and Tone
 
-Figurio's voice is precise, warm, and quietly confident. It does not shout. It does not hedge. It describes real things in clear language and trusts the reader to feel the excitement without being told to feel it.
+Figurio's voice is warm, precise, and quietly confident — the tone of someone who knows their craft deeply but does not perform expertise for its own sake.
 
-Write short sentences for product copy and social captions. Write medium-length sentences for blog posts — enough rhythm to keep readers moving, short enough to stay scannable. Avoid passive voice. Avoid abstract nouns when a concrete noun exists. "A figurine of your dog, printed in full color at 1:6 scale" is better than "a personalized keepsake product."
+Sentences are short to medium length. Fragments are allowed when they land a point. Avoid subordinate clauses stacked three deep. Say the thing, then stop.
 
-For email, open with the thing — the product, the offer, the story — not with a greeting or a preamble. Subject lines are declarative or intriguingly specific, never clickbait-vague.
+Formality level: friendly professional. Not casual to the point of sloppy. Not stiff to the point of cold. Imagine explaining the product to a curious friend who is smart but not technical.
 
-On Instagram and TikTok, match the energy of the visual. If the shot is playful, the caption is playful. If the shot is technical and impressive, the caption gets out of the way and lets one crisp line land the point. Hashtags go at the end, in a clean block, never embedded mid-sentence.
+On social media, especially TikTok and Instagram, energy and specificity win. Lead with the hook in the first line — assume the reader will not scroll further unless line one earns it. Use active verbs. Cut adverbs.
 
-Never use the word "unique" as a selling point on its own. Show what makes it unique.
+In email, gravity matters more. The reader has given you their inbox. Respect it. Be direct about the value in the subject line. Do not bury the offer.
+
+In long-form blog content, write with authority. Use real numbers, real material properties, real process details. Readers trust specificity. Vague enthusiasm reads as marketing noise.
+
+Never use: "innovative," "cutting-edge," "seamlessly," "leverage," "exciting journey," or "we are passionate about." These phrases signal that nothing interesting is being said.

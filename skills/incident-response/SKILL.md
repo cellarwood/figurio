@@ -1,9 +1,9 @@
 ---
 name: incident-response
 description: >
-  Incident handling procedures for Figurio — severity classification for e-commerce
-  and 3D printing operations, escalation paths, communication templates for customers
-  and stakeholders, and postmortem format.
+  Incident handling for Figurio — severity classification (P1: checkout/Stripe
+  down, P2: AI custom figurine pipeline degraded, P3: cosmetic issues),
+  escalation paths, communication templates, and postmortem format.
 allowed-tools:
   - Read
   - Grep
@@ -11,210 +11,193 @@ allowed-tools:
 metadata:
   paperclip:
     tags:
+      - engineering
       - devops
-      - incidents
       - operations
 ---
 
 # Incident Response
 
-Procedures for detecting, responding to, and learning from incidents affecting Figurio services.
+Structured process for detecting, triaging, resolving, and reviewing incidents
+affecting Figurio's production services.
 
 ## Severity Levels
 
-### SEV-1 — Critical (respond immediately)
+### P1 — Critical (respond immediately)
 
-Production is down or revenue is blocked. All hands.
-
-Examples:
-- Checkout / Stripe payment flow completely broken
-- Frontend unreachable (GKE ingress down, Traefik failure)
-- FastAPI backend crash-looping in production
-- Customer data at risk (security breach suspected)
-- Zásilkovna order export failure causing shipping stoppage
-
-Response time: **within 15 minutes**
-
-### SEV-2 — High (respond within 1 hour)
-
-Significant degradation — most users affected or key feature broken.
+The business is losing revenue or customer trust cannot be restored without
+urgent action.
 
 Examples:
-- "Prompt to Print" AI pipeline returning errors for >50% of requests
-- Product catalog returning stale data (cache invalidation failure)
-- Order status emails not sending
-- Sentry error rate spike >50% over baseline
+- Stripe checkout flow is returning errors or is unreachable
+- `api.figurio.cz` is down (5xx or no response)
+- `figurio.cz` frontend is inaccessible
+- Customer payment data may be at risk
 
-Response time: **within 1 hour**
+Target response: acknowledge within **5 minutes**, start remediation within
+**15 minutes**.
 
-### SEV-3 — Medium (respond within 4 hours)
+### P2 — High (respond within 30 minutes)
 
-Partial degradation — subset of users or non-critical feature affected.
-
-Examples:
-- Single product category broken
-- Admin panel inaccessible (non-customer-facing)
-- Staging environment down
-- Non-critical API endpoint returning 500s
-
-Response time: **within 4 hours**
-
-### SEV-4 — Low (respond next business day)
-
-Minor issues, no user impact.
+Core service is degraded but a workaround or partial functionality exists.
 
 Examples:
-- CI pipeline flaky (not blocking deploys)
-- Non-critical Sentry noise
-- Documentation or config drift
+- AI custom figurine pipeline (`ai.figurio.cz`) is down or returning errors
+  (catalog orders still work)
+- Order confirmation emails are delayed or failing
+- Elevated error rate (>2% of requests) in Sentry without full outage
+- Slow response times (p95 > 5s) for checkout or catalog endpoints
 
-## Escalation Paths
+Target response: acknowledge within **15 minutes**, start remediation within
+**30 minutes**.
+
+### P3 — Low (respond within 2 business hours)
+
+Cosmetic or non-blocking issues that do not affect revenue or order processing.
+
+Examples:
+- UI rendering glitch on a non-critical page
+- Broken image in the catalog for a single product
+- Minor copy errors on static pages
+- Non-critical Sentry noise below error budget threshold
+
+Target response: triage within **2 hours**, fix in next sprint unless trivial.
+
+## Detection Sources
+
+- **Sentry** — primary error alerting; P1 triggers page immediately
+- **Kubernetes pod health** — `CrashLoopBackOff` or OOMKilled pods
+- **Traefik** — 5xx response rate spike visible in logs
+- **Stripe Dashboard** — webhook delivery failures or payment decline spike
+- **Customer report** — escalated via support email to devops-engineer
+
+## Escalation Path
+
+| Severity | On-call DevOps | CTO | CEO |
+|----------|---------------|-----|-----|
+| P1 | Immediate page | Notify within 15 min | Notify if >30 min unresolved |
+| P2 | Immediate page | Notify if >1 hour unresolved | Not required |
+| P3 | Normal queue | Not required | Not required |
+
+For P1 Stripe issues, also notify the backend-engineer — they own the Stripe
+integration code.
+
+For P1 data-risk incidents, CTO and CEO are notified immediately regardless of
+resolution time.
+
+## Response Steps
+
+### 1. Acknowledge
+
+Claim the incident so the team knows someone is on it. Post in the engineering
+channel:
 
 ```
-SEV-1  →  DevOps on-call  →  CTO (if not resolved in 30 min)  →  CEO (if revenue impact >1hr)
-SEV-2  →  DevOps on-call  →  CTO (if not resolved in 2hr)
-SEV-3  →  DevOps engineer (async)
-SEV-4  →  Backlog ticket
+[INCIDENT P<N>] <short description> — acknowledged, investigating
 ```
 
-For payment incidents (Stripe), also contact the backend engineer immediately — payment logic lives in the FastAPI service.
-
-For shipping incidents (Zásilkovna), loop in the COO — they have the vendor contact.
-
-## Incident Response Steps
-
-### 1. Detect and declare
-
-- Sentry alert, user report, or monitoring alert fires
-- Assign a severity level
-- Post in `#incidents` (Slack/Discord): "Incident declared: [SEV-X] — [one-line description] — investigating"
-
-### 2. Investigate
-
-Check in this order:
+### 2. Assess
 
 ```bash
-# Pod health
-kubectl get pods -n figurio
-kubectl describe pod <crashing-pod> -n figurio
+# Check pod state
+microk8s kubectl get pods -n figurio
 
-# Recent logs
-kubectl logs -n figurio deploy/figurio-backend --since=10m
-kubectl logs -n figurio deploy/figurio-frontend --since=10m
+# Check recent events
+microk8s kubectl get events -n figurio --sort-by='.lastTimestamp' | tail -20
 
-# Sentry — check the error and stack trace for the incident
-# GKE events
-kubectl get events -n figurio --sort-by='.lastTimestamp' | tail -20
+# Check Traefik logs for 5xx spike
+microk8s kubectl logs -n kube-system -l app=traefik --tail=100 | grep " 5[0-9][0-9] "
 
-# Traefik ingress
-kubectl logs -n kube-system deploy/traefik --since=10m
+# Check Sentry for top errors
+# (open Sentry dashboard — filter to last 30 min)
 ```
 
-### 3. Contain
+### 3. Mitigate
 
-- If a bad deploy caused it: **rollback immediately** (see deployment-runbook skill)
-- If a dependency is failing (Stripe, Zásilkovna): activate the relevant maintenance page via Traefik middleware
-- If data is at risk: isolate the affected service — scale to 0 replicas if necessary
+Prefer the fastest path to restoring service over the cleanest fix:
+
+- **Pod crash / bad deploy** → roll back via Helm (see deployment-runbook skill)
+- **Stripe webhook failure** → check secret rotation, restart backend deployment
+- **AI pipeline down** → restart `ai-pipeline` deployment; catalog orders
+  continue to function — communicate P2 status to customers if >15 min
+- **Infrastructure issue** → check microk8s node health, Traefik pod, PVC
+  mounts
+
+### 4. Resolve
+
+Confirm resolution:
 
 ```bash
-kubectl scale deployment/figurio-backend --replicas=0 -n figurio
+microk8s kubectl rollout status deployment/<service> -n figurio
+curl -sf https://api.figurio.cz/health | jq .status   # "ok"
+curl -sf https://figurio.cz/                           # HTTP 200
 ```
 
-### 4. Communicate
+Post resolution message in engineering channel:
 
-Send updates every 30 minutes for SEV-1, every hour for SEV-2, until resolved.
-
-**Customer-facing status page update template:**
 ```
-[Time] We are currently experiencing issues with [feature].
-Our team is investigating. Orders placed during this time will be processed normally
-once the issue is resolved. We will update this page every 30 minutes.
+[RESOLVED P<N>] <short description> — resolved at <HH:MM UTC>.
+Duration: <X> min. Root cause: <one sentence>. Postmortem: <yes/no — schedule if P1 or P2>
 ```
 
-**Internal update template (Slack #incidents):**
-```
-[Time] SEV-X Update
-Status: Investigating / Identified / Mitigating / Resolved
-Impact: [what is broken, how many users]
-Cause: [hypothesis or confirmed root cause]
-Next action: [what is happening now]
-ETA: [estimate or "unknown"]
-```
+## Communication Templates
 
-### 5. Resolve
+### Customer-facing status update (P1 — checkout down)
 
-- Confirm all health checks pass (see deployment-runbook)
-- Confirm Sentry error rate returns to baseline
-- Post resolution message in `#incidents`:
-  ```
-  [Time] RESOLVED — SEV-X [description]
-  Duration: Xh Xm | Root cause: [summary] | Fix: [summary]
-  Postmortem: [link or "to follow within 48h"]
-  ```
+> We are currently experiencing an issue with our checkout process. Our team is
+> actively investigating and working to restore service. We apologize for the
+> inconvenience. Orders placed before this notice have been received. We will
+> update this page as soon as the issue is resolved.
+
+### Customer-facing status update (P2 — AI pipeline degraded)
+
+> Our AI custom figurine tool is currently unavailable. Standard catalog orders
+> are processing normally. Our team is working to restore the AI feature. We
+> will update here shortly.
+
+### Internal escalation message (P1 to CTO)
+
+> P1 INCIDENT: <service> is down as of <HH:MM UTC>. Impact: <revenue-affecting
+> description>. DevOps investigating. ETA unknown — looping you in per P1
+> protocol.
 
 ## Postmortem Format
 
-Write a postmortem for every SEV-1 and SEV-2. Publish within 48 hours of resolution in the team wiki.
+Required for all P1 incidents. Recommended for P2 incidents lasting >1 hour.
 
-```markdown
-# Postmortem: [Incident Title]
-Date: YYYY-MM-DD
-Severity: SEV-X
-Duration: Xh Xm
-Author: [name]
+```
+## Postmortem — <Incident Title>
 
-## Summary
-One paragraph. What happened, what was the impact, how was it resolved.
+**Date:** YYYY-MM-DD
+**Duration:** X hours Y minutes
+**Severity:** P1 / P2
+**Author:** <devops-engineer or CTO>
 
-## Timeline (UTC)
-- HH:MM — First alert / user report
-- HH:MM — Incident declared
-- HH:MM — Root cause identified
-- HH:MM — Fix applied
-- HH:MM — Resolved and verified
+### Summary
+One paragraph describing what happened and the customer impact.
 
-## Root Cause
-Technical description of why the failure occurred.
+### Timeline (UTC)
+- HH:MM — first alert / detection
+- HH:MM — incident acknowledged
+- HH:MM — root cause identified
+- HH:MM — mitigation applied
+- HH:MM — service restored
 
-## Impact
-- Users affected: [estimate]
-- Orders affected: [count or "none"]
-- Revenue impact: [estimate or "none"]
+### Root Cause
+Technical explanation of what failed and why.
 
-## What Went Well
-- [item]
+### Contributing Factors
+Conditions that made the incident worse or detection slower.
 
-## What Went Wrong
-- [item]
+### Resolution
+What was done to restore service.
 
-## Action Items
+### Action Items
 | Action | Owner | Due |
 |--------|-------|-----|
-| [item] | [name] | [date] |
+| <preventive fix> | <engineer> | <date> |
+| <monitoring improvement> | <engineer> | <date> |
 ```
 
-## Runbooks for Common Scenarios
-
-### Stripe webhook failures
-
-1. Check `kubectl logs -n figurio deploy/figurio-backend | grep stripe`
-2. Verify the Stripe webhook secret in the Kubernetes secret: `kubectl get secret figurio-backend-secrets -n figurio -o yaml`
-3. Check Stripe dashboard for webhook delivery failures
-4. Re-enable failed webhooks from Stripe dashboard if needed
-
-### Zásilkovna order export stuck
-
-1. Check the export job logs in the backend service
-2. Verify Zásilkovna API credentials have not expired
-3. Contact COO to notify Zásilkovna if orders are delayed >2 hours
-
-### GKE node out of resources
-
-```bash
-kubectl describe nodes | grep -A5 "Allocated resources"
-kubectl top nodes
-# If a node is at capacity, check for resource leaks:
-kubectl top pods -n figurio --sort-by=memory
-```
-
-Scale up the node pool via Terraform if sustained load requires it — do not do this manually through GCP console.
+Postmortems are blameless. Focus on process and system improvements.
+File them in the shared engineering folder within 48 hours of resolution.

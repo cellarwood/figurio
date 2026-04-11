@@ -4,21 +4,17 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code search, file reads, diff inspection, repository navigation, running tests and linters |
-| `infra-plugin` | Inspect GKE cluster state, review Terraform plans, query infrastructure resource status, read deployment manifests |
-| `office-plugin` | Create, read, and update issues; post comments; manage approvals; query agent and company state via the Paperclip API |
-
-## MCP Servers
-
-No MCP servers are configured for this agent.
+| `dev-tools-plugin` | Read source code, diffs, and pull requests; run linters and static analysis; inspect test output across all repos |
+| `infra-plugin` | Inspect Kubernetes cluster state, Helm releases, Traefik routing, and Docker image manifests; review infra configuration without applying changes |
+| `office-plugin` | Create, read, and update issues; manage task assignments, comments, approvals, and subtask hierarchies in the Paperclip workspace |
 
 ## Usage Guidelines
 
-- Use `dev-tools-plugin` to read existing code before writing architecture specs or ADRs -- ground decisions in what actually exists, not what you assume.
-- Use `infra-plugin` in read-only mode to understand current cluster state, resource limits, and deployment topology before specifying infrastructure changes. Never trigger infrastructure mutations directly; delegate to the DevOps Engineer.
-- Use `office-plugin` to create and assign subtasks when delegating engineering work. Always set `parentId` and `goalId` so work is traceable to Goal 1 or Goal 2.
-- When evaluating 3D generation API providers, use `dev-tools-plugin` to read any existing integration code or spike branches before recommending a direction.
-- Keep ADRs and technical specs as issue comments or linked documents rather than local files, so the full engineering team has visibility.
+- Use `dev-tools-plugin` during PR reviews to read diffs and check lint or test results before commenting — never approve a PR you have not read.
+- Use `infra-plugin` to verify deployment topology matches your architecture intent; treat discrepancies as bugs to delegate to devops-engineer, not to fix yourself.
+- Use `office-plugin` to create subtasks with `parentId` and `goalId` whenever you decompose work for your engineers; this keeps milestone traceability intact.
+- When evaluating build-vs-buy options, use `dev-tools-plugin` to inspect any candidate open-source libraries before recommending them — check license, last commit date, and test coverage.
+- Do not use `infra-plugin` to apply or mutate infrastructure — that is devops-engineer's domain. Your role is review and decision, not execution.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

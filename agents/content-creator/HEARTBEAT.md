@@ -10,14 +10,15 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 
 - Read today's plan in `$AGENT_HOME/notes/daily.md`.
-- Review the content calendar in Sheets — identify any publish slots due within 48 hours.
-- Resolve any blockers you can unblock. Record updates in daily notes.
+- Review the content calendar in Google Sheets for upcoming publish deadlines.
+- Note any pieces that are overdue or at risk; flag to CMO if a deadline will be missed.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- If content was approved: finalize and publish (or hand off for publishing if code deployment is required).
+- If changes were requested: update the draft in Google Docs, comment on the issue with a summary of what changed.
 
 ## 4. Get Assignments
 
@@ -31,54 +32,42 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Content Production Workflow
+## 6. Content Workflow
 
-**Before drafting any piece of content:**
-- Confirm the target keyword or topic brief exists. If not, define it and record it in the SEO keyword tracker in Sheets before writing.
-- Run through the SEO checklist (skill: `seo-checklist`) — keyword, meta title, meta description, internal link target.
-- Confirm the required visual asset (render, lifestyle shot, or designed graphic) is in scope and tracked.
+**For new content pieces (blog posts, web copy, email campaigns):**
+1. Confirm the brief: topic, target keyword, audience, goal, deadline.
+2. Conduct keyword research if not already done; log findings in the SEO Sheets tracker.
+3. Write a first draft in Google Docs. Title the doc clearly: `[TYPE] Title -- DRAFT vN`.
+4. Run an SEO checklist pass: keyword in H1, meta description written, internal links added.
+5. Share the Doc with the CMO (figurio-cmo@cellarwood.org) and comment on the issue requesting review.
+6. Mark the issue `blocked` with reason "awaiting CMO review" if no review has happened within 24 hours of sharing.
+7. On approval: finalize the doc, upload final assets to Drive under the correct channel folder, and close the issue with the publish URL.
 
-**For product descriptions:**
-- Pull product spec from Drive or the relevant issue.
-- Write using the content style guide (skill: `content-style-guide`).
-- Include: product name, material/finish, dimensions, what makes it notable, and a call to action.
-- Store final copy in a Google Doc, link the Doc in the issue comment.
-
-**For blog posts:**
-- Outline first, draft second. Outline goes into a Google Doc for CMO visibility.
-- Target 800-1200 words for standard posts, 1500+ for pillar pages.
-- Apply all SEO checklist items before marking done.
-
-**For social (Instagram / TikTok):**
-- Write caption + hashtag block together.
-- For TikTok, write a shot list or script alongside the caption.
-- Log the slot as filled in the content calendar Sheets tab.
+**For social media content:**
+1. Write captions and scripts directly in the issue comment or a linked Doc depending on length.
+2. If a visual asset is needed, use `design-plugin` to generate it or note the spec for the CMO to commission.
+3. Schedule or post via the appropriate channel. Record the post URL in the issue comment before closing.
 
 **For email campaigns:**
-- Write subject line, preview text, and body copy together.
-- Store in the email copy library Doc in Drive.
-- Tag with campaign name and send date in the Sheets tracker.
-
-**Visual asset pipeline:**
-- Use media-plugin for AI-generated visuals, screenshots, or mockup production.
-- Use design-plugin for brand identity assets, logo usage, and style guide graphics.
-- All finalized visual assets go into the shared Drive folder: `Figurio / Assets / [content-type]`.
+1. Confirm the list segment, send date, and goal with the CMO before writing.
+2. Write subject line variants (minimum 2) and full body copy in a Google Doc.
+3. Include a plain-text version.
+4. Flag to CMO for approval before any send is triggered.
 
 ## 7. Fact Extraction
 
-- Extract durable facts from conversations into memory (style decisions, keyword wins, brand vocabulary additions).
-- Update the style guide Doc in Drive if a new voice or vocabulary rule was established this session.
-- Update daily notes.
+- Extract durable facts from conversations into `$AGENT_HOME/memory/`: product details, brand decisions, keyword wins, audience insights.
+- Update `$AGENT_HOME/notes/daily.md` with what was completed and what carries forward.
 
 ## 8. Exit
 
-- Comment on any in_progress work before exiting — include status, what was produced, and any open dependencies.
-- If a visual asset is still pending, comment with a specific description of what is needed and mark the issue blocked.
+- Comment on any in_progress work before exiting with a clear status line and next action.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never mark a content piece done if the visual asset it depends on has not been confirmed.
-- Never let a content calendar slot pass without either a finalized asset or a blocked issue with a clear explanation.
+- Never publish content that has not passed the SEO checklist (from the `seo-checklist` skill).
+- Never send an email campaign without CMO approval.
+- All content drafts live in Google Drive before they are published anywhere.

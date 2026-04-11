@@ -4,25 +4,25 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Code execution, file system access, shell commands, running builds and tests |
-| `design-plugin` | Design asset access and inspection (base plugin; required by web-design-plugin) |
-| `web-design-plugin` | Web-specific design tools — layout inspection, CSS extraction, responsive preview |
-| `media-plugin` | Playwright-based screenshot capture, media comparison, Mermaid diagram rendering |
-| `office-plugin` | Document and spreadsheet reading (design specs, requirements docs) |
+| `dev-tools-plugin` | Development utilities: code execution, file operations, shell access for running builds and tests |
+| `design-plugin` | Design asset access and manipulation; depends on media-plugin and office-plugin |
+| `web-design-plugin` | Browser automation via Playwright for visual testing and interaction verification; depends on design-plugin |
+| `media-plugin` | Mermaid diagram rendering, Playwright browser automation, general media handling, ElevenLabs audio |
+| `office-plugin` | Document and spreadsheet handling; underpins the design-plugin dependency chain |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `chrome` | `mcp__chrome` | Chrome DevTools MCP — live browser inspection, accessibility tree, console, performance profiling, network panel |
+| `chrome` | `mcp__chrome` | Chrome DevTools Protocol access via `@anthropic-ai/chrome-devtools-mcp` -- inspect live pages, capture screenshots, run JS in the browser context, profile performance |
 
 ## Usage Guidelines
 
-- Use `mcp__chrome` to inspect the live accessibility tree on any component you build that involves ARIA roles, focus management, or dynamic content. Do not rely on code review alone to catch accessibility issues.
-- Use `mcp__plugin_media-plugin_media-playwright` for automated visual regression — capture screenshots before and after changes on catalog, checkout, and Prompt to Print pages.
-- Use `mcp__plugin_web-design-plugin_webdesign-playwright` for responsive layout validation across breakpoints (mobile 375px, tablet 768px, desktop 1280px).
-- Use `dev-tools-plugin` to run the Vite dev server, execute Playwright test suites, and inspect build output. Always run `tsc --noEmit` before marking a task done to confirm no TypeScript errors.
-- Use `office-plugin` to read design specification documents or requirement spreadsheets when a task references an attached spec.
+- Use `mcp__chrome` for live visual verification: open the dev server URL, take viewport screenshots at 375px (mobile) and 1280px (desktop), and confirm layout before closing any UI task.
+- Use `mcp__plugin_web-design-plugin_webdesign-playwright` for automated interaction tests: form submission flows, checkout steps, navigation, and any user journey that involves multiple clicks.
+- Use `mcp__plugin_media-plugin_media-playwright` when you need lower-level Playwright control (e.g., intercepting network requests to simulate API states).
+- Use `mcp__plugin_media-plugin_mermaid` to diagram component trees or data flow when documenting a new feature or explaining an architecture decision in an issue comment.
+- Stripe Elements testing must always use Stripe test mode card numbers (e.g., `4242 4242 4242 4242`). Never use real card data in automated tests.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

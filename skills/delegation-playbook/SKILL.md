@@ -1,10 +1,13 @@
 ---
 name: delegation-playbook
 description: >
-  Rules for the Figurio CEO on delegating tasks to CTO, CMO, and Head of
-  Operations. Covers routing logic by work type, when to delegate vs handle
-  personally, how to write delegation-ready issues, escalation criteria, and
-  follow-up cadence.
+  Rules for the Figurio CEO delegating tasks to direct reports — CTO, CMO, and Head of
+  Operations. Covers when to delegate vs. handle personally, escalation criteria for
+  production incidents and IP/legal concerns, and the follow-up cadence expected from
+  each direct report. Specific to Figurio's 9-agent structure and Czech Republic operations.
+allowed-tools:
+  - Read
+  - Write
 metadata:
   paperclip:
     tags:
@@ -15,91 +18,106 @@ metadata:
 
 # Delegation Playbook
 
-## When to Use
+## Direct Reports and Their Domains
 
-Use this skill whenever you need to assign work to a direct report, decide whether to handle something yourself, or determine whether an escalation from a direct report warrants a decision from you.
+| Agent | Domain | Owns |
+|-------|--------|------|
+| **CTO** | Engineering | FastAPI backend, React/TS frontend, AI custom pipeline, Docker/K8s infra, Stripe integration |
+| **CMO** | Marketing | Customer acquisition, paid/organic channels, content strategy, conversion rate optimization |
+| **Head of Operations** | Fulfillment & vendor | MCAE coordination, Stratasys J55 print queue, QC, shipping SLAs, Czech ops |
 
-## Routing Table
+## When to Delegate vs. Handle Personally
 
-Route every task to the single correct owner. If a task spans two domains, assign the primary owner and add a dependency comment for the secondary team.
+### Delegate to CTO when:
+- Any engineering implementation decision (architecture, library choice, API design)
+- Sprint prioritization within the engineering team
+- Code review standards and technical debt triage
+- Stripe integration specifics (webhooks, payment flow edge cases)
+- AI pipeline model selection or inference infrastructure choices
+- On-call and incident response process setup
 
-| Work type | Owner |
-|-----------|-------|
-| React/TS frontend, Python/FastAPI backend, GKE infrastructure, PostgreSQL, Terraform, security, AI pipeline engineering | CTO |
-| Brand identity, marketing campaigns, content, social media, SEO, paid ads, customer acquisition, influencer coordination | CMO |
-| MCAE production coordination, print job tracking, Zásilkovna fulfillment, vendor SLA management, customer support escalations | Head of Operations |
-| Board communication, company OKR registry, IP compliance, final trade-off decisions, budget anomalies | CEO (you) |
+### Delegate to CMO when:
+- Channel strategy and budget allocation within approved marketing spend
+- Campaign execution and creative direction
+- Copywriting and content calendar decisions
+- Social media presence and community management
+- Analytics tooling and attribution model choices
 
-When in doubt, check: does this require writing code, designing a campaign, or coordinating a shipment? If yes — delegate.
+### Delegate to Head of Operations when:
+- Day-to-day MCAE vendor communication and print job scheduling
+- QC process definition and rejection thresholds
+- Shipping carrier selection and tracking integration
+- Czech Republic regulatory compliance for DTC shipments
+- Customer support escalations related to fulfillment delays or print quality
 
-## What You Handle Personally
-
-You personally own a narrow set of tasks. Do not delegate these:
-
-- Decomposing company-level goals into assignable issues
-- Final decisions on irreversible trade-offs escalated by direct reports
-- Board updates and executive communication (Gmail)
-- IP and third-party compliance flags
-- Budget posture monitoring and anomaly escalation
-- Leadership sync preparation and facilitation
-
-## How to Write a Delegation-Ready Issue
-
-Every issue you create for a direct report must have:
-
-- **Title**: imperative verb + specific outcome ("Integrate Zásilkovna webhook for order status updates")
-- **Success criterion**: one measurable condition that proves the work is done
-- **`goalId`**: mapped to one of Figurio's four strategic goals
-- **`assigneeAgentId`**: the direct report's agent ID — never leave unassigned
-- **Due date**: a realistic date, not "ASAP"
-- **Context block**: 2-4 bullets with relevant constraints (e.g., "MCAE sends status via email today — no API available yet")
-
-Do not specify implementation approach in the issue body unless a specific constraint applies. Own the destination, not the path.
-
-## When to Delegate vs Handle Personally
-
-Delegate when:
-- The work touches engineering, marketing, or operations domains (see routing table)
-- The decision is reversible and the direct report has the context to make it
-- The task is repeatable and the direct report should own the pattern going forward
-
-Handle personally when:
-- The decision is irreversible (new vendor contract, pricing strategy, architectural pivot)
-- The issue requires board-level communication
-- A cross-functional blocker can only be resolved by a CEO-level call
-- Two direct reports are in conflict about scope or priority
+### Handle personally (CEO does not delegate):
+- Company strategy pivots or new product line decisions
+- Fundraising conversations or investor relations
+- Pricing strategy and margin targets
+- Hiring or firing of direct reports
+- Any legal agreement with MCAE or other key vendors
+- IP concerns — if AI-generated output may infringe third-party IP, CEO reviews before any action
+- Public statements about the company or product
 
 ## Escalation Criteria
 
-Accept an escalation from a direct report when they flag:
+### P0 — Escalate to CEO immediately (direct reports must not resolve alone)
 
-- A decision that requires CEO authority (budget > threshold, vendor commitment, scope change that affects another team)
-- A cross-functional conflict that cannot be resolved at the DR level
-- A risk that was not in scope when the issue was created (e.g., MCAE capacity constraint affects launch date)
-- A compliance or IP concern
+| Trigger | From | Why CEO must be involved |
+|---------|------|--------------------------|
+| Production checkout down (Stripe failure or backend outage) | CTO | Revenue impact; may require vendor communication |
+| AI pipeline generating output that may violate IP / copyright | CTO | Legal exposure; requires CEO judgment before any response |
+| MCAE unable to fulfill active orders (capacity or equipment failure) | Head of Ops | Core vendor relationship; CEO may need to communicate with MCAE directly |
+| Customer data breach or suspected unauthorized access | CTO | Legal obligation under GDPR (Czech Republic); CEO must be notified within 1 hour |
+| Negative press or viral complaint involving brand reputation | CMO | CEO approves all public responses |
 
-Reject or redirect an escalation when:
-- The direct report has the information and authority to decide themselves
-- The escalation is a status update disguised as a question — respond with "Your call, let me know what you decide"
-- The issue is implementation detail — do not re-enter domains you have delegated
+### P1 — Notify CEO within 24 hours, direct report leads resolution
 
-When you accept an escalation, respond with a decision within the same heartbeat. Do not park escalations.
+- A sprint milestone slips by more than 3 days
+- A marketing channel is suspended or banned (e.g., ad account flagged)
+- A batch of orders has QC rejection rate above 15%
+- A third-party integration (Stripe, MCAE API, shipping carrier) has degraded performance
+
+### P2 — Handle independently, include in weekly review
+
+- Normal engineering bugs, feature work, deployment issues resolved within SLA
+- Routine content and campaign decisions within approved budget
+- Standard MCAE order routing and QC
+
+## Delegation Protocol
+
+When delegating a task, always specify:
+
+1. **What**: clear description of the task and expected output
+2. **Done state**: how the CEO will know it is complete (e.g., "Stripe webhook tested end-to-end in staging with a successful test charge")
+3. **Deadline**: specific date, not "soon" or "ASAP"
+4. **Constraints**: budget limit, tech constraints, anything off-limits
+5. **Check-in point**: when the direct report should surface status if not yet done
+
+Example delegation format:
+```
+To: CTO
+Task: Implement Stripe checkout webhook handler for order confirmation
+Done state: Webhook receives payment_intent.succeeded, creates order record in DB, returns 200 — verified in staging
+Deadline: Friday EOD
+Constraints: Use existing FastAPI order model; do not introduce new DB tables without discussion
+Check-in: Wednesday if not yet in review
+```
 
 ## Follow-up Cadence
 
-| Time since assignment | Action |
-|-----------------------|--------|
-| 0-2 heartbeats | No follow-up needed — allow the direct report to work |
-| 2 heartbeats, no status comment | Post a check-in comment on the issue |
-| 3 heartbeats, no update | Mark the issue as a review priority in the weekly digest; raise in leadership sync |
-| Issue is `blocked` | Intervene immediately — see strategy-review skill for blocker resolution steps |
+| Direct Report | Async check-in | Sync review |
+|---------------|----------------|-------------|
+| CTO | Daily standup summary (written) | Weekly strategy review |
+| CMO | Weekly campaign performance report | Weekly strategy review |
+| Head of Operations | Weekly fulfillment ops summary (orders in/out, QC rate, MCAE status) | Weekly strategy review |
 
-Never DM direct reports outside the issue thread. All follow-ups happen as issue comments so the record is preserved.
+- If a P1 item is open, check in with the owning direct report every 24 hours until resolved
+- P0 items: real-time coordination until resolved; CEO stays in the loop throughout
 
 ## Anti-patterns
 
-- Do not perform engineering, marketing, or operations work yourself — even when it feels faster. It undermines ownership and creates shadow work outside the issue tracker.
-- Do not create issues without a `goalId` — unlinked work is invisible to strategic review.
-- Do not assign the same issue to multiple direct reports — one owner per issue, always.
-- Do not revise the implementation approach mid-issue unless a hard external constraint has changed. Trust the assignee's judgment on the how.
-- Do not accept an escalation silently — always respond with either a decision or a redirect.
+- Delegating without a clear done state — leads to rework and missed expectations
+- Pulling decisions back from CTO / CMO after delegating — undermines trust and speed
+- Treating MCAE vendor issues as purely operational when order backlog is building — escalate to CEO at P1 threshold
+- Allowing direct reports to absorb P0 issues without notifying CEO — sets wrong precedent for a small DTC team

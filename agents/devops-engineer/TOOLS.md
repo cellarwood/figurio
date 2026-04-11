@@ -4,16 +4,16 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Run shell commands, execute scripts, interact with CI/CD tooling, inspect build artifacts and logs |
-| `infra-plugin` | Manage cloud infrastructure resources, run Terraform commands, interact with Kubernetes clusters and Helm |
+| `dev-tools-plugin` | Shell execution, file read/write, git operations, log inspection, and general development tooling |
+| `infra-plugin` | Kubernetes cluster management, Helm chart operations, Terraform apply/plan, Docker build and push, secret management |
 
 ## Usage Guidelines
 
-- Before any `terraform apply` in production, run `terraform plan` and post the plan summary as a comment on the relevant issue. Do not apply without that comment in place.
-- When interacting with Kubernetes, always confirm the active context (`kubectl config current-context`) before running mutating commands. GKE and microk8s contexts must never be confused.
-- Use `helm diff upgrade` before any Helm release update to production; include the diff in your issue comment so the CTO can review before or after the fact.
-- Image tags pushed to Docker Hub (`lukekelle00/{service}`) must always be explicit version strings (e.g., `git-sha` or `v1.2.3`). The `latest` tag is forbidden for production images.
-- After every deployment, validate health-check endpoints and confirm Sentry is receiving events from the new release before marking the issue complete.
+- Use `infra-plugin` for all cluster operations — never run `kubectl`, `helm`, or `terraform` via raw shell if the plugin exposes the operation directly.
+- When running Docker builds, always use multi-stage build targets and push to `lukekelle00` on Docker Hub with explicit version tags; never use `latest` as the sole tag in production.
+- Before applying any Helm or Terraform change to the production namespace, run a `--dry-run` or `plan` first and attach the output to the issue comment.
+- Use `dev-tools-plugin` for log tailing, CI pipeline inspection, and any scripting needed during incident response.
+- Keep secret values out of every output — if a plugin command would print a secret, capture and discard it; report only the operation result.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

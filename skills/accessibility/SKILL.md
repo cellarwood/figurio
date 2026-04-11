@@ -1,13 +1,16 @@
 ---
 name: accessibility
 description: >
-  WCAG 2.1 AA compliance checklist for the Figurio e-commerce storefront —
-  covers form labeling, keyboard navigation, product image alt text, checkout
-  flow focus management, and screen reader support for the cart drawer and
-  3D model viewer.
+  WCAG 2.1 AA compliance checklist for the Figurio storefront — covers form
+  labels for checkout and AI customiser inputs, alt text for figurine product
+  photos, keyboard navigation through the catalog and cart drawer, color
+  contrast requirements, and screen reader support for dynamic cart and checkout
+  state changes. Apply this skill whenever adding or reviewing any Figurio UI.
 allowed-tools:
   - Read
   - Grep
+  - Write
+  - Edit
 metadata:
   paperclip:
     tags:
@@ -18,106 +21,143 @@ metadata:
 
 # Accessibility
 
-WCAG 2.1 AA requirements as applied to the Figurio React storefront. Follow
-these rules during implementation and use them as a review checklist before
-marking any frontend PR ready for merge.
+Figurio targets WCAG 2.1 Level AA across all storefront pages. The primary user base is Czech consumers; screen reader testing uses NVDA (Windows) and VoiceOver (macOS/iOS).
 
-## Forms
+## Image Alt Text — Figurine Photos
 
-All forms (checkout, contact, newsletter signup) MUST:
+Figurine photos are the core catalog content. Every `<img>` for a product must have a descriptive `alt` that names the subject and, where relevant, the size variant.
 
-- Associate every `<input>`, `<select>`, and `<textarea>` with a visible `<label>`
-  via `htmlFor` / `id` — never rely on `placeholder` alone as a label.
-- Use shadcn `FormMessage` to surface validation errors; the error element MUST be
-  linked to its input with `aria-describedby`.
-- Mark required fields with `aria-required="true"` and a visible indicator (an
-  asterisk `*` with a legend: `"* required field"`).
-- Never use color alone to signal an error — pair color change with an icon (`AlertCircle`)
-  and text.
-- The Zásilkovna iframe in `ShippingStep` MUST have a `title` attribute:
-  `title="Zásilkovna pickup point selector"`.
+| Context | Alt pattern | Example |
+|---|---|---|
+| Catalog card | `"{name} figurine"` | `"Dragon figurine"` |
+| Product detail main image | `"{name} figurine – {size}"` | `"Dragon figurine – 15 cm"` |
+| Thumbnail in size selector | `"{name} – {size} size preview"` | `"Dragon – 10 cm size preview"` |
+| Cart line item | `"{name}, {size}"` | `"Dragon, 15 cm"` |
+| Order confirmation | `"{name} – {quantity}× {size}"` | `"Dragon – 2× 15 cm"` |
 
-### Checkout Flow Focus Management
+- AI-custom preview renders (three.js canvas) must have an `aria-label` on the `<canvas>` element: `"3D preview of your custom figurine"`.
+- Decorative images (background textures, dividers) must have `alt=""` and `role="presentation"`.
+- Never use the product SKU or filename as the alt text.
 
-- On step transition (1 → 2 → 3), move focus to the new step's heading using
-  `ref.current.focus()` — the heading MUST have `tabIndex={-1}`.
-- On Stripe payment error, move focus to the `CardElement` container and announce
-  the error via an `aria-live="assertive"` region.
-- After successful order submission, focus the confirmation heading on the success page.
+## Form Labels — Checkout and AI Customiser
 
-## Navigation
+Every input must have an associated `<label>` or `aria-label`. Do not rely on placeholder text as the label.
 
-- The top navigation MUST be wrapped in `<nav aria-label="Main navigation">`.
-- The cart icon button MUST have `aria-label="Open cart"` and update to
-  `aria-label="Open cart, {n} items"` when the cart is non-empty (use
-  `useCartStore` count).
-- Skip-to-content link: render `<a href="#main-content" className="sr-only focus:not-sr-only ...">Skip to content</a>`
-  as the very first element in `<body>`; the main content container MUST have `id="main-content"`.
-- Keyboard users MUST be able to open/close the `CartDrawer` (`Sheet`) with `Escape`
-  — shadcn `Sheet` handles this by default; do not suppress it.
+```tsx
+// Correct — explicit label
+<Label htmlFor="shipping-city">City</Label>
+<Input id="shipping-city" name="city" autoComplete="address-level2" />
 
-## Product Images & 3D Viewer
+// Wrong — placeholder only
+<Input placeholder="City" />
+```
 
-- Every `<img>` in `ProductCard` and on the product detail page MUST have a
-  descriptive `alt` that names the figurine and angle:
-  - Good: `alt="Dragon Warrior figurine — side view, blue and gold paint scheme"`
-  - Bad: `alt="product"` or `alt=""`
-- Decorative images (background textures, dividers) MUST use `alt=""` and `role="presentation"`.
-- The `<model-viewer>` web component MUST have an `aria-label` describing the
-  figurine: `aria-label="Interactive 3D view of Dragon Warrior figurine"`.
-- Provide a static fallback image via `poster` — this also serves as the visible
-  content when JS is disabled or the WebGL context fails.
-- Do not autoplay rotation on the 3D viewer without a pause control — users with
-  vestibular disorders can be affected. Provide a visible "Pause rotation" toggle button.
+- Use shadcn `Label` (which renders a `<label>`) for all form fields.
+- Group related fields with `<fieldset>` + `<legend>`: shipping address block, billing address block.
+- Stripe `PaymentElement` is internally accessible — do not wrap it in a redundant `<label>`.
+- AI customiser file upload: `<input type="file" aria-describedby="upload-hint" accept=".obj,.stl">` paired with a visible hint (`id="upload-hint"`) listing accepted formats.
+- Required fields: add `aria-required="true"` and visually indicate with an asterisk that has `aria-hidden="true"` and a legend note ("* Required").
+- Inline validation errors: use `aria-describedby` pointing to the error element. The error element must have `role="alert"` so screen readers announce it immediately.
 
-## Color & Contrast
+```tsx
+<Input
+  id="email"
+  aria-describedby={emailError ? "email-error" : undefined}
+  aria-invalid={!!emailError}
+/>
+{emailError && (
+  <p id="email-error" role="alert" className="text-sm text-destructive">
+    {emailError}
+  </p>
+)}
+```
 
-- Body text on white backgrounds: minimum contrast ratio 4.5:1 (WCAG AA).
-- Large text (≥ 18 pt / 24 px or ≥ 14 pt bold): minimum 3:1.
-- Interactive elements (buttons, links): borders or underlines must meet 3:1 against
-  adjacent background — do not rely on color alone to distinguish links from body text.
-- Price text (muted CZK secondary): verify the muted Tailwind color (`text-muted-foreground`)
-  passes 4.5:1 against the card background — if not, step up to `text-foreground/70`.
+## Keyboard Navigation
 
-## Screen Reader Support
+All interactive elements must be reachable and operable by keyboard alone.
 
-- `CartDrawer` (`Sheet`): when opened, the drawer MUST trap focus inside; shadcn
-  `Sheet` does this via Radix UI — do not remove `FocusTrap`.
-- Empty cart state: announce with `aria-live="polite"` when items are removed
-  and the cart becomes empty.
-- Loading states: use `aria-busy="true"` on the parent container while data fetches;
-  `Skeleton` placeholders are visual only and MUST have `aria-hidden="true"`.
-- Toast notifications (order confirmed, added to cart): rendered via shadcn `Toaster`
-  which uses `role="status"` and `aria-live="polite"` — do not replace with custom
-  alert components.
-- Quantity stepper buttons (`+` / `−`) in cart line items MUST have explicit
-  `aria-label`: `"Increase quantity of Dragon Warrior figurine"`,
-  `"Decrease quantity of Dragon Warrior figurine"`.
+### Catalog
 
-## Keyboard Interaction Table
+- Product cards are `<article>` elements. The "Add to cart" button and size selector must both be reachable via Tab.
+- Focus order within a card: image (skip if decorative) → product name link → size selector → "Add to cart" button.
+- The catalog grid must not trap focus.
 
-| Component | Expected keyboard behavior |
+### Cart Drawer
+
+- Opening the cart drawer (shadcn `Sheet`) must move focus to the drawer's heading (`<h2>`) on open.
+- Closing the drawer (Escape key or close button) must return focus to the element that triggered the open (the cart icon button in the header).
+- Trap focus within the drawer while it is open — shadcn `Sheet` handles this via Radix `FocusTrap`; do not disable it.
+
+### Checkout Form
+
+- Tab order follows visual order: shipping fields → payment element → submit button.
+- The submit button must be reachable without scrolling on mobile (use sticky bottom bar on mobile).
+- Do not use `tabIndex` values other than `0` or `-1`.
+
+### 3D Model Viewer
+
+- The `<canvas>` must be focusable: `tabIndex={0}`.
+- When focused, show a visible focus ring (Tailwind `focus-visible:ring-2 focus-visible:ring-primary`).
+- Provide a text alternative describing what the model is below the canvas for users who cannot interact with WebGL.
+
+## Color Contrast
+
+Minimum contrast ratios (WCAG AA):
+
+| Text type | Minimum ratio |
 |---|---|
-| `ProductCard` | `Enter` / `Space` on "Add to Cart" button triggers add |
-| `CartDrawer` | `Escape` closes; focus returns to the cart trigger button |
-| `CheckoutForm` steps | `Tab` moves forward, `Shift+Tab` backward through fields |
-| `ModelViewer` | `Tab` into viewer; arrow keys orbit (built into `model-viewer`) |
-| Zásilkovna iframe | `Tab` enters iframe; `Escape` should return focus to page |
+| Normal text (< 18 pt / < 14 pt bold) | 4.5 : 1 |
+| Large text (≥ 18 pt or ≥ 14 pt bold) | 3 : 1 |
+| UI component borders and icons | 3 : 1 |
 
-## Testing Checklist (Pre-merge)
+Figurio brand colors — verified ratios against white (`#ffffff`) background:
 
-- [ ] Run `axe-core` via `@axe-core/react` in dev mode — zero violations at AA level.
-- [ ] Tab through the full checkout flow without a mouse — every field reachable.
-- [ ] Test with VoiceOver (macOS) or NVDA (Windows) on the cart drawer and checkout.
-- [ ] Verify all `<img>` elements have non-empty, descriptive `alt` text.
-- [ ] Confirm focus is visible (not just browser default outline) on all interactive elements
-      — Figurio's shadcn theme MUST NOT set `outline: none` without a custom
-      focus-visible replacement.
+- Primary (`#1a1a2e`): 17.5 : 1 — safe for all text.
+- Accent (`#e94560`): 4.6 : 1 — safe for normal text.
+- Muted text (`#6b7280`): 4.6 : 1 — safe for normal text; do not go lighter.
+- Destructive (`#dc2626`): 5.9 : 1 — safe for error text.
 
-## Anti-patterns
+Never use color as the only means of conveying state (e.g., red border for error). Always pair color with an icon or text label.
 
-- Do not use `onClick` on `<div>` or `<span>` — use `<button>` or `<a>` elements.
-- Do not suppress the browser focus ring globally (`*:focus { outline: none }`).
-- Do not use `tabIndex={0}` on non-interactive elements to make them focusable.
-- Do not remove `role="dialog"` or `aria-modal` from shadcn `Dialog`/`Sheet` — these
-  are required for screen readers to understand the modal context.
+## Screen Reader Support — Cart and Checkout
+
+Dynamic state changes must be announced to screen readers via ARIA live regions.
+
+### Cart
+
+- Mount a visually hidden `<div aria-live="polite" aria-atomic="true">` at the app root.
+- When an item is added to the cart, update its text content: `"Dragon figurine (15 cm) added to cart. Cart total: 3 items."` The live region announces this without moving focus.
+- When quantity changes or an item is removed, announce: `"Dragon figurine removed. Cart total: 2 items."`.
+- The cart item count badge on the header icon must have an `aria-label`: `aria-label={\`Cart, \${count} items\`}`.
+
+### Checkout
+
+- After `stripe.confirmPayment` succeeds and the user lands on the confirmation page, the page `<title>` must update to `"Order confirmed – Figurio"` (screen readers announce title changes on navigation).
+- Payment processing state: disable the submit button and set `aria-busy="true"` on the form while the Stripe call is in flight.
+- If Stripe returns an error, focus must move programmatically to the error `Alert` element so screen readers read it immediately.
+
+```tsx
+const errorRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  if (paymentError) errorRef.current?.focus();
+}, [paymentError]);
+
+// In render:
+<div ref={errorRef} tabIndex={-1} role="alert" aria-live="assertive">
+  {paymentError}
+</div>
+```
+
+## Checklist for PR Review
+
+Before merging any component that touches the storefront UI, verify:
+
+- [ ] All `<img>` have descriptive `alt` text following the patterns above
+- [ ] All form inputs have associated `<label>` or `aria-label`
+- [ ] Required fields use `aria-required` and validation errors use `role="alert"` + `aria-describedby`
+- [ ] Color contrast meets 4.5 : 1 for body text, 3 : 1 for UI components
+- [ ] Color is not the only differentiator for state
+- [ ] Focus management is correct for dialogs and drawers (open moves focus in; close returns focus)
+- [ ] Dynamic cart changes are announced via the live region
+- [ ] All interactive elements are keyboard reachable in logical Tab order

@@ -1,9 +1,11 @@
 ---
 name: database-patterns
 description: >
-  PostgreSQL patterns for Figurio's backend — product catalog schema, order
-  state machine, payment records, user accounts, and 3D model metadata for
-  both the standard catalog and AI "Prompt to Print" figurines.
+  PostgreSQL schema conventions for Figurio — product catalog tables (figurines,
+  categories, size tiers, images), orders and line items, payments, users and
+  auth, AI generation jobs. Migration patterns with Alembic including naming
+  conventions and multi-step schema changes. Use whenever designing schema
+  changes, writing queries, or authoring Alembic migrations.
 allowed-tools:
   - Read
   - Grep
@@ -17,175 +19,225 @@ metadata:
 
 # Database Patterns
 
-Figurio uses PostgreSQL. Migrations run via Alembic. All tables use UUID primary keys generated server-side (`gen_random_uuid()`). Use `TIMESTAMPTZ` for all timestamps, stored in UTC.
+## General Conventions
 
-## Naming Conventions
+- All tables use **snake_case** names, plural (`figurines`, `orders`, `users`)
+- Primary keys: `UUID` generated with `gen_random_uuid()` for all user-facing entities; `SERIAL` only for internal lookup tables where human-readable IDs are never exposed
+- All tables have `created_at TIMESTAMPTZ DEFAULT NOW()` and `updated_at TIMESTAMPTZ DEFAULT NOW()`; manage `updated_at` via a trigger (one shared trigger function `set_updated_at`)
+- Soft deletes: use `deleted_at TIMESTAMPTZ` on `figurines` and `users`; hard deletes everywhere else
+- Monetary values: store as `INTEGER` cents (CZK), never `FLOAT` or `NUMERIC` with currency symbols
+- Timestamps: always `TIMESTAMPTZ`, never `TIMESTAMP`
 
-- Tables: `snake_case`, plural (`products`, `orders`, `users`)
-- Columns: `snake_case`
-- Foreign keys: `{referenced_table_singular}_id` (e.g., `user_id`, `order_id`)
-- Indexes: `ix_{table}_{column(s)}`
-- Unique constraints: `uq_{table}_{column(s)}`
+## Core Schema
 
-## User Accounts
+### Product Catalog
+
+```sql
+-- Top-level categories (e.g., "Fantasy", "Sci-Fi", "Sports")
+CREATE TABLE categories (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug        TEXT NOT NULL UNIQUE,
+    name        TEXT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Size tiers (e.g., "Small 10cm", "Medium 15cm", "Large 20cm")
+CREATE TABLE size_tiers (
+    id          SERIAL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    height_mm   INTEGER NOT NULL,
+    price_czk   INTEGER NOT NULL,  -- base price in haléře (cents)
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Catalog figurines and AI-custom base templates
+CREATE TABLE figurines (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sku             TEXT NOT NULL UNIQUE,
+    category_id     UUID NOT NULL REFERENCES categories(id),
+    name            TEXT NOT NULL,
+    description     TEXT,
+    is_custom       BOOLEAN NOT NULL DEFAULT FALSE,  -- TRUE for AI-generated
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    deleted_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Price per figurine per size tier (overrides size_tiers.price_czk)
+CREATE TABLE figurine_size_prices (
+    figurine_id     UUID NOT NULL REFERENCES figurines(id) ON DELETE CASCADE,
+    size_tier_id    INTEGER NOT NULL REFERENCES size_tiers(id),
+    price_czk       INTEGER NOT NULL,
+    PRIMARY KEY (figurine_id, size_tier_id)
+);
+
+-- Images for each figurine (multiple angles)
+CREATE TABLE figurine_images (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    figurine_id     UUID NOT NULL REFERENCES figurines(id) ON DELETE CASCADE,
+    url             TEXT NOT NULL,
+    alt_text        TEXT,
+    sort_order      INTEGER NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Users and Auth
 
 ```sql
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email           TEXT NOT NULL,
-    password_hash   TEXT NOT NULL,
-    role            TEXT NOT NULL DEFAULT 'customer',  -- 'customer' | 'admin'
+    email           TEXT NOT NULL UNIQUE,
+    hashed_password TEXT NOT NULL,
     full_name       TEXT,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_users_email UNIQUE (email)
+    is_admin        BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at      TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
-- Never store plaintext passwords — always bcrypt hash.
-- `role` is enforced at the app layer; no PostgreSQL row-level security needed yet.
+No OAuth tables yet — email/password only. JWT tokens are stateless; no refresh token table.
 
-## Product Catalog
+### Orders and Payments
 
 ```sql
-CREATE TABLE products (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    sku             TEXT NOT NULL,
-    name            TEXT NOT NULL,
-    description     TEXT,
-    price_czk       NUMERIC(10, 2) NOT NULL,  -- Czech Koruna, two decimals
-    weight_grams    INTEGER,
-    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_products_sku UNIQUE (sku)
+CREATE TYPE order_status AS ENUM (
+    'PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'
 );
 
-CREATE INDEX ix_products_is_active ON products (is_active);
-```
-
-- Prices are stored in CZK as `NUMERIC` — never `FLOAT`.
-- Soft-delete with `is_active = FALSE`; never hard-delete catalog rows.
-
-## 3D Model Metadata
-
-Both catalog products and AI-generated figurines link to a model file record.
-
-```sql
-CREATE TABLE model_files (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    storage_key     TEXT NOT NULL,        -- object key in internal object store
-    file_format     TEXT NOT NULL,        -- 'stl' | 'obj' | '3mf'
-    file_size_bytes BIGINT,
-    color_profile   TEXT,                 -- MCAE print color profile identifier
-    is_printable    BOOLEAN NOT NULL DEFAULT FALSE,  -- validated by slicer check
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- AI-generated figurines
-CREATE TABLE figurines (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID NOT NULL REFERENCES users (id),
-    prompt          TEXT NOT NULL,
-    model_file_id   UUID REFERENCES model_files (id),
-    generation_status TEXT NOT NULL DEFAULT 'pending',
-        -- 'pending' | 'processing' | 'ready' | 'failed'
-    error_message   TEXT,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX ix_figurines_user_id ON figurines (user_id);
-CREATE INDEX ix_figurines_generation_status ON figurines (generation_status);
-```
-
-## Order State Machine
-
-Orders follow a linear state machine. Store the current state in `status`; never delete or overwrite history.
-
-Valid transitions:
-
-```
-draft → confirmed → payment_pending → payment_confirmed → printing → shipped → delivered
-                                    ↘ payment_failed
-                          (any state) → cancelled
-                          (any state) → refunded
-```
-
-```sql
 CREATE TABLE orders (
-    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id                     UUID NOT NULL REFERENCES users (id),
-    status                      TEXT NOT NULL DEFAULT 'draft',
-    total_czk                   NUMERIC(10, 2) NOT NULL,
-    shipping_address            JSONB NOT NULL,
-    stripe_payment_intent_id    TEXT,
-    zasílkovna_packet_id        TEXT,
-    tracking_number             TEXT,
-    shipment_status             TEXT,
-    notes                       TEXT,
-    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id                 UUID NOT NULL REFERENCES users(id),
+    status                  order_status NOT NULL DEFAULT 'PENDING',
+    stripe_session_id       TEXT,
+    stripe_payment_intent_id TEXT,
+    shipping_address        JSONB NOT NULL,
+    total_czk               INTEGER NOT NULL,
+    created_at              TIMESTAMPTZ DEFAULT NOW(),
+    updated_at              TIMESTAMPTZ DEFAULT NOW()
 );
-
-CREATE INDEX ix_orders_user_id ON orders (user_id);
-CREATE INDEX ix_orders_status  ON orders (status);
 
 CREATE TABLE order_items (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id        UUID NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
-    product_id      UUID REFERENCES products (id),      -- null for AI figurines
-    figurine_id     UUID REFERENCES figurines (id),     -- null for catalog items
+    order_id        UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    figurine_id     UUID NOT NULL REFERENCES figurines(id),
+    size_tier_id    INTEGER NOT NULL REFERENCES size_tiers(id),
     quantity        INTEGER NOT NULL DEFAULT 1,
-    unit_price_czk  NUMERIC(10, 2) NOT NULL,            -- snapshot at time of order
-    CONSTRAINT chk_order_items_source CHECK (
-        (product_id IS NOT NULL) != (figurine_id IS NOT NULL)  -- exactly one source
+    unit_price_czk  INTEGER NOT NULL,  -- snapshot at time of order
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+`shipping_address` is JSONB (not a normalized table) because address structure varies and it must be an immutable snapshot.
+`unit_price_czk` is always snapshotted at order creation — never re-read from `figurine_size_prices` after the order is placed.
+
+### AI Generation Jobs
+
+```sql
+CREATE TYPE job_status AS ENUM ('QUEUED', 'PROCESSING', 'COMPLETED', 'FAILED');
+
+CREATE TABLE ai_generation_jobs (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL REFERENCES users(id),
+    order_item_id   UUID REFERENCES order_items(id),  -- NULL until linked to an order
+    prompt          TEXT NOT NULL,
+    result_url      TEXT,
+    status          job_status NOT NULL DEFAULT 'QUEUED',
+    error_message   TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+## Indexes
+
+Create indexes for every foreign key (PostgreSQL does not do this automatically) and for common query patterns:
+
+```sql
+-- figurines
+CREATE INDEX idx_figurines_category_id ON figurines(category_id);
+CREATE INDEX idx_figurines_sku ON figurines(sku);  -- already unique, index is implicit
+
+-- orders
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_stripe_session_id ON orders(stripe_session_id);
+
+-- order_items
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_order_items_figurine_id ON order_items(figurine_id);
+
+-- ai_generation_jobs
+CREATE INDEX idx_ai_jobs_user_id ON ai_generation_jobs(user_id);
+CREATE INDEX idx_ai_jobs_status ON ai_generation_jobs(status);
+```
+
+## Alembic Conventions
+
+### File Layout
+
+```
+alembic/
+├── env.py
+├── versions/
+│   └── 20240101_001_create_categories.py
+```
+
+Filename format: `YYYYMMDD_NNN_<short_description>.py`
+
+### Migration Template
+
+```python
+"""create categories
+
+Revision ID: abc123
+Revises: None
+Create Date: 2024-01-01 10:00:00
+"""
+from alembic import op
+import sqlalchemy as sa
+
+revision = "abc123"
+down_revision = None
+branch_labels = None
+depends_on = None
+
+def upgrade() -> None:
+    op.create_table(
+        "categories",
+        sa.Column("id", sa.UUID(), server_default=sa.text("gen_random_uuid()"), primary_key=True),
+        sa.Column("slug", sa.Text(), nullable=False),
+        sa.Column("name", sa.Text(), nullable=False),
+        sa.Column("created_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("NOW()")),
+        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), server_default=sa.text("NOW()")),
     )
-);
+    op.create_unique_constraint("uq_categories_slug", "categories", ["slug"])
+
+def downgrade() -> None:
+    op.drop_table("categories")
 ```
 
-- `shipping_address` is JSONB (name, street, city, postal_code, country).
-- `unit_price_czk` is a snapshot — do not join back to `products.price_czk` for financial reporting.
+### Multi-Step Schema Changes
 
-## Payment Records
+For changes that require a data backfill or a column rename, use two migrations:
 
-```sql
-CREATE TABLE payments (
-    id                          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id                    UUID NOT NULL REFERENCES orders (id),
-    stripe_payment_intent_id    TEXT NOT NULL,
-    amount_czk                  NUMERIC(10, 2) NOT NULL,
-    currency                    TEXT NOT NULL DEFAULT 'czk',
-    status                      TEXT NOT NULL,
-        -- mirrors Stripe: 'requires_payment_method' | 'processing' | 'succeeded' | 'canceled'
-    stripe_event_id             TEXT,           -- idempotency: last processed Stripe event
-    created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_payments_stripe_payment_intent_id UNIQUE (stripe_payment_intent_id)
-);
+1. **Migration A** — add the new column as nullable, backfill data
+2. **Migration B** — add `NOT NULL` constraint or drop old column
+
+Never add a `NOT NULL` column without a `server_default` in a single step on a table that has existing rows.
+
+### Enum Changes
+
+Adding a value to a PostgreSQL `ENUM` is irreversible in Alembic's `downgrade`. Document this in the migration docstring and do not implement a meaningful `downgrade` for enum additions:
+
+```python
+def upgrade() -> None:
+    op.execute("ALTER TYPE order_status ADD VALUE 'REFUNDED'")
+
+def downgrade() -> None:
+    raise NotImplementedError("Cannot remove enum values in PostgreSQL")
 ```
-
-- One payment row per PaymentIntent. Append a new row for re-attempts, do not overwrite.
-- Store `stripe_event_id` to deduplicate webhook deliveries.
-
-## General Patterns
-
-**updated_at trigger** — apply to every mutable table:
-
-```sql
-CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_orders_updated_at
-    BEFORE UPDATE ON orders
-    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-```
-
-**No soft-delete by default** — only `products` uses `is_active`. Other tables retain rows permanently for audit purposes.
-
-**JSONB vs columns** — use JSONB only for genuinely variable-shape data (shipping addresses, print settings). Keep all queryable/filterable fields as proper columns.

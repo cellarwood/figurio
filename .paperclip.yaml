@@ -1,55 +1,60 @@
 schema: agentcompanies/v1
-kind: adapter-config
-adapter: paperclip
+company: figurio
 
-# Company identity
-company:
-  slug: figurio
-  name: Figurio
+adapterConfig:
+  model: claude-sonnet-4-6
+  maxTurns: 50
+  env:
+    GH_TOKEN:
+      source: secret
+      key: GH_TOKEN
+    DOCKER_HUB_USERNAME:
+      source: secret
+      key: DOCKER_HUB_USERNAME
+    DOCKER_HUB_TOKEN:
+      source: secret
+      key: DOCKER_HUB_TOKEN
+    STRIPE_SECRET_KEY:
+      source: secret
+      key: STRIPE_SECRET_KEY
+    STRIPE_WEBHOOK_SECRET:
+      source: secret
+      key: STRIPE_WEBHOOK_SECRET
+    DATABASE_URL:
+      source: secret
+      key: DATABASE_URL
+    SENTRY_DSN:
+      source: plain
+      value: ""
+    GEMINI_API_KEY:
+      source: secret
+      key: GEMINI_API_KEY
+    ELEVENLABS_API_KEY:
+      source: secret
+      key: ELEVENLABS_API_KEY
+    MEDIA_OUTPUT_DIR:
+      source: plain
+      value: /paperclip/media-output
+    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
+      source: plain
+      value: /paperclip/.gws/figurio.json
 
-# Default budget for all agents (in cents/month)
-defaultBudget: 10000
-
-# Per-agent budget overrides
-agentBudgets:
-  ceo: 10000
-  cto: 15000
-  backend-engineer: 10000
-  frontend-engineer: 10000
-  ml-ai-engineer: 10000
-  devops-engineer: 8000
-  cmo: 10000
-  content-creator: 6000
-  head-of-operations: 8000
-
-# Environment variable inputs — secrets injected at deploy time
-env:
-  secrets:
-    - GH_TOKEN
-    - DOCKER_HUB_USERNAME
-    - DOCKER_HUB_TOKEN
-    - STRIPE_SECRET_KEY
-    - STRIPE_WEBHOOK_SECRET
-    - DATABASE_URL
-    - GEMINI_API_KEY
-    - ELEVENLABS_API_KEY
-  plain:
-    - SENTRY_DSN
-    - MEDIA_OUTPUT_DIR
-    - GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE
-
-# Slack integration
-slack:
-  workspace: 00aiworkspace.slack.com
-
-# Infrastructure references
-infrastructure:
-  github:
-    org: cellarwood
-    repo: figurio
-  dockerHub:
-    username: lukekelle00
-  kubernetes:
-    context: microk8s-local
-  stripe:
-    account: Cellarwood
+agents:
+  ceo:
+    budget: 10000
+  cto:
+    budget: 15000
+  cmo:
+    budget: 10000
+  backend-engineer:
+    budget: 12000
+  frontend-engineer:
+    budget: 12000
+  ml-engineer:
+    budget: 15000
+  devops-engineer:
+    budget: 10000
+  content-creator:
+    budget: 6000
+  head-of-operations:
+    budget: 8000

@@ -1,9 +1,9 @@
 ---
 name: tech-decisions
 description: >
-  Framework for build-vs-buy decisions, tech stack evaluations, and vendor selection
-  for Figurio — covering AI 3D generation APIs (Prompt to Print pipeline), print
-  partners beyond MCAE, and infrastructure/tooling choices within the React/FastAPI/K8s stack.
+  Framework for build-vs-buy and vendor-selection decisions at Figurio —
+  text-to-3D service selection (Meshy vs Tripo3D vs others), mesh repair tooling,
+  3D preview rendering approach, and infrastructure choices for the K8s/FastAPI/React stack.
 allowed-tools:
   - Read
   - Grep
@@ -12,144 +12,130 @@ metadata:
     tags:
       - engineering
       - architecture
-      - vendor
+      - decisions
 ---
 
 # Tech Decisions
 
+Use this skill when evaluating whether to build a capability in-house or adopt a
+third-party tool, API, or library for any part of the Figurio platform.
+
 ## When to Use
 
-Invoke this skill when evaluating:
-- Whether to build a capability in-house or buy/integrate a third-party service
-- New AI 3D generation APIs or model providers for the Prompt to Print pipeline
-- Alternative or additional print partners (beyond MCAE)
-- Infrastructure tooling (queues, observability, storage, CDN)
-- Frontend or backend library additions
+- Selecting or switching a text-to-3D generation provider
+- Evaluating mesh repair or validation libraries
+- Choosing a 3D preview/rendering approach for the storefront
+- Picking infrastructure components (ingress, object storage, job queue, observability)
+- Assessing a new Python library or npm package for a core pipeline stage
 
 ## Decision Framework
 
-Every significant tech decision at Figurio follows this structure:
+### Step 1 — Define the Constraint Set
 
-### 1. Define the Problem Scope
+Before evaluating options, establish hard constraints for Figurio:
 
-State precisely what is needed, not what solution is assumed. Example: "We need geometry validation for AI-generated models before sending to MCAE" — not "We need to evaluate Blender vs. Trimesh."
+| Constraint | Detail |
+|---|---|
+| Print target | Stratasys J55 PolyJet via MCAE; output must be J55-compatible (build volume 342 × 228 × 200 mm, full-color, watertight mesh) |
+| Latency budget | Custom figurine generation must complete within 5 minutes end-to-end for a good customer experience |
+| Cost ceiling | Per-unit generation cost must remain below the margin floor (currently ~€4 per figurine at catalog prices) |
+| Data residency | No hard EU data residency requirement today, but prefer EU or US providers; avoid providers with training-on-input clauses for customer uploads |
+| Ops complexity | Team is small; prefer managed services over self-hosted where ops burden is the primary differentiator |
 
-### 2. Build vs. Buy Criteria
+### Step 2 — Score Against Figurio-Specific Criteria
 
-| Factor | Build | Buy / Integrate |
-|--------|-------|-----------------|
-| Core IP | Logic that is our competitive differentiator | Generic infrastructure (auth, email, payments) |
-| Maintenance cost | Team has deep domain expertise | Ongoing updates are low-value distraction |
-| Time to market | Acceptable delay | Urgent launch requirement |
-| Vendor lock-in risk | High risk to core pipeline | Swappable via adapter layer |
-| Volume/cost | SaaS pricing exceeds build cost at our scale | Build cost exceeds SaaS at our scale |
+Rate each option (1–5) on:
 
-**Figurio defaults to buy for**: payments (Stripe), shipping logistics (Zásilkovna), transactional email, observability (Datadog/Grafana), CDN.
+1. **Output quality** — Does the mesh produce acceptable full-color PolyJet prints? Request test prints if possible.
+2. **Mesh quality** — Watertight, manifold, within J55 tolerances without heavy post-processing?
+3. **API maturity** — Webhook support, stable versioning, clear SLA, idempotency keys?
+4. **Cost per generation** — At expected volume (catalog + custom orders)?
+5. **Latency** — P95 generation time within the 5-minute budget?
+6. **Vendor risk** — Funding stage, contractual lock-in, data ownership clauses?
+7. **Integration effort** — Days to wire into the existing FastAPI pipeline?
 
-**Figurio defaults to build for**: 3D model post-processing logic, order state machine, print job orchestration, customer-facing UI.
+### Step 3 — Document the Decision
 
-**Evaluate carefully (neither default)**: AI 3D generation APIs, new print partners, 3D preview rendering.
+Record the outcome in the repo at `docs/decisions/<YYYY-MM-DD>-<slug>.md` using the ADR format below.
 
-### 3. Evaluation Dimensions
+---
 
-For each candidate option, score on:
+## Domain-Specific Guidance
 
-- **Quality of output** — does it meet the bar for Figurio figurine fidelity?
-- **API maturity** — REST/gRPC with versioning, not beta-only
-- **Pricing model** — per-generation vs. per-seat vs. volume tiers; model at 1k, 10k, 100k orders/month
-- **Data residency** — EU data residency required (Czech Republic, GDPR)
-- **SLA / uptime** — minimum 99.5% for anything in the checkout or print path
-- **Integration effort** — estimate days to production-ready adapter, not just proof-of-concept
-- **Exit cost** — how hard is it to swap this vendor if needed in 12 months?
+### Text-to-3D Generation (Meshy vs Tripo3D vs others)
 
-### 4. Decision Record Format
+**Current baseline:** Meshy API (text-to-3D and image-to-3D endpoints).
 
-Every decision with > 1 week implementation effort or > €500/month expected cost gets a written record:
+When evaluating alternatives or re-evaluating Meshy:
 
-```
-## Decision: [short title]
+- **Must have:** OBJ/GLB/STL output with per-vertex or texture color; no post-processing should be needed to get color into the PolyJet workflow
+- **Must have:** Async job model with webhook callbacks (polling is a fallback, not preferred)
+- **Watch out for:** Providers that output single-color or uncolored meshes — full-color is non-negotiable for Figurio's product
+- **Tripo3D:** Strong mesh quality, competitive latency; evaluate texture resolution and API rate limits at Figurio's projected order volume
+- **Shap-E / custom PyTorch:** Building in-house is only justified if no commercial provider meets quality or cost targets at scale; ops burden is high
+- **Decision trigger:** Re-evaluate providers when cost per generation exceeds €2 or P95 latency exceeds 4 minutes
+
+### Mesh Repair Tooling
+
+**Current approach:** Pipeline stage after generation, before preview.
+
+Options and tradeoffs:
+
+| Tool | Type | Strengths | Weaknesses |
+|---|---|---|---|
+| Manifold (C++/Python bindings) | Library | Fast, robust boolean ops, good for PolyJet | No color/texture repair |
+| pymeshfix | Library | Simple API, good watertight repair | Slow on large meshes |
+| Meshmixer (CLI) | Desktop app | Full-featured | Not headless-friendly |
+| Microsoft 3D Builder API | Cloud | Managed | Vendor lock-in, not production API |
+
+**Recommendation:** Use `manifold` for geometry repair + `trimesh` for validation checks; only escalate to heavier tools if manifold cannot resolve the mesh.
+
+Build vs buy: **buy** (use open-source libraries). Building a mesh repair pipeline from scratch is not justified.
+
+### 3D Preview Rendering (Storefront)
+
+Options:
+
+- **React Three Fiber + Three.js (current direction):** In-browser WebGL; no server cost, good interactivity. Use for catalog and custom order confirmation preview.
+- **Model Viewer (`<model-viewer>` web component):** Lower complexity, good mobile support; acceptable for catalog cards where interactivity is limited.
+- **Server-side rendering (Blender headless):** Only justified for high-fidelity marketing images, not real-time preview.
+
+**Decision rule:** Use `<model-viewer>` for catalog thumbnails (performance), React Three Fiber for the full-screen configurator and order confirmation view.
+
+### Infrastructure Choices
+
+**Job queue:** Use a simple PostgreSQL-backed queue (e.g., `pgqueue` pattern) before introducing Redis/Celery. Add Redis only when job throughput exceeds what PG can handle (benchmark threshold: >50 concurrent generation jobs).
+
+**Object storage:** S3-compatible (MinIO on-cluster for dev, Backblaze B2 or Cloudflare R2 for production). Avoid AWS S3 unless the team is already paying for AWS — cost at Figurio's scale doesn't justify the complexity.
+
+**Observability:** OpenTelemetry traces exported to a managed backend (Grafana Cloud or similar). Do not build a custom logging pipeline.
+
+**Build vs buy default:** Prefer managed/hosted for anything outside the core product (auth, email, payments, observability). Build only for the text-to-3D pipeline, mesh processing, and the React configurator — these are Figurio's differentiators.
+
+---
+
+## ADR Template
+
+```markdown
+# ADR: <title>
+
 Date: YYYY-MM-DD
-Status: proposed | accepted | superseded
+Status: Accepted | Superseded by ADR-XXX
 
-### Context
-[Why are we making this decision now?]
+## Context
+<What problem are we solving? What constraints apply?>
 
-### Options Considered
-1. [Option A] — [one-line summary]
-2. [Option B] — [one-line summary]
+## Options Considered
+| Option | Score | Notes |
+|---|---|---|
+| ... | ... | ... |
 
-### Decision
-[Which option, and the primary reason]
+## Decision
+<What we chose and why.>
 
-### Trade-offs Accepted
-[What we are giving up with this choice]
+## Consequences
+<Trade-offs accepted. What becomes easier, what becomes harder.>
 
-### Review Trigger
-[Condition that would prompt revisiting — e.g., "if monthly cost exceeds €2k" or "if MCAE SLA drops below 99%"]
+## Review Trigger
+<Condition that should prompt revisiting this decision.>
 ```
-
-Store decision records in `docs/decisions/` in the repo.
-
-## AI 3D Generation API Evaluation
-
-The Prompt to Print pipeline is core IP — the generation API is a dependency, not the differentiator.
-
-### Mandatory Requirements
-
-- REST or gRPC API (no browser-only SDKs)
-- Returns standard 3D formats: GLB, OBJ, or STL — must be compatible with MCAE ingestion
-- EU data processing option (user prompts may contain PII — names, likenesses)
-- Per-generation pricing available (not seat-only)
-- Geometry quality sufficient for MCAE MCAE full-color 3D printing (watertight meshes, manifold geometry)
-
-### Evaluation Process
-
-1. Run 20 standardized test prompts (figurine-style: character descriptions, poses, styles)
-2. Validate output geometry with automated checks (manifold, vertex count, printability score)
-3. Submit 5 outputs to MCAE for test prints — assess physical output quality
-4. Benchmark latency: p50 and p99 generation time
-5. Calculate total cost at 500 generations/month and 5,000 generations/month
-
-### Current Integration: [to be filled per active vendor]
-
-The adapter lives in `app/services/ai_generation/`. Swapping providers requires only replacing the adapter, not the order flow.
-
-## Print Partner Evaluation
-
-MCAE is the primary print partner. Any additional or alternative partner must meet:
-
-- Full-color 3D printing (multi-material or powder-based color — no single-color FDM)
-- API for job submission and status tracking (no email-based workflows)
-- Production in Czech Republic or EU (shipping cost and lead time SLA)
-- Turnaround: standard ≤ 5 business days, express ≤ 2 business days
-- File format acceptance: STL or GLB
-- Minimum order: compatible with D2C single-unit orders
-
-## Infrastructure & Tooling Decisions
-
-### Approved Stack (no re-evaluation needed)
-
-| Category | Choice | Rationale |
-|----------|--------|-----------|
-| Payments | Stripe | Best-in-class DX, Czech CZK support, strong webhook reliability |
-| Shipping | Zásilkovna | Dominant Czech parcel network, pickup point density |
-| Container orchestration | Kubernetes | Already operational, team proficiency |
-| DB | PostgreSQL | Relational model fits order/catalog domain well |
-| Frontend component lib | shadcn/ui | Owned components, no vendor lock-in, Tailwind-compatible |
-
-### Evaluate Before Adding
-
-Before adding any new dependency (library, SaaS, managed service):
-
-- Is there an existing approved tool that covers 80% of the need?
-- Will this add a new runtime language or paradigm? (Requires CTO sign-off)
-- Does it have an active maintainer and > 1k GitHub stars or commercial support?
-- Is the license compatible with commercial use (no AGPL without review)?
-
-## Anti-patterns
-
-- Choosing a vendor based on a demo or prototype without running real figurine prompts through it
-- Integrating an AI generation API without an adapter abstraction layer — direct calls in business logic lock us in
-- Selecting infrastructure tools that lack EU region options
-- Making a build-vs-buy call without estimating cost at realistic Figurio order volumes
-- Adding a new Python dependency without checking for conflicts with existing FastAPI/Pydantic versions

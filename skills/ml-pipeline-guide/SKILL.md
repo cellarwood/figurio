@@ -1,10 +1,11 @@
 ---
 name: ml-pipeline-guide
 description: >
-  Text-to-3D pipeline conventions for Figurio's "Prompt to Print" feature.
-  Covers API integration with Meshy and Tripo3D, mesh repair automation via
-  Blender scripting and NetFabb, printability quality thresholds, and error
-  handling for the MCAE/PolyJet production workflow.
+  Text-to-3D pipeline conventions for Figurio's figurine generation system.
+  Covers API integration with Meshy, Tripo3D, Luma Genie, and CSM 3D; mesh
+  repair steps (non-manifold fix, thin wall detection, floating artifact
+  removal); quality scoring criteria; and async job queue patterns for
+  managing long-running generation jobs.
 allowed-tools:
   - Read
   - Write
@@ -13,187 +14,164 @@ allowed-tools:
 metadata:
   paperclip:
     tags:
-      - engineering
       - ml
-      - pipeline
+      - engineering
+      - 3d-pipeline
 ---
 
-# Text-to-3D Pipeline Guide
+# ML Pipeline Guide
 
-## Overview
-
-The Figurio "Prompt to Print" pipeline converts a customer text prompt into a
-print-ready `.stl` or `.obj` mesh suitable for the Stratasys J55 PolyJet printer.
-The pipeline is implemented as a FastAPI background task and runs in a dedicated
-Kubernetes job pod.
+This skill defines how Figurio's text-to-3D generation pipeline is structured,
+from prompt intake through mesh delivery to MCAE for Stratasys J55 PolyJet printing.
 
 ## Pipeline Stages
 
 ```
-Customer prompt
-  → Prompt sanitization & enrichment
-  → 3D generation API call (Meshy or Tripo3D)
-  → Mesh download & validation
-  → Automated mesh repair (Blender + NetFabb)
-  → Quality threshold check
-  → Asset storage (S3-compatible bucket)
-  → Order record update (PostgreSQL)
+prompt → API dispatch → raw mesh → repair → quality score → approve/reject
 ```
 
-## Stage 1 — Prompt Sanitization & Enrichment
+Each stage is a discrete async step managed by the job queue. No stage blocks
+the HTTP request lifecycle.
 
-Before sending to a generation API, every prompt must be:
+## API Integration
 
-1. Checked against the content policy blocklist (stored in `config/content_policy.json`).
-2. Enriched with a Figurio style suffix: append `", full-color, highly detailed figurine, suitable for 3D printing"` unless the user prompt already contains material/style keywords.
-3. Capped at 400 characters total after enrichment.
+### Supported Services
 
-Sanitization is handled by `app/ml/prompt.py::sanitize_prompt()`.
+| Service  | SDK / transport       | Output format | Notes                          |
+|----------|-----------------------|---------------|--------------------------------|
+| Meshy    | REST, `httpx` async   | GLB / OBJ     | Best texture color fidelity    |
+| Tripo3D  | REST, `httpx` async   | GLB           | Fastest generation (~30 s)     |
+| Luma Genie | REST, `httpx` async | GLB           | Strong topology for characters |
+| CSM 3D   | REST, `httpx` async   | OBJ + MTL     | Good geometric detail          |
 
-## Stage 2 — 3D Generation API Integration
+### Client Pattern
 
-### Provider Selection
-
-The active provider is controlled by the env var `FIGURIO_3D_PROVIDER` (values: `meshy`, `tripo3d`). Default: `meshy`.
-
-Use `app/ml/providers/router.py::get_provider()` — never instantiate provider clients directly in pipeline code.
-
-### Meshy Integration
+All service clients inherit from `BaseText3DClient` in `app/ml/clients/base.py`.
+Each client must implement:
 
 ```python
-# app/ml/providers/meshy.py
-POST https://api.meshy.ai/v2/text-to-3d
-Headers: Authorization: Bearer {MESHY_API_KEY}
-Body:
-  {
-    "mode": "preview",          # first pass — fast low-res
-    "prompt": enriched_prompt,
-    "art_style": "realistic",
-    "negative_prompt": "low quality, blurry",
-    "topology": "triangle",
-    "target_polycount": 50000   # Figurio standard
-  }
+async def submit(self, prompt: str, style_hints: dict) -> str:
+    """Submit generation job. Returns provider job_id."""
+
+async def poll(self, job_id: str) -> JobStatus:
+    """Return PENDING | PROCESSING | DONE | FAILED."""
+
+async def download(self, job_id: str, dest_path: Path) -> Path:
+    """Download completed mesh to dest_path. Returns final path."""
 ```
 
-After preview generation completes, always trigger a `refine` pass:
+- All HTTP calls use `httpx.AsyncClient` with a 90-second timeout.
+- Retry on 429/503 with exponential backoff: 2 s, 4 s, 8 s (max 3 retries).
+- Provider API keys are read from environment variables:
+  `MESHY_API_KEY`, `TRIPO3D_API_KEY`, `LUMA_API_KEY`, `CSM3D_API_KEY`.
+
+### Multi-Provider Dispatch
+
+For catalog figurines, run Meshy and Tripo3D in parallel; keep the result with
+the higher quality score. For custom AI figurines, use the provider configured
+in `settings.DEFAULT_TEXT3D_PROVIDER` (default: `meshy`).
 
 ```python
-POST https://api.meshy.ai/v2/text-to-3d/{task_id}/refine
-Body: {"texture_richness": "high"}
+results = await asyncio.gather(
+    meshy_client.submit(prompt, style_hints),
+    tripo_client.submit(prompt, style_hints),
+    return_exceptions=True,
+)
 ```
 
-Poll `GET /v2/text-to-3d/{task_id}` every 10 s with a 5-minute timeout.
-Terminal statuses: `SUCCEEDED`, `FAILED`, `EXPIRED`.
+## Mesh Repair Steps
 
-### Tripo3D Integration
+All downloaded meshes pass through `app/ml/repair/pipeline.py` before scoring.
+Repairs run in this order — order matters.
+
+### 1. Non-Manifold Fix
+
+Use `pymeshlab` (`MeshSet.meshing_repair_non_manifold_edges`).
+Fail the job if edge count after repair exceeds 5 % of original (indicates
+geometry is beyond automated repair).
+
+### 2. Thin Wall Detection
+
+Figurio's minimum printable wall thickness on the J55 is **0.8 mm**.
+Cast interior rays using `trimesh`; flag any region below threshold.
+If flagged volume exceeds 2 % of total mesh volume, add warning to job metadata
+(`repair_warnings: ["thin_wall"]`) — do not auto-reject, let quality scorer
+decide.
+
+### 3. Floating Artifact Removal
+
+Identify disconnected components with `trimesh.graph.connected_components`.
+Remove any component whose volume is less than 0.5 % of the largest component.
+Log removed component count to job metadata (`artifacts_removed: N`).
+
+### 4. Export
+
+After repair, export as binary STL (for MCAE slicer compatibility) and GLB
+(for storefront 3D preview). Both go to `storage/meshes/{job_id}/`.
+
+## Quality Scoring
+
+Scoring runs in `app/ml/scoring/scorer.py` and produces a `QualityScore`
+dataclass with fields:
+
+| Field               | Range  | Weight | Description                                      |
+|---------------------|--------|--------|--------------------------------------------------|
+| `detail_score`      | 0–1    | 0.30   | Surface detail density (vertex count normalized) |
+| `color_accuracy`    | 0–1    | 0.30   | Color coverage vs. prompt keywords (CLIP-based)  |
+| `geometry_score`    | 0–1    | 0.25   | Watertightness + symmetry heuristics             |
+| `printability`      | 0–1    | 0.15   | Thin wall penalty + support volume estimate      |
+
+`total = weighted sum of above fields`
+
+Thresholds:
+- `total >= 0.75` → approve
+- `0.55 <= total < 0.75` → manual review queue
+- `total < 0.55` → auto-reject, re-queue with fallback provider
+
+Store scores in `job.quality_score` (JSON column) in the jobs table.
+
+## Async Job Queue
+
+### Technology
+
+ARQ (async Redis Queue) with Redis 7. Worker entrypoint: `app/ml/worker.py`.
+
+### Job Lifecycle
+
+```
+QUEUED → DISPATCHED → POLLING → REPAIR → SCORING → DONE
+                                                  ↘ FAILED
+```
+
+Each transition writes a timestamped entry to `job.status_history` (JSONB).
+
+### Key Queue Functions
 
 ```python
-# app/ml/providers/tripo3d.py
-POST https://api.tripo3d.ai/v2/openapi/task
-Headers: Authorization: Bearer {TRIPO3D_API_KEY}
-Body:
-  {
-    "type": "text_to_model",
-    "prompt": enriched_prompt,
-    "model_version": "v2.0-20240919",
-    "face_limit": 50000,
-    "texture": true,
-    "pbr": true
-  }
+# Enqueue from FastAPI endpoint
+await arq_pool.enqueue_job("generate_figurine", job_id=job_id, prompt=prompt)
+
+# Worker task signature
+async def generate_figurine(ctx, *, job_id: str, prompt: str): ...
 ```
 
-Poll `GET /v2/openapi/task/{task_id}` every 8 s with a 6-minute timeout.
-Terminal statuses: `success`, `failed`.
+### Polling Loop
 
-### Mesh Download
+Inside the worker, poll the provider every 10 seconds, up to 20 minutes.
+If the provider is still PROCESSING after 20 minutes, mark job FAILED with
+`failure_reason: "provider_timeout"` and alert via Slack webhook.
 
-On success, download the primary mesh asset (prefer `.glb`, fall back to `.obj`).
-Store the raw file at `tmp/{order_id}/raw_mesh.{ext}` on the pod's ephemeral volume.
+### Concurrency
 
-## Stage 3 — Mesh Repair
+Run at most 4 simultaneous generation jobs per worker process
+(`max_jobs=4` in ARQ worker settings). Scale workers horizontally for higher
+throughput; do not raise `max_jobs` above 4 (GPU-bound scoring step).
 
-Run repairs in this order. Each step is a separate Blender Python script call.
+## Error Handling
 
-### 3a. Blender Automated Repair
-
-Script: `scripts/blender/repair_mesh.py`
-
-```bash
-blender --background --python scripts/blender/repair_mesh.py -- \
-  --input tmp/{order_id}/raw_mesh.glb \
-  --output tmp/{order_id}/repaired_mesh.stl
-```
-
-The script performs:
-- Remove duplicate vertices (`mesh.remove_doubles(threshold=0.0001)`)
-- Fill holes (max hole edge count: 200)
-- Recalculate normals (outside)
-- Scale to fit within a 200 × 200 × 200 mm bounding box (J55 build volume is 350 × 270 × 200 mm; leave margin for support structures)
-- Export as binary STL
-
-### 3b. NetFabb Cloud Repair (fallback)
-
-If the Blender script exits non-zero or produces a mesh that fails validation,
-submit to NetFabb Cloud via `app/ml/repair/netfabb.py::repair_async()`.
-
-```python
-# Uses the NetFabb REST API
-POST https://api3.netfabb.com/repair
-Body: multipart with STL file
-# Poll for completion, download repaired STL
-```
-
-NetFabb repair is mandatory when Blender reports more than 500 remaining non-manifold edges.
-
-## Stage 4 — Quality Threshold Check
-
-All thresholds are defined in `config/print_quality.yaml`. Current values:
-
-| Metric | Minimum / Maximum | Rejection action |
-|---|---|---|
-| Watertight (manifold) | must be manifold | retry NetFabb, then fail order |
-| Triangle count | ≤ 150 000 | decimate to 100 000 in Blender |
-| Minimum wall thickness | ≥ 1.0 mm | flag for manual review |
-| Bounding box | ≤ 200 × 200 × 200 mm | auto-scale |
-| Non-manifold edges | 0 | fail if > 0 after NetFabb |
-
-Validation is implemented in `app/ml/validation.py::validate_mesh()` using `trimesh`.
-
-```python
-import trimesh
-mesh = trimesh.load("repaired_mesh.stl")
-assert mesh.is_watertight, "Mesh is not watertight"
-assert mesh.is_volume, "Mesh has no valid volume"
-```
-
-## Stage 5 — Error Handling
-
-| Failure point | Action |
-|---|---|
-| Content policy violation | Return HTTP 422 to customer immediately with localized message |
-| Provider API timeout | Retry once with 30 s delay; if second attempt fails, try alternate provider |
-| Provider returns `FAILED` | Switch to alternate provider once; if both fail, enqueue for manual prompt review |
-| Mesh download error | Retry 3 times with exponential backoff (2 s, 4 s, 8 s) |
-| Blender script crash | Log stderr, escalate to NetFabb repair |
-| NetFabb repair fails | Set order status `MESH_REPAIR_FAILED`, notify ops via Slack `#ml-alerts` |
-| Quality threshold failure | Set order status `QUALITY_REVIEW`, notify ops; do not charge customer |
-
-All pipeline errors must be logged to the `ml_pipeline_events` PostgreSQL table with `order_id`, `stage`, `error_code`, `provider`, and `raw_error_message`.
-
-## Environment Variables
-
-| Variable | Description |
-|---|---|
-| `FIGURIO_3D_PROVIDER` | Active generation provider (`meshy` or `tripo3d`) |
-| `MESHY_API_KEY` | Meshy API key (from Kubernetes secret `ml-api-keys`) |
-| `TRIPO3D_API_KEY` | Tripo3D API key (from Kubernetes secret `ml-api-keys`) |
-| `NETFABB_API_KEY` | NetFabb Cloud API key |
-| `BLENDER_BIN` | Path to Blender binary (default: `/usr/bin/blender`) |
-| `MESH_STORAGE_BUCKET` | S3-compatible bucket for final mesh assets |
-
-## Anti-patterns
-
-- Do not call provider APIs directly from route handlers — always go through `router.py`.
-- Do not skip the Blender repair step even if the provider reports the mesh is manifold — provider meshes routinely have subtle errors.
-- Do not store raw or repaired meshes in the PostgreSQL database — store only the S3 object key.
-- Do not expose provider API keys in pipeline logs — use structured logging with key masking.
+- All unhandled exceptions in worker tasks must be caught, logged with
+  `structlog` including `job_id`, and set job status to FAILED.
+- Never silently swallow errors — always update job status so the API can
+  surface failure to the customer.
+- On FAILED, send a Stripe refund trigger event to `app/payments/refunds.py`
+  if the job was tied to a paid order.

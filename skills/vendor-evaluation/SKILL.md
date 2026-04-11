@@ -1,10 +1,10 @@
 ---
 name: vendor-evaluation
 description: >
-  Framework for evaluating and managing Figurio's two critical external partners —
-  print partner MCAE (Stratasys J55 PolyJet, mcae.cz) and shipping provider Zásilkovna.
-  Covers pricing benchmarks, SLA thresholds, quality metrics, escalation triggers,
-  and periodic review cadence for both vendors.
+  Framework for evaluating Figurio's printing partners and shipping providers.
+  Covers cost-per-unit benchmarking across figurine size tiers, print technology
+  comparison (PolyJet vs SLA vs FDM), turnaround SLA assessment, geographic
+  coverage, and drop-ship capability for Czech Republic and EU fulfillment.
 allowed-tools:
   - Read
   - Write
@@ -14,136 +14,110 @@ metadata:
     tags:
       - operations
       - vendors
-      - quality
+      - procurement
 ---
 
 # Vendor Evaluation
 
-## When to Use
+Use this skill when assessing a new printing partner or shipping provider, renegotiating terms with existing vendors (MCAE, Zasilkovna, DHL), or comparing alternatives during capacity planning.
 
-Invoke this skill when:
-- Conducting a scheduled quarterly vendor review for MCAE or Zásilkovna
-- An SLA breach or quality incident requires a structured assessment
-- Evaluating whether to renegotiate terms, add a backup vendor, or escalate a concern
-- Onboarding a potential alternative print or shipping partner
+## Print Partner Evaluation
 
----
+### Size Tier Cost Benchmarking
 
-## Vendors Overview
+Figurio figurines fall into three size tiers. Collect cost-per-unit quotes for each:
 
-| Vendor | Role | Contract Type |
-|--------|------|---------------|
-| MCAE Systems (mcae.cz) | 3D print production — Stratasys J55 PolyJet | Per-order pricing, outsourced production |
-| Zásilkovna | Last-mile shipping, parcel network CZ/SK/EU | Per-shipment rate, API integration |
+| Tier | Dimensions | Key Cost Drivers |
+|------|-----------|-----------------|
+| S (small) | up to 80mm height | material volume, support waste |
+| M (medium) | 81–150mm height | material volume, build time |
+| L (large) | 151–250mm height | material volume, per-job setup amortization |
 
----
+Request quotes for minimum viable batch sizes (e.g., 10, 50, 100 units) to understand volume breaks. Always request cost in CZK and EUR; note which currency the SLA penalty clauses use.
 
-## MCAE — Print Partner
+### Print Technology Comparison
 
-### Pricing Benchmarks
+Figurio's primary requirement is full-color, high-fidelity figurines. Evaluate each technology against this:
 
-Track cost-per-unit by size tier. Flag for renegotiation if actual invoiced cost drifts more than 10% above agreed rates:
+| Technology | Full Color | Surface Quality | Rigidity | Relative Cost | Notes |
+|-----------|-----------|----------------|----------|---------------|-------|
+| PolyJet (Stratasys J55) | Yes — best in class | Smooth, paintable | Moderate | High | Current standard via MCAE |
+| SLA (resin) | Post-painted only | Very smooth | High | Medium | Not viable for catalog products |
+| FDM | Post-painted only | Layer lines visible | High | Low | Reject for figurines — quality mismatch |
 
-| Size Tier | Target Unit Cost (CZK) | Max Tolerance |
-|-----------|------------------------|---------------|
-| Small (~8 cm) | Establish baseline at contract review | +10% |
-| Medium (~15 cm) | Establish baseline at contract review | +10% |
-| Large (~25 cm) | Establish baseline at contract review | +10% |
+Score each vendor candidate on: color gamut (CMYK range), minimum layer thickness (target ≤ 27 µm), and surface finish without post-processing.
 
-Material surcharges (support material waste, PolyJet resin) must be itemized on every invoice. Reject invoices that bundle production and material costs without line-item breakdown.
+### Turnaround SLA Assessment
 
-### SLA Thresholds
+Figurio's customer-facing promise is 10 business days door-to-door for standard orders. Work backwards:
 
-| Metric | Target | Breach Threshold |
-|--------|--------|-----------------|
-| Production lead time (Small/Medium) | ≤ 3 business days | > 4 business days |
-| Production lead time (Large) | ≤ 5 business days | > 6 business days |
-| File acknowledgement (after handoff) | ≤ 4 hours (business hours) | > 8 hours |
-| Reprint turnaround (defect-caused) | ≤ 2 business days | > 3 business days |
+- Print + cure: target ≤ 5 business days from approved print file
+- QC + pack: 1 business day (Figurio-side)
+- Shipping: 2–4 business days (Zasilkovna domestic / DHL EU)
 
-Any breach triggers an immediate written notification to MCAE and is logged in the SLA breach register.
+Evaluate vendors on:
+- Standard turnaround commitment (contractual, not best-effort)
+- Rush/expedite option and uplift cost
+- Peak-season capacity guarantees (Q4 Nov–Dec)
+- SLA breach penalties (credit or rebate per day late)
 
-### Quality Metrics
+### Drop-Ship Capability
 
-Score each incoming batch on a 1–5 scale for:
-- **Color fidelity** — match to reference render from Figurio's AI pipeline
-- **Surface finish** — no layer artifacts, no support scarring visible on display surfaces
-- **Dimensional accuracy** — within ±0.5 mm on critical axes for all size tiers
-- **Structural integrity** — no cracks, delamination, or hollow failures
+Preferred vendors can ship directly to end customers under Figurio branded packaging. Assess:
 
-A batch with any unit scoring ≤ 2 on any metric is rejected in full. Units scoring 3 on color fidelity are accepted with a note for trend tracking. Three consecutive batches with a score of 3 on color fidelity trigger a formal calibration request to MCAE.
+- Can vendor print on Figurio-branded box inserts? (white-label packaging)
+- Do they support per-order shipment (true drop-ship) vs. batch delivery to Figurio warehouse?
+- API or EDI integration for order handoff (preferred) vs. manual CSV upload
+- Returns/damage handling: does vendor accept direct returns from customers?
 
-### Escalation Triggers (MCAE)
+### Geographic Coverage
 
-Escalate to CTO + COO immediately if any of the following occur:
-- Two or more SLA breaches in a rolling 30-day period
-- Defect rate exceeds 5% across any monthly batch
-- MCAE unable to produce a size tier for > 5 consecutive business days
-- Invoice discrepancies > 5% unresolved after 48 hours
+Primary market is Czech Republic; secondary is EU (DE, SK, AT, PL priority). Assess:
+
+- Vendor location relative to Zasilkovna pickup points
+- EU customs handling if vendor is outside CZ (prefer CZ or SK based)
+- Cross-border shipping cost impact on unit economics
 
 ---
 
-## Zásilkovna — Shipping Provider
+## Shipping Provider Evaluation
 
-### Pricing Benchmarks
+### Current Providers
 
-Benchmark against published Zásilkovna B2B rate card. Flag if per-shipment cost exceeds agreed tier by more than 8%. Monitor:
-- Base parcel rate (CZ domestic vs. SK vs. EU destinations)
-- Pickup surcharges (if applicable)
-- COD fee (not used by Figurio — Stripe-only — confirm this remains off)
+| Provider | Use Case | Coverage |
+|----------|----------|----------|
+| Zasilkovna | Czech Republic domestic, parcel shop pickup | CZ, SK, PL, HU, RO, DE |
+| DHL Express | EU delivery, international orders | Global |
 
-### SLA Thresholds
+### Evaluation Criteria for New or Alternative Providers
 
-| Metric | Target | Breach Threshold |
-|--------|--------|-----------------|
-| CZ domestic delivery | ≤ 2 business days | > 3 business days |
-| SK delivery | ≤ 3 business days | > 4 business days |
-| EU delivery | ≤ 5 business days | > 7 business days |
-| Label generation API response time | < 2 seconds p95 | > 5 seconds p95 |
-| Tracking event update latency | ≤ 4 hours after scan | > 8 hours |
-
-### Quality Metrics
-
-| Metric | Target | Review Trigger |
-|--------|--------|---------------|
-| Successful first-attempt delivery rate | ≥ 95% | < 92% in a month |
-| Parcel damage rate (customer-reported) | < 0.5% of shipments | > 1% in a month |
-| Lost parcel rate | < 0.1% of shipments | > 0.3% in a month |
-| Customer-facing tracking accuracy | ≥ 98% events correct | < 95% in a month |
-
-Damage and loss data is sourced from Figurio's customer support tickets, cross-referenced against Zásilkovna's claims portal.
-
-### Escalation Triggers (Zásilkovna)
-
-Escalate to COO + CMO if:
-- Delivery SLA breach rate exceeds 5% of monthly shipments for a given destination zone
-- API outage or label generation failure exceeds 30 minutes
-- Damage or loss rate hits the review trigger threshold two months in a row
+1. **Rate card by weight bracket** — collect rates for 0–0.5 kg, 0.5–1 kg, 1–2 kg (typical figurine range)
+2. **Parcel shop network density** — Zasilkovna benchmark: 5,000+ pickup points in CZ
+3. **Tracking API** — must support webhook or polling for status updates to feed Figurio order status page
+4. **Damage/loss claims process** — SLA for claim resolution; maximum liability per parcel
+5. **Label generation** — REST API for label creation from order data (required for automation)
+6. **Cash on delivery (COD)** — assess if relevant for CZ market segment
 
 ---
 
-## Periodic Review Cadence
+## Scoring Scorecard
 
-| Review Type | Frequency | Participants | Output |
-|-------------|-----------|--------------|--------|
-| MCAE quality snapshot | Monthly | Head of Ops | SLA + quality scorecard |
-| Zásilkovna delivery report | Monthly | Head of Ops | Delivery metrics report |
-| Full vendor business review | Quarterly | Head of Ops + COO | Scorecard + action items sent to vendor |
-| Contract/rate renegotiation | Annually or on trigger | COO + Head of Ops | Updated pricing agreement |
+Use a weighted score (1–5 per criterion) when comparing vendors head-to-head:
 
-Quarterly reviews must include a written summary sent to each vendor within 5 business days of the review date. Action items are tracked with owners and due dates.
+| Criterion | Weight | Print Partner | Shipping Provider |
+|-----------|--------|--------------|------------------|
+| Cost competitiveness | 30% | Yes | Yes |
+| Quality / color fidelity | 25% | Yes | — |
+| Turnaround SLA | 20% | Yes | Yes |
+| API / integration readiness | 15% | Yes | Yes |
+| Drop-ship / direct fulfillment | 10% | Yes | — |
 
----
-
-## Backup Vendor Readiness
-
-Figurio currently has no active backup print vendor. The Head of Operations should maintain a shortlist of at least one alternative PolyJet-capable print partner (evaluated annually) and document a switchover runbook in the `references/` folder of this skill.
+Document scores in the vendor comparison sheet (Google Sheets — Operations folder) and share summary with CTO and CEO before any contract decision.
 
 ---
 
 ## Anti-patterns
 
-- Do not evaluate MCAE solely on cost — color fidelity is core to Figurio's product promise
-- Do not accept bundled MCAE invoices without line-item material breakdown
-- Do not escalate individual one-off parcel delays to Zásilkovna — only escalate pattern-level failures
-- Do not renegotiate vendor contracts without COO sign-off
+- Do not evaluate FDM or uncolored SLA vendors for catalog figurines — they require manual painting that breaks unit economics.
+- Do not accept turnaround SLAs quoted in calendar days without confirming business-day definition.
+- Do not switch shipping providers without confirming Zasilkovna parcel shop pickup compatibility — customers selecting pickup points depend on this network.

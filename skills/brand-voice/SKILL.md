@@ -1,87 +1,135 @@
 ---
 name: brand-voice
 description: >
-  Figurio brand voice guide — tone (playful, artisanal, premium), visual identity,
-  and messaging pillars for marketing 3D-printed figurines and the Prompt to Print
-  custom order product.
-allowed-tools:
-  - Read
-  - Write
+  Figurio brand voice guide for all customer-facing copy — playful yet premium tone,
+  vocabulary for 3D printing and collectibles, and writing rules for three core audience
+  personas: collectors, gift buyers, and meme enthusiasts. Includes do's and don'ts.
 metadata:
   paperclip:
-    tags:
-      - marketing
-      - brand
-      - content
+    tags: [marketing, brand, copywriting, content]
 ---
 
 # Brand Voice
 
-Figurio sells full-color MCAE 3D-printed figurines — catalog pieces and fully custom "Prompt to Print" orders. The brand sits at the intersection of craft, technology, and emotional gifting.
+## Brand Personality
 
-## Tone Pillars
+Figurio sits at the intersection of premium craft and internet culture. The voice is:
 
-### 1. Playful — but not childish
-Figurio products are fun and surprising. Copy should feel light and joyful, not corporate. However, Figurio is a premium product; avoid cheap-sounding language.
+- **Playful but not childish** — wit and lightness, never silly or cheap-feeling.
+- **Premium but not pretentious** — confident about quality, never condescending.
+- **Personal** — Figurio makes objects that represent real people; the copy should feel human.
+- **Specific** — vague enthusiasm ("amazing!", "incredible!") is banned. Name the detail.
 
-- Yes: "Turn your best memories into something you can actually hold."
-- No: "Cool figurines for everyone!!!"
+One-line test: would this copy sound right on a high-end gift boutique Instagram that also
+posts memes? If yes, it's on-brand.
 
-### 2. Artisanal — the craft matters
-Figurio printing is full-color MCAE — not cheap resin. The detail, the texture, the color accuracy — these are selling points. Reference the craft without being technical.
+## Audience Personas
 
-- Yes: "Every layer, every color, exactly as you imagined it."
-- No: "3D printed using industry-standard technology."
+Write with one primary persona in mind per piece of copy.
 
-### 3. Premium — justify the price
-Figurines start at a meaningful price point. Copy should establish value, not apologize for it. Figurio is a considered purchase, not an impulse buy.
+### 1. The Collector
 
-- Yes: "A gift they'll keep for years — not another thing they'll forget."
-- No: "Affordable figurines for any budget."
+- Who: adult hobbyist, owns figurines, miniatures, or pop-culture collectibles.
+- Cares about: material quality, color accuracy, scale fidelity, shelf presence.
+- Language: can handle technical terms (PolyJet, full-color, resin) — use them.
+- Tone: peer-to-peer. You are both enthusiasts. Do not over-explain.
+- Example hook: "Full-color PolyJet. 16-million-color accuracy. Stratasys J55. Your shelf knows the difference."
 
-## Messaging Pillars
+### 2. The Gift Buyer
 
-These are the core ideas all Figurio content should connect to:
+- Who: person buying for a partner, parent, friend, or colleague. Not a hobbyist.
+- Cares about: uniqueness, emotional impact, ease of ordering, delivery reliability.
+- Language: plain language. Avoid jargon. Lead with the emotional outcome.
+- Tone: warm, reassuring, slightly playful. Make them feel smart for choosing Figurio.
+- Example hook: "A gift that actually looks like them. Not a stock caricature — a real figurine, printed in full color."
 
-1. **Personalization is the product** — the magic of Figurio is that it is *yours*. Even catalog figurines are positioned as "chosen for you," not mass-produced.
-2. **The reveal moment** — opening the box, seeing yourself in 3D for the first time. This emotional beat is Figurio's best content hook.
-3. **Gifting context first** — most buyers are gift-givers. Lead with the recipient's reaction, not the technical specs.
-4. **Czech craftsmanship** — Figurio prints in the Czech Republic via MCAE. "Made here" is a trust signal and a differentiator from generic dropship figurine shops.
+### 3. The Meme Enthusiast
 
-## Prompt to Print Voice
+- Who: younger audience, culturally online, discovered Figurio via TikTok or viral content.
+- Cares about: novelty, shareability, self-expression, the "what if" factor.
+- Language: casual, fast, punchy. Shorter sentences. Current without chasing slang.
+- Tone: in on the joke. Figurio knows it's a little absurd and leans into it.
+- Example hook: "You but tiny. And permanent. And slightly terrifying."
 
-The AI-custom product ("Prompt to Print") gets slightly more tech-forward language — the audience is curious and digitally native. But keep wonder > jargon.
+## Vocabulary
 
-- Yes: "Describe your character. We print it. It's genuinely magic."
-- No: "Our AI-powered text-to-3D pipeline generates printable mesh files."
+### Use These Terms
 
-## Seasonal Tone Adjustments
-
-| Campaign | Tone shift |
+| Term | Context |
 |---|---|
-| Christmas | Warmer, nostalgia-forward. "The gift they'll still have in 20 years." |
-| Valentine's Day | Intimate, slightly romantic. Couples and best-friend angles. |
-| Halloween | Lean into the playful pillar. Monsters, self-parody, dark humor is OK. |
-| Easter / Spring | Family-focused. Light, cheerful. Kids as subject of figurines. |
+| figurine | Always — not "figure", not "statuette", not "mini" |
+| custom figurine | For AI-generated / personalized products |
+| full-color | Describing print quality — not "colorful" or "vibrant" |
+| PolyJet | When speaking to collectors or technical audiences |
+| Stratasys J55 | Machine name — use for credibility/trust content |
+| lifelike | Describing color and surface fidelity |
+| collectible | For catalog products with shelf-appeal framing |
+| printed | Not "manufactured", not "made in a factory" |
+| crafted | Acceptable for premium framing — use sparingly |
 
-## Language Rules
+### Avoid These Terms
 
-- Write in Czech for CZ/SK social content and email. Write in English for international ads and product descriptions.
-- Use "figurína" in Czech, "figurine" in English — never "model" (too technical) or "toy" (too cheap).
-- Zásilkovna shipping: never lead with logistics. Mention delivery in close/urgency context only.
-- Stripe / payments: never mention the payment provider in customer-facing copy.
-- Avoid superlatives like "best," "world-class," "revolutionary" — show it, don't claim it.
+| Avoid | Why |
+|---|---|
+| cheap | Obvious — but also avoid implying affordability is the selling point |
+| toy | Positions Figurio below its price point |
+| plastic | Technically inaccurate (PolyJet resin) and sounds cheap |
+| order now | Generic urgency — replace with deadline-specific copy |
+| amazing / incredible | Vague. Name the specific thing that is impressive |
+| state of the art | Cliche. Show the technology, don't label it |
+| miniature | Acceptable in SEO/blog, but "figurine" is preferred in ads and product copy |
 
-## Visual Identity Notes (for copy pairing)
+## Tone by Channel
 
-- Photography style: clean white or warm-wood backgrounds, natural light, human hands in frame to convey scale
-- Video style: slow reveal, macro close-ups of texture, final pull-back to show full figurine
-- Color palette: off-white, warm terracotta, deep teal — avoid harsh primary colors in brand assets
-- Font pairing: serif headline + clean sans-serif body — positions Figurio as editorial, not retail
+| Channel | Tone Dial | Notes |
+|---|---|---|
+| Instagram feed | 70% premium, 30% playful | Quality-first, occasional wit |
+| TikTok | 30% premium, 70% playful | Hook fast, lean on persona #3 |
+| Product pages | 80% premium, 20% playful | Confidence, detail, reassurance |
+| Email | 60% premium, 40% playful | Warmer than product pages |
+| Customer support | 100% warm, 0% meme | Empathetic and clear, no brand wit |
 
-## Anti-patterns
+## Copy Rules
 
-- Do not compare Figurio to cheaper alternatives by name
-- Do not use countdown-timer pressure language in organic content (acceptable only in last-chance paid ads)
-- Do not use AI-generated imagery of figurines in marketing — always use real print photography
-- Do not describe the printing process in detail unless the audience is press or B2B
+1. **Lead with the figurine, not the technology.** Technology earns trust in body copy —
+   the headline should show the outcome ("a figurine that looks exactly like you").
+
+2. **Name the occasion when it's a gift.** "Perfect Christmas gift" outperforms "great gift"
+   because it resolves the buyer's decision.
+
+3. **Every CTA has a reason.** "Order now" is weak. "Order by Feb 7 for Valentine's delivery"
+   tells the buyer why now matters.
+
+4. **Use "you" and "your".** Not "customers can", not "buyers receive" — write to one person.
+
+5. **Specificity over enthusiasm.** "Ships within 5 business days from our Czech production
+   partner" beats "ships fast!".
+
+6. **Short sentences for social. Longer for email and product pages.** Match reading context.
+
+## Do's and Don'ts
+
+| Do | Don't |
+|---|---|
+| "Full-color PolyJet printing captures every detail." | "Our advanced technology creates amazing results." |
+| "Order by December 20 for Christmas delivery." | "Order soon — limited time!" |
+| "A figurine that actually looks like them." | "A unique and special gift for your loved one." |
+| "You, but in 3D." | "Transform yourself into a miniature!" |
+| Mention MCAE / Stratasys J55 when building credibility | Use factory or manufacturing language |
+| Acknowledge the Czech origin as craft provenance | Over-explain logistics in marketing copy |
+
+## Examples
+
+**Instagram caption (Gift Buyer persona)**
+> Some gifts say "I tried." This one says "I hired a 3D printer in the Czech Republic."
+> Custom figurines from Figurio — order by Feb 7 for Valentine's delivery.
+
+**TikTok hook (Meme Enthusiast persona)**
+> POV: you finally exist in physical form. And you're about 15cm tall.
+
+**Product page headline (Collector persona)**
+> Full-color PolyJet. Stratasys J55. 0.014mm layer resolution.
+> Your figurine, built the way collectors expect it.
+
+**Email subject line (Gift Buyer persona)**
+> The Christmas gift they won't find anywhere else (order cutoff: Dec 20)

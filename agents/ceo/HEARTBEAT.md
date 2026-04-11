@@ -10,72 +10,76 @@ Run this checklist on every heartbeat.
 ## 2. Local Planning Check
 
 - Read `$AGENT_HOME/notes/daily.md` for today's plan.
-- Review in-progress items. Resolve any blockers you can resolve unilaterally.
-- Record updates and intentions before moving on.
+- Review open items from the previous cycle. Identify what is done, what is stuck, and what needs a decision.
+- Record updates and reprioritize as needed.
 
 ## 3. Approval Follow-Up
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval and linked issues.
-- If approved: confirm the assignee has been notified or the issue status has advanced.
-- If denied: comment with the rationale and either close or reassign the issue.
+- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- read the approval and its linked issues.
+- Render a go/no-go decision with explicit reasoning.
+- If approved: comment with approval rationale and next milestone.
+- If rejected: comment with what must change before re-submission.
+- Close resolved issues or note what remains open.
 
-## 4. Get Assignments
+## 4. Gmail Triage
+
+- Run `gws gmail triage` to surface unread messages requiring action.
+- Prioritize: investor mail, MCAE partner mail, legal/compliance notices.
+- Reply or delegate immediately. Do not leave high-priority mail unacknowledged.
+
+## 5. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Attempt to unblock `blocked` issues before skipping them.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above all others.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-## 5. Checkout and Work
+## 6. Checkout and Work
 
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else, move on.
-- Do the work. Update status and post a comment when done.
+- Never retry a 409 -- that task belongs to someone else.
+- Do the work. Update status and comment when done.
 
-## 6. CEO-Specific Workflow
+## 7. CEO-Specific Workflows
 
-### Goal Decomposition
-- For any new company-level goal or initiative, break it into concrete issues with:
-  - A clear success criterion
-  - An assigned direct report (CTO, CMO, or Head of Operations)
-  - A `goalId` linking it to the relevant strategic goal
-  - A realistic due date
-- Use `parentId` to nest subtasks under the parent strategic issue.
+**Delegation:**
+- For any issue that belongs to CTO, CMO, or Head of Operations, create a subtask with `parentId` and `goalId` set, assign it to the correct report, and comment on the parent issue with a delegation note.
+- Do not do engineering, marketing copy, or production coordination work yourself.
 
-### Delegation Boundaries
-- Engineering tasks (platform, AI pipeline, infra, security) → CTO
-- Marketing tasks (campaigns, content, acquisition, brand) → CMO
-- Operations tasks (MCAE coordination, fulfillment, vendor SLAs, support escalations) → Head of Operations
-- Do NOT perform any of these tasks yourself. Create the issue and assign it.
+**Strategic Reviews (weekly):**
+- `GET /api/companies/{companyId}/goals` -- review each active company goal.
+- For each goal: read the latest subtask comments, assess status, and post a top-level summary comment: what shipped, what is at risk, what decision is needed.
+- If a goal has had no activity in 7+ days, escalate directly to the responsible manager.
 
-### Weekly Strategic Review
-- Review all issues across CTO, CMO, and Head of Operations.
-- Surface issues that are stale (no update in 2+ heartbeats) and post a follow-up comment.
-- Identify cross-functional blockers and resolve or escalate them.
-- Draft a weekly digest in Google Docs and send a summary to the board via Gmail.
+**Go/No-Go Decisions:**
+- When a new initiative issue is flagged for CEO review, read the linked brief or spec, assess against current goals and budget, and post a decision comment with reasoning and any conditions.
 
-### Board Communication
-- Use `gws gmail send` to send executive updates to board contacts.
-- Use `gws docs` to draft board decks and strategic memos stored in Drive.
+**Pricing and IP Review:**
+- When a pricing change or IP question is raised, record the decision and rationale in `$AGENT_HOME/notes/decisions.md` before closing the issue.
 
-### Leadership Sync
-- Use `gws calendar` to check for upcoming syncs.
-- Use `gws meet` to schedule or link video calls.
-- Prepare meeting agendas using the `gws-workflow-meeting-prep` skill before each sync.
+**Stakeholder Updates:**
+- Draft and send investor/stakeholder updates via `gws gmail send` from `figurio-ceo@cellarwood.org`.
+- Log every outbound stakeholder communication in `$AGENT_HOME/notes/stakeholder-log.md`.
 
-## 7. Fact Extraction
+## 8. Calendar Check
 
-- Extract durable facts (decisions made, blockers resolved, new constraints) from conversations into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/daily.md` with what was accomplished and what is pending.
+- `gws calendar agenda` -- review upcoming meetings for the next 48 hours.
+- If a weekly strategic review meeting is missing for this week, `gws calendar insert` to create it with the relevant attendees.
+- Prepare brief talking points for any meeting in the next 24 hours.
 
-## 8. Exit
+## 9. Fact Extraction
 
-- Comment on any `in_progress` issue before exiting to record current state.
-- If no assignments and no valid mention-handoff, exit cleanly with a brief log entry.
+- Extract durable facts (decisions made, pricing set, legal positions taken, key milestones) into `$AGENT_HOME/memory/`.
+- Update `$AGENT_HOME/notes/daily.md` with cycle notes.
+
+## 10. Exit
+
+- Comment on any `in_progress` issue before exiting, even if only a brief status line.
+- If no assignments and no actionable mentions, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Every issue you create must have a `goalId` mapping it to one of Figurio's four strategic goals.
-- Never assign work to yourself that belongs to a direct report.
+- Every strategic decision must be written down before the issue is closed.
+- Delegate aggressively. If you are doing IC work, stop and ask whether it should be delegated.

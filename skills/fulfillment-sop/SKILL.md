@@ -1,10 +1,10 @@
 ---
 name: fulfillment-sop
 description: >
-  Standard operating procedures for end-to-end Figurio order fulfillment —
-  from print file preparation and MCAE handoff, through QA inspection and
-  branded packaging, to Zásilkovna shipping label generation and returns handling.
-  Applies to both catalog figurines and AI custom "Prompt to Print" orders.
+  Standard operating procedures for Figurio order fulfillment end-to-end.
+  Covers MCAE print file handoff, quality inspection criteria, branded packaging
+  assembly, shipping label generation via Zasilkovna and DHL, and returns and
+  refund handling for both catalog and AI-custom figurine orders.
 allowed-tools:
   - Read
   - Write
@@ -14,196 +14,155 @@ metadata:
     tags:
       - operations
       - fulfillment
-      - quality
-      - shipping
+      - sop
 ---
 
 # Fulfillment SOP
 
-## When to Use
-
-Invoke this skill when:
-- Processing a new production batch for MCAE handoff
-- Performing QA inspection on incoming figurines from MCAE
-- Packaging and dispatching orders via Zásilkovna
-- Handling a return or reprint request from a customer
+This SOP covers the full lifecycle of a Figurio order from payment confirmation to delivery. It applies to both catalog figurines and AI-custom figurine orders. Custom orders have additional steps noted inline.
 
 ---
 
-## Order Types
+## Step 1 — Print File Handoff to MCAE
 
-| Type | Source | Key Difference |
-|------|--------|---------------|
-| Catalog | Customer selects existing figurine SKU | Print files are pre-validated, stored in production file library |
-| AI Custom ("Prompt to Print") | Customer submits prompt; AI generates 3D model | Print file requires additional validation before handoff |
-
----
-
-## Stage 1 — Print File Preparation
+**Trigger:** Stripe payment confirmed, order status set to `PAID`.
 
 ### Catalog Orders
 
-1. Retrieve the validated `.3mf` or `.stl` print file from the production file library using the order's SKU.
-2. Confirm file version matches the current approved revision (check revision log).
-3. Group orders by size tier (Small / Medium / Large) for batch efficiency.
-4. No reprep required unless MCAE flags a file issue on receipt.
+1. Retrieve the pre-approved print file for the SKU from the print file library (Google Drive → Operations/Print Files/Catalog).
+2. Verify file version matches the current approved revision (check filename suffix, e.g., `figurine-knight-v3.stl`).
+3. Bundle the print file with the MCAE order form (template: Operations/Templates/MCAE-Order-Form.xlsx), filling in:
+   - Order ID
+   - SKU and quantity
+   - Requested delivery date (today + 5 business days)
+   - Finish: PolyJet full-color, no post-processing
+4. Send to MCAE via email to `production@mcae.cz` with subject: `[FIGURIO] Order {ORDER_ID} — Print Request`.
 
-### AI Custom Orders
+### AI-Custom Orders
 
-1. Retrieve the AI-generated 3D model from the order record.
-2. Run automated mesh validation checks (watertight mesh, minimum wall thickness ≥ 1.5 mm, no inverted normals). Flag failures immediately to the backend team.
-3. Apply Figurio's standard orientation and support strategy template for the relevant size tier.
-4. Export as `.3mf` with embedded color data (PolyJet requires per-voxel color encoding — confirm color profile is Stratasys J55 compatible).
-5. Store the validated file in the production handoff folder with filename convention: `CUSTOM-{order_id}-{size_tier}-{YYYYMMDD}.3mf`.
+1. Confirm the AI-generated 3D model has passed automated geometry validation (watertight mesh, no inverted normals). If validation failed, escalate to the backend engineer before proceeding.
+2. Run a brief manual check: correct figurine identity, no obvious artifacts, appropriate scale for the selected size tier.
+3. Store the approved model in Google Drive → Operations/Print Files/Custom/{ORDER_ID}/.
+4. Proceed with MCAE order form as above, noting "CUSTOM — do not reuse file" in the comments field.
 
----
-
-## Stage 2 — MCAE Handoff
-
-1. Compile the batch manifest — a CSV with columns: `order_id`, `type` (catalog/custom), `size_tier`, `filename`, `quantity`, `due_date`.
-2. Upload print files and manifest to the agreed MCAE SFTP drop folder by **10:00 CET on business days**.
-3. Send a handoff notification email to the MCAE production contact with the manifest attached.
-4. Log the handoff time and batch ID in the fulfillment tracker (PostgreSQL `production_batches` table or ops spreadsheet).
-5. Await MCAE file acknowledgement within 4 business hours (per vendor SLA). If no acknowledgement is received, follow up directly and log the delay.
-
-### Handoff Checklist
-
-- [ ] All files validated (mesh checks passed)
-- [ ] Manifest CSV complete and accurate
-- [ ] Files uploaded to SFTP before 10:00 CET
-- [ ] Notification email sent to MCAE contact
-- [ ] Batch logged in fulfillment tracker
-- [ ] Acknowledgement received and recorded
+**MCAE SLA:** 5 business days from file receipt. If no acknowledgment within 4 business hours, follow up by phone.
 
 ---
 
-## Stage 3 — Production Tracking
+## Step 2 — Quality Inspection
 
-- Check MCAE production status daily via their portal or daily status email.
-- Flag any batch approaching SLA breach (see `vendor-evaluation` skill for thresholds) and contact MCAE proactively.
-- Maintain a "pending production" view in the fulfillment tracker showing expected completion date per batch.
+**Trigger:** MCAE delivers print(s) to Figurio (or to the designated QC address).
 
----
+Inspect each figurine against the following checklist. Fail any unit that does not meet all criteria:
 
-## Stage 4 — QA Inspection (Incoming from MCAE)
+| Check | Pass Criteria |
+|-------|--------------|
+| Color fidelity | No visible banding; colors match reference render within reasonable tolerance |
+| Surface finish | No layer artifacts, no support marks on visible surfaces |
+| Dimensional accuracy | Height within ±2 mm of spec for the size tier |
+| Structural integrity | No cracks, warping, or brittle joints |
+| Base stability | Figurine stands upright unaided on flat surface |
 
-All figurines are inspected before packaging. Do not skip QA for catalog orders — MCAE issues can affect any batch.
-
-### Inspection Process
-
-For each unit in the incoming delivery:
-
-1. **Visual color check** — Compare against the approved reference render. Color deviation visible at normal viewing distance (≥ 30 cm) fails.
-2. **Surface finish check** — Inspect display surfaces (front, top, sides) for support scarring, layer artifacts, or resin pooling. Any artifact on a display surface fails.
-3. **Dimensional check** — Measure height against size tier spec:
-   - Small: 7.5–8.5 cm
-   - Medium: 14–16 cm
-   - Large: 24–26 cm
-4. **Structural integrity** — Flex test thin elements (weapon tips, wings, antennas). Any cracking or delamination fails.
-
-### QA Outcomes
-
-| Outcome | Action |
-|---------|--------|
-| Pass | Proceed to packaging |
-| Fail — single unit | Set aside, log defect, request MCAE reprint for that unit |
-| Fail — > 5% of batch | Reject full batch, escalate to MCAE, log SLA breach |
-
-Record all QA outcomes in the fulfillment tracker: `order_id`, `pass/fail`, `defect_type` (if applicable), `inspector`, `date`.
+- **Pass:** proceed to Step 3.
+- **Fail (single unit in batch):** set aside, reorder replacement from MCAE referencing the same order ID with suffix `-R1`. Do not delay shipping of passing units if the order contains multiple items and at least one is passing.
+- **Fail (full batch):** escalate to MCAE with photos. Pause shipment. Notify customer with a delay email (template: Operations/Templates/Email-Delay-Custom.txt). Do not issue refund until MCAE root cause is confirmed.
 
 ---
 
-## Stage 5 — Branded Packaging
+## Step 3 — Branded Packaging Assembly
 
-1. Wrap figurine in acid-free tissue paper — full wrap, no exposed surfaces.
-2. Place in size-appropriate Figurio branded box:
-   - Small: 120×120×120 mm box
-   - Medium: 200×200×200 mm box
-   - Large: 320×320×320 mm box
-3. Fill void space with branded crinkle paper filler (Figurio teal). No polystyrene peanuts.
-4. Insert the printed order card (generated from order record — includes customer name, figurine name, and QR code linking to care instructions).
-5. For AI Custom orders, also insert the "Your Figurio Story" card describing the AI generation process.
-6. Seal box with Figurio branded tape.
-7. Attach Zásilkovna shipping label to the largest flat face of the box.
+All figurines ship in Figurio-branded packaging regardless of order type.
 
----
+### Assembly Steps
 
-## Stage 6 — Zásilkovna Shipping
-
-1. Generate shipping labels via the Zásilkovna API integration (FastAPI service endpoint `/fulfillment/labels`). Input: list of `order_id` values from the current dispatch batch.
-2. Confirm each label is generated with the correct:
-   - Recipient name and address (pulled from order record)
-   - Declared value (required for insurance — use order total in CZK)
-   - Size/weight tier matching the package
-3. Print labels and apply immediately to packaged boxes — do not stockpile unlabelled boxes.
-4. Record tracking number against `order_id` in the fulfillment tracker and update order status to `shipped` in the Figurio backend.
-5. Hand parcels to Zásilkovna courier or deposit at designated drop point by the daily cutoff time (confirm current cutoff with Zásilkovna account contact — typically 15:00 CET).
-6. Trigger the customer shipping confirmation email (via Figurio backend — includes tracking number and Zásilkovna tracking link).
-
-### Dispatch Checklist
-
-- [ ] Labels generated via API (no manual label creation)
-- [ ] Each label verified against order record
-- [ ] Tracking numbers logged in fulfillment tracker
-- [ ] Order status updated to `shipped`
-- [ ] Parcels handed off before daily cutoff
-- [ ] Customer shipping confirmation sent
+1. Wrap figurine in acid-free tissue paper (white).
+2. Place in the appropriately sized box:
+   - S tier: 120×120×120 mm box
+   - M tier: 180×120×120 mm box
+   - L tier: 250×180×150 mm box
+3. Fill void with biodegradable packing peanuts — figurine must not shift when box is shaken.
+4. Insert the branded thank-you card (pre-printed, stored in ops stock). For AI-custom orders, use the custom variant card which includes a note about the personalized process.
+5. Seal box with Figurio-branded tape.
+6. Affix the printed packing slip (generated from the order system) inside the lid.
 
 ---
 
-## Stage 7 — Returns Handling
+## Step 4 — Shipping Label Generation
 
-### Eligible Return Reasons
+### Zasilkovna (domestic CZ and parcel shop delivery)
 
-- Defective figurine (QA failure that passed undetected)
-- Significant color mismatch vs. product images (catalog) or AI render preview (custom)
-- Damaged in transit (Zásilkovna damage claim required)
-- Wrong item received
+Use the Zasilkovna Shipper API or portal:
 
-### Process
+1. Log in to Zasilkovna Shipper (credentials in 1Password → Operations).
+2. Create shipment with:
+   - Recipient name, address, and phone from order data
+   - Parcel shop ID if the customer selected pickup (field: `pickup_point_id` in order record)
+   - Weight: weigh the packed box on the ops scale; enter in grams
+   - COD: leave blank (Figurio uses Stripe — no COD)
+3. Download the label PDF and print on label printer (Dymo LabelWriter 4XL).
+4. Affix label to top face of box.
+5. Update order status to `LABEL_CREATED` in the backend admin panel.
 
-1. Customer submits return request via Figurio support channel, including photos.
-2. Head of Operations reviews photos and approves or rejects within 1 business day.
-3. **Approved returns:**
-   - Issue Zásilkovna return label to customer (via API — reverse shipment).
-   - On receipt, confirm defect matches reported reason. If mismatch, escalate.
-   - Initiate reprint (catalog) or re-generation + reprint (AI custom) at no charge.
-   - Log root cause: `mcae_defect`, `transit_damage`, `fulfillment_error`, or `customer_expectation`.
-4. **Transit damage:** File Zásilkovna damage claim within 5 business days of delivery. Attach customer photos and tracking record.
-5. Log all returns in the returns register with root cause — reviewed monthly to identify recurring issues.
+### DHL (EU international orders)
 
-### Returns Do Not Apply To
-
-- AI Custom orders where the delivered figurine matches the approved AI render preview — customers must review and approve the preview before production.
+1. Log in to DHL Express portal (credentials in 1Password → Operations).
+2. Create shipment using DHL MyDHL+ or the DHL API integration (if automated pipeline is active).
+3. Select service: **DHL Express Worldwide** for non-CZ EU orders.
+4. Enter customs data for non-EU shipments: commodity description "Decorative figurine — 3D printed", HS code `9505.90.80`, value from order total in EUR.
+5. Print label and affix to box.
+6. Update order status to `LABEL_CREATED`.
 
 ---
 
-## Fulfillment Tracker Fields (Reference)
+## Step 5 — Handoff to Carrier
 
-Key fields that must be populated at each stage:
+- **Zasilkovna:** Drop parcels at the designated Zasilkovna pickup point by 14:00 for same-day dispatch. Collect the drop-off receipt and photograph it.
+- **DHL:** Schedule DHL pickup (daily standing pickup booked for 15:00) or drop at DHL ServicePoint.
 
-| Field | Populated At |
-|-------|-------------|
-| `order_id` | Order creation |
-| `order_type` (catalog/custom) | Order creation |
-| `size_tier` | Order creation |
-| `file_validated_at` | Stage 1 |
-| `mcae_handoff_at` | Stage 2 |
-| `mcae_acknowledged_at` | Stage 2 |
-| `mcae_completed_at` | Stage 3 |
-| `qa_result` | Stage 4 |
-| `qa_defect_type` | Stage 4 (if failed) |
-| `packaged_at` | Stage 5 |
-| `tracking_number` | Stage 6 |
-| `shipped_at` | Stage 6 |
-| `return_reason` | Stage 7 (if applicable) |
+Update order status to `SHIPPED` and trigger the shipping confirmation email with tracking number (automated from order system on status change).
+
+---
+
+## Returns and Refund Handling
+
+### Customer-Initiated Return
+
+1. Customer submits return request via the Figurio website or emails support.
+2. Ops reviews eligibility:
+   - **Eligible:** damaged on arrival, wrong item, print quality failure. Window: 30 days from delivery.
+   - **Not eligible:** AI-custom orders where the 3D model was customer-approved before printing (unless defect is Figurio's fault).
+3. For eligible returns: send the customer a prepaid Zasilkovna return label (generated in Shipper portal, cost charged to Figurio account).
+4. On return receipt, inspect the item:
+   - Confirmed defect: issue full refund via Stripe (Refunds API or Stripe dashboard). Update order status to `REFUNDED`.
+   - No defect found: contact customer, offer store credit or re-shipment. Escalate disputes to Head of Operations.
+
+### Stripe Refund Process
+
+- Full refund: `POST /v1/refunds` with `payment_intent` from order record.
+- Partial refund: specify `amount` in CZK smallest unit (haléře).
+- Refunds typically appear within 5–10 business days depending on customer bank.
+- Log all refunds in the Refunds sheet (Google Sheets → Operations/Finance/Refunds-{YEAR}.xlsx) with order ID, reason, and amount.
+
+---
+
+## Order Status Reference
+
+| Status | Meaning |
+|--------|---------|
+| `PAID` | Payment confirmed, awaiting print handoff |
+| `IN_PRINT` | Sent to MCAE |
+| `QC` | Print received, under inspection |
+| `PACKING` | Passed QC, being packaged |
+| `LABEL_CREATED` | Shipping label generated |
+| `SHIPPED` | Handed to carrier |
+| `DELIVERED` | Carrier confirmed delivery |
+| `REFUNDED` | Refund issued |
+| `ON_HOLD` | Issue requiring manual resolution |
 
 ---
 
 ## Anti-patterns
 
-- Do not hand off AI Custom print files to MCAE without completing mesh validation — invalid files cause wasted production runs
-- Do not skip QA on catalog orders — MCAE batch issues affect catalog and custom equally
-- Do not generate Zásilkovna labels manually outside the API integration — manual labels bypass order status tracking
-- Do not package before QA is complete — once packaged, defect identification becomes slower
-- Do not accept a return without photos — required for MCAE reprint claims and Zásilkovna damage claims
+- Do not ship an AI-custom order without confirming geometry validation passed — a failed print wastes MCAE capacity and delays the customer.
+- Do not generate a Zasilkovna label without the customer's `pickup_point_id` if they selected parcel shop delivery — the parcel will be undeliverable.
+- Do not issue a Stripe refund before the return is physically received and inspected, except in cases of clear non-delivery confirmed by carrier.
