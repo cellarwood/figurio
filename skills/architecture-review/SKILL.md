@@ -1,103 +1,102 @@
 ---
 name: architecture-review
 description: >
-  Review technical designs for Figurio's services — FastAPI backend API contracts,
-  PostgreSQL database schema, text-to-3D pipeline architecture, React/TS frontend
-  structure, and K8s deployment topology on microk8s with Traefik ingress.
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
+  Review system design decisions for the Figurio platform — FastAPI backend,
+  React/TS frontend, PostgreSQL, text-to-3D AI pipeline (Meshy/Tripo3D),
+  Stripe payments, and K8s deployment on microk8s. Use when evaluating new
+  services, integration patterns, data models, or infrastructure changes.
 metadata:
   paperclip:
     tags:
       - engineering
-      - review
       - architecture
+      - review
 ---
 
 # Architecture Review
 
-Use this skill when evaluating a proposed technical design, PR, or RFC for any
-Figurio service before implementation begins or merges.
-
 ## When to Use
 
-- A backend engineer proposes a new FastAPI endpoint or changes an existing contract
-- A schema migration (Alembic) is proposed that touches orders, products, renders, or users
-- The text-to-3D pipeline gains a new stage (upload → generation → mesh repair → preview → delivery)
-- A frontend engineer proposes a new React component tree or routing change
-- A DevOps change touches K8s manifests, Helm values, or Traefik routing rules
+Apply this skill when:
+- A new service, integration, or infrastructure component is proposed
+- An existing subsystem needs significant refactoring
+- A cross-cutting concern (auth, caching, observability) needs a design decision
+- A new AI pipeline stage (generation, repair, validation) is being scoped
 
-## Review Dimensions
+## Platform Overview
 
-### 1. API Contracts (FastAPI)
+Figurio runs a D2C e-commerce platform for full-color 3D-printed figurines with two product lines:
+1. **Catalog products** — predefined figurine SKUs, standard order flow
+2. **AI custom products** — customer uploads or describes a figurine; text-to-3D pipeline produces the mesh, which is printed
 
-- Endpoints follow `/api/v{n}/{resource}` naming; current version is `v1`
-- Request/response models are Pydantic v2 — no raw `dict` returns
-- All mutations (POST/PUT/PATCH/DELETE) require explicit Stripe idempotency keys where payment side-effects are possible
-- Async handlers (`async def`) are required for any DB or external I/O call
-- Background tasks (mesh repair, render job dispatch) use FastAPI `BackgroundTasks` or are enqueued — never blocking a request handler
-- Errors follow the standard envelope: `{"error": {"code": "...", "message": "..."}}`
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React + TypeScript, shadcn-ui, Tailwind CSS |
+| Backend API | Python / FastAPI |
+| Database | PostgreSQL |
+| AI pipeline | Meshy or Tripo3D (external API), internal mesh repair/validation |
+| Payments | Stripe (checkout + webhooks) |
+| Container orchestration | Kubernetes via microk8s |
+| Ingress | Traefik |
+| Deployment | Docker images, K8s manifests |
 
-### 2. PostgreSQL Schema (Alembic)
+## Review Checklist
 
-- Every migration has a matching downgrade path unless the change is purely additive and explicitly noted
-- Foreign keys to `orders` and `products` must use `ON DELETE RESTRICT` by default; only override with justification
-- Indexes on columns used in WHERE filters for catalog queries (`product_id`, `sku`, `status`, `created_at`)
-- UUIDs as primary keys for all new tables (not serial integers)
-- JSON/JSONB columns are acceptable for mesh metadata and AI generation parameters — document expected shape in a comment
-- No business logic in triggers or stored procedures; keep logic in the Python service layer
+### API & Service Boundaries
+- Does the proposed service have a single, well-scoped responsibility?
+- Are endpoints RESTful and consistent with existing Figurio conventions (`/api/v1/{resource}`)?
+- Is the service stateless? State must live in PostgreSQL, not in-process.
+- Are long-running tasks (AI mesh generation, print job processing) handled asynchronously via a task queue — not blocking the API response?
 
-### 3. Text-to-3D Pipeline Architecture
+### Data Model
+- Are new tables normalized and consistent with existing PostgreSQL schema conventions?
+- Are foreign keys and indexes defined for all join paths used by the application?
+- Are soft deletes used for customer-facing records (orders, custom designs) to preserve audit trail?
+- Is sensitive data (PII, payment tokens) kept out of application logs and avoided in custom columns?
 
-The pipeline stages are: **prompt → external generation API → mesh download → mesh repair → format conversion → preview render → CDN upload → order linked**
+### AI Pipeline (text-to-3D)
+- Is the external AI provider call (Meshy / Tripo3D) isolated behind an internal adapter so the provider can be swapped?
+- Is mesh quality validation (polygon count, manifold check, color fidelity) a separate, mandatory step before the mesh reaches the print queue?
+- Are generation failures surfaced to the customer with actionable messaging, not raw API errors?
+- Is the generated mesh stored in object storage (not PostgreSQL) with only the reference URL in the DB?
 
-Review checklist for pipeline changes:
-- Is each stage idempotent? Re-running a failed stage must not duplicate records or charges
-- Generation API calls (Meshy, Tripo3D, etc.) are wrapped in a retry-with-backoff layer; webhook callbacks are preferred over polling where the provider supports them
-- Mesh repair (e.g., manifold checks, watertight validation) runs before any preview is shown to the customer
-- PyTorch inference (custom model paths) is isolated in a separate worker process — not in the FastAPI process
-- File artifacts are stored in object storage (not local disk); filenames include job UUID and stage suffix (e.g., `{job_id}_repaired.stl`)
-- MCAE print-readiness constraints: PolyJet, Stratasys J55 — flag designs that exceed build volume (342 × 228 × 200 mm) or minimum wall thickness (1 mm)
+### Payments (Stripe)
+- Are payment intents created server-side only — never from the frontend?
+- Is Stripe webhook signature verification enforced for all `/webhooks/stripe` endpoints?
+- Is the idempotency key pattern used for all Stripe API calls to prevent double-charges on retries?
+- Are order state transitions driven by Stripe webhook events, not by client-side callbacks?
 
-### 4. React/TS Frontend Structure
+### Kubernetes / microk8s
+- Does the new workload have defined CPU/memory `requests` and `limits`?
+- Are secrets stored in K8s Secrets (or an external secret store), not in ConfigMaps or environment variables baked into images?
+- Does the service expose a `/healthz` liveness probe and `/readyz` readiness probe?
+- Are AI pipeline workers deployed as a separate Deployment (not co-located with the API) so they can scale independently?
 
-- Components live under `src/components/`; pages under `src/pages/`
-- shadcn-ui primitives are extended, not forked — no copy-paste of shadcn source into the repo
-- All API calls go through a typed client generated from the FastAPI OpenAPI spec; no raw `fetch` in components
-- Tailwind utility classes only — no inline styles, no custom CSS files except `globals.css`
-- 3D preview uses a dedicated `<ModelViewer>` component (Three.js / React Three Fiber); it must lazy-load and not block the catalog page
-- Stripe.js is loaded once at the app root and injected via context — not imported in individual checkout components
+### Security
+- Are all backend endpoints protected by authentication middleware unless explicitly exempted?
+- Is CORS restricted to the Figurio frontend origin in production?
+- Are file uploads (customer reference images) validated for MIME type and size before storage?
 
-### 5. K8s Deployment Topology (microk8s + Traefik + Helm)
+## Common Anti-Patterns
 
-- Each service (api, worker, frontend, ml-worker) has its own Deployment + Service; no multi-container pods except for sidecar log shippers
-- Traefik IngressRoute rules: `/api/` → api service; `/` → frontend service; no wildcard catch-alls on the api prefix
-- Resource requests and limits are required on every container spec; flag any container without them
-- ML worker (PyTorch) and mesh repair worker run as separate Deployments with GPU node affinity if applicable; they must not share pods with the FastAPI service
-- Secrets (Stripe keys, DB passwords, external API keys) are stored in K8s Secrets, referenced as env vars — never hardcoded in Helm values files committed to the repo
-- Health checks: `livenessProbe` and `readinessProbe` required on api and worker deployments
+- Calling Meshy/Tripo3D synchronously from the API request path — use a task queue
+- Storing mesh files in PostgreSQL as BLOBs — use object storage
+- Triggering order fulfillment from a frontend success redirect — always use Stripe webhooks
+- Running microk8s workloads without resource limits — leads to noisy-neighbour failures on the single-node cluster
+- Hardcoding AI provider credentials in Dockerfiles or K8s manifests
 
-## Verdict Format
+## Output Format for Reviews
 
-After reviewing, summarize with:
+When documenting a review decision, write:
 
 ```
-## Architecture Review: <component or PR title>
+## Decision: <title>
 
-**Verdict:** Approve / Approve with changes / Request changes / Block
+**Status:** Proposed | Accepted | Rejected | Superseded
 
-### Issues
-- [BLOCKING] ...
-- [MAJOR] ...
-- [MINOR] ...
+**Context:** <what problem this solves in Figurio terms>
 
-### Recommendations
-- ...
+**Decision:** <what we are doing>
 
-### Open Questions
-- ...
+**Consequences:** <trade-offs, follow-up tasks, risks>
 ```
-
-Use **BLOCKING** for issues that would cause data loss, payment inconsistency, or pipeline corruption. Use **MAJOR** for correctness or maintainability problems. Use **MINOR** for style or preference deviations.

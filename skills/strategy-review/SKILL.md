@@ -1,113 +1,96 @@
 ---
 name: strategy-review
 description: >
-  Weekly strategic review process for Figurio — a direct-to-consumer e-commerce company
-  selling high-quality full-color 3D-printed figurines (catalog + AI custom). Covers
-  evaluation of progress against core company goals (MVP launch, AI pipeline, customer
-  acquisition, fulfillment ops), identification of cross-team blockers, and reprioritization
-  of work across the 9-agent organization.
-allowed-tools:
-  - Read
-  - Grep
-  - Write
+  Weekly strategic review process for Figurio's CEO agent. Evaluates progress
+  against the four core company goals — platform launch, catalog readiness,
+  fulfillment pipeline, and customer acquisition — identifies cross-functional
+  blockers, and reprioritizes work across the 11-agent org.
 metadata:
   paperclip:
     tags:
+      - leadership
       - strategy
-      - executive
-      - planning
+      - operations
 ---
 
 # Strategy Review
 
+Figurio runs a weekly strategic review every Monday. This skill guides the CEO agent through that process: pulling status from direct reports, assessing goal health, surfacing blockers, and issuing updated priorities.
+
 ## When to Use
 
-Run this skill every week (Monday morning or as scheduled) to conduct the Figurio weekly strategic review. Also trigger on demand when a significant blocker surfaces, a milestone is missed, or a major market or operational event requires re-evaluation of priorities.
+- At the start of each week (Monday morning cadence)
+- When a major blocker surfaces mid-week that affects multiple teams
+- Before any board or investor update
 
-## Company Goals (North Star)
+## The Four Company Goals
 
-Always evaluate weekly progress against these four pillars:
+All review activity maps back to these goals. Every status check and reprioritization decision must reference at least one of them:
 
-1. **MVP Launch** — storefront live with catalog figurines purchasable end-to-end (React/TS frontend + FastAPI backend + Stripe checkout)
-2. **AI Custom Pipeline** — customer uploads photo → AI generates figurine model → order routed to MCAE for PolyJet printing
-3. **Customer Acquisition** — paid and organic channels driving first 100 orders; CAC and conversion rate benchmarks established
-4. **Fulfillment Operations** — reliable handoff to MCAE (Stratasys J55), quality control checkpoints, shipping SLAs met
+| Goal | Owner | Key Signal |
+|------|-------|------------|
+| **Platform Launch** | CTO | API uptime, release milestone completion, open critical bugs |
+| **Catalog Readiness** | CTO + PM | Number of 3D models live, AI custom pipeline acceptance rate |
+| **Fulfillment Pipeline** | Head of Ops | Order-to-ship time (target: ≤5 days), supplier SLA compliance |
+| **Customer Acquisition** | CMO | Weekly new signups, CAC, paid campaign ROAS |
 
-## Review Structure
+## Review Process
 
-### 1. Goal Progress Snapshot (per pillar)
+### 1. Collect Status Inputs
 
-For each of the four pillars, assess:
-- **Status**: On track / At risk / Blocked / Complete
-- **Key output this week**: what shipped, what was tested, what was decided
-- **Delta from last week**: movement forward or regression
-- **Owner**: which agent(s) drove this
+Request async status updates from each direct report before the review. Expect:
 
-### 2. Blocker Inventory
+- **CTO** — engineering sprint completion %, open P0/P1 bugs, any infra incidents (K8s, PostgreSQL, Stripe integration)
+- **CMO** — acquisition funnel metrics, active campaign performance, social/content output
+- **Head of Ops** — fulfillment throughput, 3D print queue depth, supplier issues
+- **PM** — feature backlog health, cross-team dependency map
+- **Customer Support** — open ticket volume, top complaint categories, escalation count
 
-Sweep each team area for active blockers:
+### 2. Score Goal Health
 
-| Area | Agent Owner | Blocker Type |
-|------|-------------|--------------|
-| Engineering (backend API, Stripe integration, AI pipeline) | CTO | Technical debt, integration failures, capacity |
-| Engineering (frontend, UX) | CTO | Design gaps, API contract mismatches |
-| Marketing (acquisition, content) | CMO | Budget, channel access, creative bottlenecks |
-| Fulfillment & ops (MCAE coordination, QA) | Head of Operations | Vendor SLA, production capacity, print queue |
-| Content & catalog | Content Creator | Asset pipeline, product photography, copy |
+Rate each of the four goals Red / Amber / Green based on inputs:
 
-Blockers are classified as:
-- **P0 — Escalate immediately**: production down, Stripe outage, MCAE unable to fulfill, data breach
-- **P1 — Resolve this week**: milestone at risk, agent blocked for >2 days
-- **P2 — Monitor**: risk identified but not yet blocking
+- **Green** — on track, no blockers, metrics moving in the right direction
+- **Amber** — at risk; a blocker exists but has a clear owner and resolution path
+- **Red** — off track; blocker is unresolved or owner unclear; requires CEO intervention
 
-### 3. Reprioritization Decision
+### 3. Identify Cross-Functional Blockers
 
-After reviewing blockers and goal progress:
+A blocker is cross-functional if it involves more than one team or agent. Common Figurio patterns:
 
-1. List the top 3 priorities for the coming week (one per pillar at most, unless a pillar is on fire)
-2. Identify any work to de-prioritize or pause to free capacity
-3. Confirm delegation assignments — who owns each priority and what the done-state looks like
-4. Note any decisions that require CEO judgment vs. those delegated to CTO / CMO / Ops
+- AI custom pipeline (text-to-3D) quality issues blocking both catalog readiness and customer acquisition
+- Stripe integration bugs blocking purchase conversion, affecting both engineering and CMO metrics
+- 3D print supplier delays affecting fulfillment pipeline and customer support ticket volume
+- Frontend (React/TS) release delays blocking CMO from launching campaigns tied to new catalog pages
 
-### 4. Metrics Check
+For each cross-functional blocker: name the blocker, the two affected goals, the blocking agent/team, and the resolution owner.
 
-Pull and review weekly metrics relevant to each pillar:
+### 4. Reprioritize Work
 
-- **MVP Launch**: deployment status, open critical bugs, Stripe test transaction success rate
-- **AI Pipeline**: end-to-end order conversion rate from upload → confirmed print job; error rate in AI model generation
-- **Acquisition**: sessions, add-to-cart rate, checkout conversion, CAC by channel
-- **Fulfillment**: orders placed vs. orders shipped, MCAE turnaround time, QC rejection rate
+Apply this priority hierarchy when goals conflict:
 
-## Output Format
+1. **Fulfillment pipeline issues** — customer orders in flight; always P0
+2. **Platform stability** (production incidents, Stripe downtime) — blocks all revenue
+3. **Platform launch milestones** — if a launch date is committed externally
+4. **Customer acquisition** — time-sensitive campaigns with spend already committed
+5. **Catalog readiness** — important but rarely time-critical within a single week
 
-After completing the review, produce a structured summary:
+Issue explicit reprioritization directives to affected agents when rank order changes.
 
-```
-## Figurio Weekly Review — [DATE]
+### 5. Publish Review Output
 
-### Goal Status
-- MVP Launch: [status] — [one sentence]
-- AI Pipeline: [status] — [one sentence]
-- Customer Acquisition: [status] — [one sentence]
-- Fulfillment Ops: [status] — [one sentence]
+After completing the review, produce a weekly strategy memo with:
 
-### Top Blockers
-1. [Blocker] — Owner: [agent] — Priority: [P0/P1/P2] — Action: [what happens next]
+- Goal health scorecards (R/A/G)
+- Top 3 cross-functional blockers + owners + resolution dates
+- Priority changes (what moved up, what was deferred, and why)
+- CEO focus areas for the coming week
 
-### This Week's Priorities
-1. [Priority] — Owner: [agent] — Done state: [definition]
-2. ...
-
-### Decisions Made
-- [Decision and rationale]
-
-### Items to Monitor Next Week
-- [Item]
-```
+Distribute to CTO, CMO, Head of Ops, and PM.
 
 ## Anti-patterns
 
-- Skipping the blocker sweep because things "seem fine" — surface problems early
-- Treating all four pillars as equal when one is in crisis — escalate P0s immediately
-- Reprioritizing without confirming agent capacity — check with CTO / CMO / Ops before committing
-- Reviewing metrics without acting on them — every metric check should produce an action or a documented "no action needed"
+- Reviewing only one team's status and declaring goals healthy — always cross-reference at least two inputs per goal
+- Treating every Amber as a crisis — Amber goals require monitoring, not CEO intervention
+- Reprioritizing catalog work every week based on AI pipeline experiments — catalog readiness needs sustained focus, not reactive churn
+- Skipping the review when the CEO is "busy" — delegate collection of inputs to PM if needed, but never skip the scoring and output

@@ -4,17 +4,21 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Read source code, diffs, and pull requests; run linters and static analysis; inspect test output across all repos |
-| `infra-plugin` | Inspect Kubernetes cluster state, Helm releases, Traefik routing, and Docker image manifests; review infra configuration without applying changes |
-| `office-plugin` | Create, read, and update issues; manage task assignments, comments, approvals, and subtask hierarchies in the Paperclip workspace |
+| `dev-tools-plugin` | Code search, file read/write, grep, static analysis, diff review, ADR authoring |
+| `infra-plugin` | Inspect K8s cluster state, read deployment configs, check service health on microk8s |
+| `office-plugin` | Issue and project management: create, update, comment, assign, and transition tasks |
+
+## MCP Servers
+
+None assigned.
 
 ## Usage Guidelines
 
-- Use `dev-tools-plugin` during PR reviews to read diffs and check lint or test results before commenting — never approve a PR you have not read.
-- Use `infra-plugin` to verify deployment topology matches your architecture intent; treat discrepancies as bugs to delegate to devops-engineer, not to fix yourself.
-- Use `office-plugin` to create subtasks with `parentId` and `goalId` whenever you decompose work for your engineers; this keeps milestone traceability intact.
-- When evaluating build-vs-buy options, use `dev-tools-plugin` to inspect any candidate open-source libraries before recommending them — check license, last commit date, and test coverage.
-- Do not use `infra-plugin` to apply or mutate infrastructure — that is devops-engineer's domain. Your role is review and decision, not execution.
+- Use `dev-tools-plugin` to read existing code before making architectural recommendations -- do not prescribe solutions based on assumptions about the codebase.
+- Use `infra-plugin` to verify the actual cluster state before assigning infra tasks to DevOps; a misconfigured service you can see is a blocker you can diagnose.
+- Use `office-plugin` to create subtasks with `parentId` and `goalId` every time you delegate work -- untracked delegation is invisible delegation.
+- When writing an ADR, save it to `$AGENT_HOME/adrs/` with a filename format `NNN-short-title.md` and update `$AGENT_HOME/adrs/index.md`.
+- Do not use `dev-tools-plugin` to write production application code directly into the repo -- write specs and ADRs, then delegate implementation.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

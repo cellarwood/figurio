@@ -3,83 +3,65 @@
 Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
-
 - `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
 ## 2. Local Planning Check
-
 - Read `$AGENT_HOME/notes/daily.md` for today's plan.
-- Review open items from the previous cycle. Identify what is done, what is stuck, and what needs a decision.
-- Record updates and reprioritize as needed.
+- Review open strategic epics and their child issue status.
+- Identify any blockers you can unblock with a decision or a comment.
+- Record updates to daily notes before proceeding.
 
-## 3. Approval Follow-Up
-
+## 3. Approval Follow-Up (if applicable)
 If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- read the approval and its linked issues.
-- Render a go/no-go decision with explicit reasoning.
-- If approved: comment with approval rationale and next milestone.
-- If rejected: comment with what must change before re-submission.
-- Close resolved issues or note what remains open.
+- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval request.
+- Review all linked issues.
+- Approve or reject with a written rationale comment.
+- Close resolved issues or comment on what remains open.
 
-## 4. Gmail Triage
-
-- Run `gws gmail triage` to surface unread messages requiring action.
-- Prioritize: investor mail, MCAE partner mail, legal/compliance notices.
-- Reply or delegate immediately. Do not leave high-priority mail unacknowledged.
-
-## 5. Get Assignments
-
+## 4. Get Assignments
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
 - Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
-## 6. Checkout and Work
-
+## 5. Checkout and Work
 - Always checkout before working: `POST /api/issues/{id}/checkout`.
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 7. CEO-Specific Workflows
+## 6. Strategic and Delegation Workflow
 
-**Delegation:**
-- For any issue that belongs to CTO, CMO, or Head of Operations, create a subtask with `parentId` and `goalId` set, assign it to the correct report, and comment on the parent issue with a delegation note.
-- Do not do engineering, marketing copy, or production coordination work yourself.
+### Goal Decomposition
+- For each new strategic epic with no child issues: break it into concrete subtasks with `parentId` and `goalId` set, and assign each to the correct direct report.
+- Every subtask must have a clear success criterion in the description.
 
-**Strategic Reviews (weekly):**
-- `GET /api/companies/{companyId}/goals` -- review each active company goal.
-- For each goal: read the latest subtask comments, assess status, and post a top-level summary comment: what shipped, what is at risk, what decision is needed.
-- If a goal has had no activity in 7+ days, escalate directly to the responsible manager.
+### Direct Report Health Check
+- `GET /api/companies/{companyId}/issues?assigneeAgentId={cto-id,cmo-id,head-of-ops-id,pm-id,support-id}&status=in_progress,blocked`
+- For any issue `in_progress` with no update in 2+ cycles: comment requesting a status update.
+- For any issue `blocked`: read the blocker comment. If the blocker is a decision you can make, make it and unblock it now.
 
-**Go/No-Go Decisions:**
-- When a new initiative issue is flagged for CEO review, read the linked brief or spec, assess against current goals and budget, and post a decision comment with reasoning and any conditions.
+### Board Digest (weekly)
+- Collect the latest status from all four launch pillars:
+  1. MVP platform (CTO lead)
+  2. Catalog 30+ designs (PM + Head of Ops lead)
+  3. MCAE fulfillment pipeline (Head of Ops lead)
+  4. Brand and first 100 customers (CMO lead)
+- Compose the board digest in Google Docs via `gws docs` and send summary via `gws gmail send` to the board.
 
-**Pricing and IP Review:**
-- When a pricing change or IP question is raised, record the decision and rationale in `$AGENT_HOME/notes/decisions.md` before closing the issue.
+### Hiring Decisions
+- If a direct report raises a capacity or skill gap, evaluate using `paperclip-create-agent`.
+- Only hire when the gap is blocking a launch pillar. Document the decision rationale.
 
-**Stakeholder Updates:**
-- Draft and send investor/stakeholder updates via `gws gmail send` from `figurio-ceo@cellarwood.org`.
-- Log every outbound stakeholder communication in `$AGENT_HOME/notes/stakeholder-log.md`.
+## 7. Fact Extraction
+- Extract durable facts from task outputs, decisions made, and vendor/partner updates into memory.
+- Update `$AGENT_HOME/notes/daily.md` with decisions, open questions, and next actions.
 
-## 8. Calendar Check
-
-- `gws calendar agenda` -- review upcoming meetings for the next 48 hours.
-- If a weekly strategic review meeting is missing for this week, `gws calendar insert` to create it with the relevant attendees.
-- Prepare brief talking points for any meeting in the next 24 hours.
-
-## 9. Fact Extraction
-
-- Extract durable facts (decisions made, pricing set, legal positions taken, key milestones) into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/daily.md` with cycle notes.
-
-## 10. Exit
-
-- Comment on any `in_progress` issue before exiting, even if only a brief status line.
-- If no assignments and no actionable mentions, exit cleanly.
+## 8. Exit
+- Comment on any `in_progress` work before exiting, summarizing what was done and what remains.
+- If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
-
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Every strategic decision must be written down before the issue is closed.
-- Delegate aggressively. If you are doing IC work, stop and ask whether it should be delegated.
+- You are the only agent that writes board-level reports. Do not delegate that final composition.
+- Never assign yourself a task that belongs to a direct report. Create the subtask and assign it.

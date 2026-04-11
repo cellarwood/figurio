@@ -4,33 +4,29 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | File system access, shell commands, code reading — used for reviewing specs, reading planning documents, and inspecting project structure |
-| `office-plugin` | Office productivity utilities including document creation, structured note-taking, and report generation |
+| `dev-tools-plugin` | File system access, shell commands, code inspection — used for reading project artifacts, configs, and status files |
+| `office-plugin` | Document creation, structured report generation, and office-format output for board and stakeholder communications |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-ceo@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`ceo@cellarwood.org`).
 
-**Services:**
-
-| Service | What it does |
-|---------|-------------|
-| Gmail | Send, read, reply to, and triage email — primary channel for investor, partner, and stakeholder communication |
-| Calendar | View your agenda and insert meetings — used to manage the weekly strategic review cadence and external calls |
-| Drive | Store and retrieve strategic documents, legal review records, OKR files, and board materials |
-| Docs | Draft and update living documents: OKRs, strategy memos, stakeholder reports, meeting notes |
-| Tasks | Maintain a personal action list for items not yet in the issue tracker |
-| Meet | Generate video call links for scheduled external or cross-team meetings |
+**Services:** Gmail (send, read, reply, triage), Google Calendar (agenda view, event insertion), Google Drive (file storage and sharing), Google Docs (document creation and editing), Google Tasks (personal task lists), Google Meet (meeting scheduling and links), Shared workspace resources (team drives, shared calendars).
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
+Pre-packaged workflow skills:
+- `gws-workflow-meeting-prep` -- pull agenda, attendees, and relevant docs before a scheduled meeting
+- `gws-workflow-standup-report` -- compile a standup-style update from recent issue activity
+- `gws-workflow-weekly-digest` -- assemble the weekly board digest from direct report summaries
+
 ## Usage Guidelines
 
-- Delegate all engineering, design, and production work through the issue tracker — do not use dev-tools-plugin to write or modify code directly.
-- Use Gmail exclusively for external communications (investors, MCAE, press, legal). Internal coordination happens through the Paperclip issue tracker and comments.
-- Record every go/no-go decision and pricing change in `$AGENT_HOME/notes/decisions.md` before closing the associated issue.
-- Use Drive and Docs to maintain durable artifacts (OKRs, pricing models, legal position notes) rather than leaving critical information only in issue comments.
-- When preparing for a stakeholder update, pull the latest goal statuses from the API first, then draft in Docs before sending via Gmail — never send off the cuff.
+- Use `office-plugin` for board digests and formal documents; use `gws docs` to store and share them with the board via Drive.
+- Use `gws gmail` to communicate with external parties (MCAE vendor contacts, board members, launch partners) — do not use internal Paperclip comments for outbound external email.
+- Use `gws calendar` to schedule and track weekly strategic review meetings with direct reports; insert events with Meet links so remote attendance is always available.
+- Use `dev-tools-plugin` to inspect project-root artifacts (OKR files, roadmap documents, config) when preparing strategic reviews — read the source of truth, do not rely on memory alone.
+- Reserve `gws tasks` for personal CEO to-dos that are not yet formal Paperclip issues; graduate them to issues once they have an owner and a deadline.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

@@ -4,7 +4,7 @@
     "office-plugin@claude-my-marketplace": true
   },
   "env": {
-    "AGENT_EMAIL": "figurio-ceo@cellarwood.org",
+    "AGENT_EMAIL": "ceo@cellarwood.org",
     "COMPANY_DOMAIN": "cellarwood.org",
     "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": "/paperclip/.gws/figurio.json"
   }

@@ -10,7 +10,7 @@
     ]
   },
   "env": {
-    "AGENT_EMAIL": "figurio-ops@cellarwood.org",
+    "AGENT_EMAIL": "ops@cellarwood.org",
     "COMPANY_DOMAIN": "cellarwood.org",
     "GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE": "/paperclip/.gws/figurio.json"
   }

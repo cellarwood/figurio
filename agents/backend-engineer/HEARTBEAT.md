@@ -9,9 +9,9 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read today's plan from `$AGENT_HOME/notes/plan.md`.
-- Review in-progress items: are any blocked? Are any done but not yet closed?
-- Record updates before proceeding.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan and carry-overs.
+- Identify any blockers recorded from the previous session and determine if they can now be resolved.
+- Record updates before beginning new work.
 
 ## 3. Approval Follow-Up (if applicable)
 
@@ -24,6 +24,7 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
 - Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
 - If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+- Check `mvp-backend` project for any newly created tasks not yet assigned.
 
 ## 5. Checkout and Work
 
@@ -31,36 +32,34 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Backend Engineer Workflow
+## 6. Backend Engineering Workflow
 
-Follow this sequence when working a backend task:
+For each task:
 
-1. **Understand the contract first.** If the task involves a new or changed endpoint, draft the Pydantic request/response schemas and confirm alignment with the CTO or frontend engineer before writing handlers.
-2. **Database changes require a migration.** Any model change must have an Alembic migration. Name it descriptively. Test the upgrade and downgrade paths locally before marking complete.
-3. **Write the handler, then write the test.** Use pytest + httpx async client. Cover the happy path and at least one failure path (bad input, auth failure, or external service error).
-4. **Stripe work requires idempotency.** Use idempotency keys on all Stripe API calls. Webhook handlers must verify the signature, be idempotent on replay, and update order state atomically.
-5. **MCAE handoff tasks.** Confirm the expected payload format against the latest MCAE spec in `$AGENT_HOME/notes/mcae-spec.md` (or request it if missing). Log every outbound submission and the MCAE response.
-6. **Comment on the issue with:**
-   - What was built or changed.
-   - Migration version (if applicable).
-   - New or updated endpoints (method + path).
-   - Any frontend impact or schema changes.
-   - Any follow-up tasks created.
+1. **Understand the domain first.** If the task involves a new entity or state transition, sketch the data model and invariants before writing code.
+2. **Database migrations.** Create an Alembic migration for any schema change. Never modify existing production migrations in place.
+3. **Implement the route / worker.** Follow FastAPI patterns already established in the codebase. Use async where I/O-bound.
+4. **Wrap external calls.** Stripe and AI API calls go through their respective client wrappers with retry logic. Never call third-party HTTP endpoints directly from a route handler.
+5. **Write tests.** Unit tests for state machine transitions and domain logic. Integration tests for critical API paths (checkout, order status update, webhook handler).
+6. **Verify with dev-tools-plugin.** Run linting and test suite before marking a task done.
+7. **Update task.** Comment with: what was built, any migration steps required, known follow-up items.
+
+For blocked tasks:
+- If blocked on credentials (Stripe keys, AI API keys): comment on the issue tagging the CTO, then move on.
+- If blocked on a design decision: propose a concrete option in the comment and request a decision. Do not sit idle.
 
 ## 7. Fact Extraction
 
-- After completing work, extract any durable facts (new env vars required, MCAE API quirks, Stripe webhook event types in use, schema decisions) into `$AGENT_HOME/notes/facts.md`.
-- Update `$AGENT_HOME/notes/plan.md` with today's progress.
+- Extract durable facts from this session (API design decisions, schema choices, third-party API quirks) into `$AGENT_HOME/memory/`.
+- Update `$AGENT_HOME/notes/daily.md` with today's progress and any open threads.
 
 ## 8. Exit
 
-- Comment on any in_progress issues before exiting — include current state and what remains.
+- Comment on any `in_progress` task before exiting to record current state.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never leave a Stripe webhook handler without signature verification in place.
-- Never run raw `pip install` — always use `uv add` or `uv sync`.
-- Migrations must be reviewed for reversibility before marking a task done.
+- Never leave a task `in_progress` without a comment explaining where things stand.

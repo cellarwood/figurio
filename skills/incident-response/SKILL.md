@@ -1,203 +1,207 @@
 ---
 name: incident-response
 description: >
-  Incident handling for Figurio — severity classification (P1: checkout/Stripe
-  down, P2: AI custom figurine pipeline degraded, P3: cosmetic issues),
-  escalation paths, communication templates, and postmortem format.
+  Incident handling for the Figurio platform — Sentry alert triage, rollback
+  procedures for failed Helm deployments, database recovery steps, and Stripe
+  webhook failure handling. Use this skill when responding to production alerts,
+  outages, or degraded service on the Figurio platform.
 allowed-tools:
+  - Bash
   - Read
   - Grep
-  - Bash
 metadata:
   paperclip:
     tags:
-      - engineering
       - devops
-      - operations
+      - engineering
+      - incident
 ---
 
 # Incident Response
 
-Structured process for detecting, triaging, resolving, and reviewing incidents
-affecting Figurio's production services.
+## When to Use
+
+Use this skill when a production alert fires, a deployment causes a regression, a Stripe webhook fails, or the database enters a bad state. This is the playbook — work through it top-to-bottom and document every action taken.
 
 ## Severity Levels
 
-### P1 — Critical (respond immediately)
+| Level | Definition | Response Time |
+|-------|-----------|---------------|
+| P1 | Checkout unavailable, payments failing, site down | Immediate |
+| P2 | Order pipeline degraded, high error rate, partial outage | < 15 min |
+| P3 | Non-critical feature broken, elevated latency, isolated errors | < 1 hour |
 
-The business is losing revenue or customer trust cannot be restored without
-urgent action.
+## Phase 1 — Triage with Sentry
 
-Examples:
-- Stripe checkout flow is returning errors or is unreachable
-- `api.figurio.cz` is down (5xx or no response)
-- `figurio.cz` frontend is inaccessible
-- Customer payment data may be at risk
+Sentry is the primary alert source. On receiving an alert:
 
-Target response: acknowledge within **5 minutes**, start remediation within
-**15 minutes**.
-
-### P2 — High (respond within 30 minutes)
-
-Core service is degraded but a workaround or partial functionality exists.
-
-Examples:
-- AI custom figurine pipeline (`ai.figurio.cz`) is down or returning errors
-  (catalog orders still work)
-- Order confirmation emails are delayed or failing
-- Elevated error rate (>2% of requests) in Sentry without full outage
-- Slow response times (p95 > 5s) for checkout or catalog endpoints
-
-Target response: acknowledge within **15 minutes**, start remediation within
-**30 minutes**.
-
-### P3 — Low (respond within 2 business hours)
-
-Cosmetic or non-blocking issues that do not affect revenue or order processing.
-
-Examples:
-- UI rendering glitch on a non-critical page
-- Broken image in the catalog for a single product
-- Minor copy errors on static pages
-- Non-critical Sentry noise below error budget threshold
-
-Target response: triage within **2 hours**, fix in next sprint unless trivial.
-
-## Detection Sources
-
-- **Sentry** — primary error alerting; P1 triggers page immediately
-- **Kubernetes pod health** — `CrashLoopBackOff` or OOMKilled pods
-- **Traefik** — 5xx response rate spike visible in logs
-- **Stripe Dashboard** — webhook delivery failures or payment decline spike
-- **Customer report** — escalated via support email to devops-engineer
-
-## Escalation Path
-
-| Severity | On-call DevOps | CTO | CEO |
-|----------|---------------|-----|-----|
-| P1 | Immediate page | Notify within 15 min | Notify if >30 min unresolved |
-| P2 | Immediate page | Notify if >1 hour unresolved | Not required |
-| P3 | Normal queue | Not required | Not required |
-
-For P1 Stripe issues, also notify the backend-engineer — they own the Stripe
-integration code.
-
-For P1 data-risk incidents, CTO and CEO are notified immediately regardless of
-resolution time.
-
-## Response Steps
-
-### 1. Acknowledge
-
-Claim the incident so the team knows someone is on it. Post in the engineering
-channel:
-
-```
-[INCIDENT P<N>] <short description> — acknowledged, investigating
-```
-
-### 2. Assess
+1. Open the Sentry issue and identify: service, error type, first seen vs. spike.
+2. Check the breadcrumb trail — was a deployment in the last 30 minutes?
+3. Correlate with pod health:
 
 ```bash
-# Check pod state
-microk8s kubectl get pods -n figurio
-
-# Check recent events
-microk8s kubectl get events -n figurio --sort-by='.lastTimestamp' | tail -20
-
-# Check Traefik logs for 5xx spike
-microk8s kubectl logs -n kube-system -l app=traefik --tail=100 | grep " 5[0-9][0-9] "
-
-# Check Sentry for top errors
-# (open Sentry dashboard — filter to last 30 min)
+kubectl get pods -n figurio
+kubectl describe pod <crashing-pod> -n figurio
+kubectl logs <crashing-pod> -n figurio --previous
 ```
 
-### 3. Mitigate
+4. Check Sentry release tracking — if the regression correlates with a new release, proceed to rollback immediately.
 
-Prefer the fastest path to restoring service over the cleanest fix:
+Key Sentry projects for Figurio:
+- `figurio-api` — backend service errors
+- `figurio-frontend` — client-side JS errors
+- `figurio-workers` — background job failures (order processing, image rendering)
 
-- **Pod crash / bad deploy** → roll back via Helm (see deployment-runbook skill)
-- **Stripe webhook failure** → check secret rotation, restart backend deployment
-- **AI pipeline down** → restart `ai-pipeline` deployment; catalog orders
-  continue to function — communicate P2 status to customers if >15 min
-- **Infrastructure issue** → check microk8s node health, Traefik pod, PVC
-  mounts
+## Phase 2 — Deployment Rollback
 
-### 4. Resolve
-
-Confirm resolution:
+If the incident is caused by a bad deploy, roll back via Helm.
 
 ```bash
-microk8s kubectl rollout status deployment/<service> -n figurio
-curl -sf https://api.figurio.cz/health | jq .status   # "ok"
-curl -sf https://figurio.cz/                           # HTTP 200
+# List recent revisions
+helm history <release-name> -n figurio
+
+# Roll back to the previous revision
+helm rollback <release-name> -n figurio
+
+# Roll back to a specific revision
+helm rollback <release-name> <revision-number> -n figurio
 ```
 
-Post resolution message in engineering channel:
+Verify the rollback took effect:
 
-```
-[RESOLVED P<N>] <short description> — resolved at <HH:MM UTC>.
-Duration: <X> min. Root cause: <one sentence>. Postmortem: <yes/no — schedule if P1 or P2>
-```
-
-## Communication Templates
-
-### Customer-facing status update (P1 — checkout down)
-
-> We are currently experiencing an issue with our checkout process. Our team is
-> actively investigating and working to restore service. We apologize for the
-> inconvenience. Orders placed before this notice have been received. We will
-> update this page as soon as the issue is resolved.
-
-### Customer-facing status update (P2 — AI pipeline degraded)
-
-> Our AI custom figurine tool is currently unavailable. Standard catalog orders
-> are processing normally. Our team is working to restore the AI feature. We
-> will update here shortly.
-
-### Internal escalation message (P1 to CTO)
-
-> P1 INCIDENT: <service> is down as of <HH:MM UTC>. Impact: <revenue-affecting
-> description>. DevOps investigating. ETA unknown — looping you in per P1
-> protocol.
-
-## Postmortem Format
-
-Required for all P1 incidents. Recommended for P2 incidents lasting >1 hour.
-
-```
-## Postmortem — <Incident Title>
-
-**Date:** YYYY-MM-DD
-**Duration:** X hours Y minutes
-**Severity:** P1 / P2
-**Author:** <devops-engineer or CTO>
-
-### Summary
-One paragraph describing what happened and the customer impact.
-
-### Timeline (UTC)
-- HH:MM — first alert / detection
-- HH:MM — incident acknowledged
-- HH:MM — root cause identified
-- HH:MM — mitigation applied
-- HH:MM — service restored
-
-### Root Cause
-Technical explanation of what failed and why.
-
-### Contributing Factors
-Conditions that made the incident worse or detection slower.
-
-### Resolution
-What was done to restore service.
-
-### Action Items
-| Action | Owner | Due |
-|--------|-------|-----|
-| <preventive fix> | <engineer> | <date> |
-| <monitoring improvement> | <engineer> | <date> |
+```bash
+kubectl rollout status deployment/<service-name> -n figurio
+kubectl get pods -n figurio -l app=<service-name>
 ```
 
-Postmortems are blameless. Focus on process and system improvements.
-File them in the shared engineering folder within 48 hours of resolution.
+After rollback, confirm error rate drops in Sentry before declaring recovery. Allow 3-5 minutes for the rate to stabilize.
+
+Pin the Docker image tag in `helm/<service-name>/values.yaml` back to the last known-good SHA and commit it.
+
+## Phase 3 — Stripe Webhook Failure Handling
+
+Stripe webhooks are the backbone of Figurio's order confirmation and fulfillment pipeline.
+
+### Diagnosing
+
+1. Check the Stripe Dashboard → Developers → Webhooks → Event log for delivery failures.
+2. Identify whether the failure is a connectivity issue (5xx from Figurio) or a logic error (2xx but order not created).
+3. Cross-reference with Sentry `figurio-api` for matching exceptions at the webhook endpoint.
+
+### Recovery Steps
+
+**If Figurio's webhook endpoint is returning 5xx (service down):**
+- Restore service first (Phase 2 rollback or pod restart).
+- Once healthy, use Stripe Dashboard to resend failed events: Webhooks → select endpoint → Failed deliveries → Resend.
+
+**If events were silently dropped (2xx but no DB write):**
+- Identify the order IDs from Stripe event payloads.
+- Manually replay the events:
+
+```bash
+# Using Stripe CLI
+stripe events resend <event-id>
+```
+
+- Confirm each replayed event creates the expected record in the database.
+
+**If the webhook signing secret is mismatched:**
+- Rotate the secret in the Stripe Dashboard.
+- Update the Kubernetes secret:
+
+```bash
+kubectl create secret generic stripe-webhook-secret \
+  --from-literal=secret=<new-secret> \
+  --namespace figurio \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+- Restart the API pod to pick up the new secret:
+
+```bash
+kubectl rollout restart deployment/figurio-api -n figurio
+```
+
+## Phase 4 — Database Recovery
+
+### Pod-level DB Connection Issues
+
+Check if the database pod is healthy:
+
+```bash
+kubectl get pods -n figurio -l app=postgres
+kubectl logs -n figurio -l app=postgres --tail=50
+```
+
+If the pod is crash-looping, describe it for resource or config issues:
+
+```bash
+kubectl describe pod <postgres-pod> -n figurio
+```
+
+### Restoring from Backup
+
+Figurio database backups are stored as Kubernetes CronJob outputs. Identify the latest backup:
+
+```bash
+kubectl get cronjobs -n figurio
+kubectl get pods -n figurio -l job-name=db-backup --sort-by=.metadata.creationTimestamp
+```
+
+To restore:
+1. Scale down dependent services to prevent writes during restore:
+
+```bash
+kubectl scale deployment figurio-api --replicas=0 -n figurio
+kubectl scale deployment figurio-workers --replicas=0 -n figurio
+```
+
+2. Run the restore job (defined in `helm/postgres/templates/restore-job.yaml`), providing the backup file path.
+3. Verify data integrity with a record count check.
+4. Scale services back up:
+
+```bash
+kubectl scale deployment figurio-api --replicas=2 -n figurio
+kubectl scale deployment figurio-workers --replicas=2 -n figurio
+```
+
+### Data Corruption
+
+Do not attempt manual SQL fixes without a second pair of eyes. Snapshot the current state first:
+
+```bash
+kubectl exec -n figurio <postgres-pod> -- pg_dump figurio_production > /tmp/pre-fix-dump.sql
+```
+
+## Phase 5 — Post-Incident
+
+After recovery:
+
+1. Confirm error rate in Sentry has returned to baseline.
+2. Verify all Stripe webhooks that failed during the incident have been replayed and orders are consistent.
+3. Write a brief incident note capturing: timeline, root cause, fix applied, and follow-up action items.
+4. Open a GitHub Issue tagged `incident` with the post-incident summary.
+5. If a deployment caused the incident, add a regression test before the fix is redeployed.
+
+## Quick Reference — Useful Commands
+
+```bash
+# Real-time pod logs across all figurio pods
+kubectl logs -n figurio -l app=figurio-api -f --max-log-requests=5
+
+# Resource usage — spot OOM candidates
+kubectl top pods -n figurio
+
+# Recent events in the namespace
+kubectl get events -n figurio --sort-by=.lastTimestamp | tail -20
+
+# Check Traefik is routing correctly after an incident
+kubectl get ingressroute -n figurio
+```
+
+## Anti-patterns
+
+- Do NOT restart pods as the first response without checking logs — it destroys the evidence.
+- Do NOT manually edit the database without snapshotting first.
+- Do NOT mark an incident resolved until Sentry error rate has stabilized, not just when the fix is deployed.
+- Do NOT replay Stripe events in bulk without verifying idempotency — duplicate orders are a P1 in their own right.

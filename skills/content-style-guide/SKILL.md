@@ -1,145 +1,142 @@
 ---
 name: content-style-guide
 description: >
-  Writing style guide for Figurio — a Czech DTC e-commerce brand selling high-quality
-  full-color 3D-printed figurines. Covers product descriptions (emphasizing PolyJet
-  detail, material quality, and size), blog posts about 3D printing and collectibles,
-  social media captions, email copy, and general brand voice conventions.
+  Writing style for Figurio content — product descriptions that highlight craftsmanship
+  and print detail, blog posts about 3D printing culture and collector community,
+  and social media captions designed to drive engagement and shares for a playful
+  D2C figurine brand.
+allowed-tools:
+  - Read
+  - Grep
 metadata:
   paperclip:
     tags:
       - content
-      - copywriting
+      - marketing
       - brand
 ---
 
-# Figurio Content Style Guide
+# Content Style Guide
+
+Figurio's voice is playful, craft-proud, and collector-savvy. Every piece of content should
+make readers feel they are discovering something worth owning, sharing, or gifting.
 
 ## Brand Voice
 
-Figurio's tone is warm, precise, and enthusiastic about craftsmanship. Customers are
-buying something personal — a gift, a keepsake, a collectible — so content should
-feel celebratory without being hyperbolic.
+| Trait | Meaning in practice |
+|-------|---------------------|
+| Playful | Light puns, pop-culture nods, exclamation points used sparingly but sincerely |
+| Craft-proud | Name the technology (PolyJet, full-color, multi-material) — don't obscure it |
+| Collector-savvy | Speak to the completionist instinct, limited runs, display potential |
+| Accessible | No jargon gatekeeping — a grandparent buying a gift should follow along |
 
-Core voice attributes:
-- **Precise** — mention actual specs (size, material, technology) rather than vague claims
-- **Warm** — speak to the emotional significance of the object
-- **Credible** — reference the Stratasys J55 PolyJet process by name where it adds weight
-- **Accessible** — avoid jargon; if a technical term is used, give a one-phrase explanation
-
-Avoid: superlatives without evidence ("best in the world"), generic gift-copy ("perfect
-for anyone"), passive voice in product descriptions.
+Never sound corporate, clinical, or generic. Avoid filler phrases like "high-quality product" or
+"great for any occasion."
 
 ---
 
 ## Product Descriptions
 
-Figurio sells two product lines:
-- **Catalog figurines** — pre-designed characters and collectibles
-- **AI custom figurines** — personalized figurines generated from customer photos
-
 ### Structure
 
-Every product description should cover four elements in this order:
+1. **Hook line** (1 sentence) — lead with what makes this figurine interesting, not its specs.
+2. **Detail paragraph** (2–4 sentences) — highlight print quality, color accuracy, or design story.
+3. **Specs block** — size tier (Small 8cm / Medium 15cm / Large 25cm), material, print method.
+4. **CTA** — one line that nudges toward adding to cart or gifting.
 
-1. **Hook** — one sentence on what makes this figure special (character, occasion, detail)
-2. **Detail & finish** — call out color fidelity, surface texture, or intricate features
-3. **Material & process** — reference PolyJet full-color resin and MCAE production
-4. **Size & display** — exact dimensions, recommended display context
+### Tone
 
-### Tone rules
+- Write as if describing the figurine to someone holding it in their hands.
+- Use tactile and visual language: *crisp edges*, *vivid gradient*, *hand-painted-level detail*.
+- Reference the Stratasys J55 PolyJet process when precision is a selling point — it's a
+  genuine differentiator, not marketing fluff.
+- For catalog items call out the design origin when it adds prestige (e.g., "commissioned
+  from illustrator X" or "licensed from the official collection").
 
-- Use present tense: "The figurine captures…" not "This figurine will capture…"
-- Lead with the subject's story, not the technology
-- Mention size in centimeters (Figurio's primary market is Czech Republic / EU)
-- One mention of "Stratasys J55 PolyJet" per product page is enough — do not repeat
+### Examples
 
-### Example (catalog product)
+**Good:**
+> Meet the Cyber Samurai — 15cm of obsessive detail, from the micro-etched visor reflections
+> to the layered armor plating. Printed on the Stratasys J55 PolyJet in full color with
+> multi-material precision. Every edge is crisp enough to cast a shadow.
 
-> The Dragon Knight stands 18 cm tall, every scale etched in full-color PolyJet resin
-> for a depth that paint cannot replicate. Produced by MCAE on the Stratasys J55,
-> the finish holds true-to-file color accuracy across all 500+ color gradients.
-> Display upright on the included acrylic base or alongside the full Knights series.
-
-### Example (AI custom product)
-
-> Your face, rendered at 15 cm in vibrant full-color resin. Upload a front-facing photo
-> and our AI sculpts a likeness that PolyJet printing brings to life — down to skin tone,
-> hair detail, and the exact shade of your eyes. Ships in a gift-ready box.
+**Bad:**
+> This high-quality figurine is great for collectors and makes a perfect gift for any occasion.
 
 ---
 
 ## Blog Posts
 
-Blog topics cluster around three themes:
-1. 3D printing technology and how PolyJet works
-2. Collectible culture, figurine care, and display ideas
-3. Behind-the-scenes at MCAE / Figurio production process
+Figurio's blog covers 3D printing culture, behind-the-scenes production, collector spotlights,
+and seasonal/trending topics. Posts should inform and delight — not just promote.
 
 ### Structure
 
-- **Title**: 6–10 words, include a primary keyword naturally
-- **Intro**: 2–3 sentences — hook the reader with a question or surprising fact
-- **Body**: H2 sections, 150–300 words each; no section longer than 5 paragraphs
-- **CTA**: Every post ends with a link to a relevant product or the custom configurator
+- **Title:** Specific and curiosity-driven. Lead with the most interesting angle.
+  - Good: "Why Full-Color PolyJet Printing Changes What a Figurine Can Look Like"
+  - Bad: "Our 3D Printing Process Explained"
+- **Intro:** 2–3 sentences. Open with a surprising fact, a vivid image, or a relatable moment.
+- **Body:** Use subheadings every 200–300 words. Mix explanation with anecdote.
+- **Outro:** Close with a forward-looking line or a gentle product link — never a hard sell.
+
+### Topics and Framing
+
+- **Production deep-dives:** Explain the Stratasys J55, the mesh repair pipeline, size tiers.
+  Show the craft. Readers should feel like insiders.
+- **Collector culture:** Limited runs, display tips, gifting occasions, seasonal collections.
+- **Custom figurine process:** Walk through the "Prompt to Print" flow — AI generation,
+  technician review, customer preview approval. Demystify it.
+- **Behind the design:** Commission stories, artist profiles, how a trend becomes a model.
 
 ### Tone
 
-Conversational but informed. Assume the reader knows what a figurine is but not how
-PolyJet works. Explain processes in plain language — "the printer jets ink-like resins
-layer by layer, fusing them under UV light" is better than "binder jetting photopolymer
-resin substrates."
+Conversational but authoritative. Use "we" for Figurio. Use "you" to address the reader.
+Avoid first-person singular ("I think…") unless it's a signed personal piece.
 
 ---
 
 ## Social Media Captions
 
-### Instagram / Facebook
+### Platform Defaults
 
-- 1–3 sentences maximum
-- Lead with the visual ("Look at those wing details…")
-- End with a soft CTA or question to encourage engagement
-- 3–5 hashtags, placed after the copy (not inline): `#3Dprinted #customfigurine #Figurio`
-- Always mention size when showing scale
+| Platform | Length | Tone | CTA |
+|----------|--------|------|-----|
+| Instagram | 80–150 words | Visual-first, playful | "Link in bio" or tag a friend |
+| TikTok | 30–60 words | Fast, punchy, trend-aware | Engage with the comment hook |
+| Facebook | 60–120 words | Slightly warmer, gift-oriented | Direct product link |
+| Pinterest | 40–80 words | Descriptive, keyword-rich | Product link |
 
-### Example
+### Caption Formula
 
-> Every feather, printed. This phoenix figurine stands 22 cm tall and was produced
-> on the Stratasys J55 — 500,000 colors, zero paintbrush. Which color variant
-> would you display? 🔗 in bio.
->
-> #Figurio #3DPrintedFigurines #PolyJet #Collectibles
+1. **Hook** — first line must earn the scroll-stop. Question, bold claim, or visual payoff teaser.
+2. **Body** — 1–2 sentences of context or delight.
+3. **CTA** — one clear action or social prompt (tag a friend, share, comment).
+4. **Hashtags** — 3–6, mix broad (#3Dprinting, #figurines) with niche (#PolyJet, #customfigurine,
+   #FigurioPrint). Never pad to 30.
 
----
+### Engagement Hooks That Work for Figurio
 
-## Email Copy
+- "Tag someone who needs this on their desk."
+- "Which size would you pick — 8cm, 15cm, or go full 25cm statement piece?"
+- "We printed [X] layers for this. Can you spot the detail?"
+- "What would your custom figurine look like? Drop your prompt below."
 
-### Subject lines
+### What to Avoid
 
-- 40–55 characters preferred (fits most mobile clients)
-- Use the recipient's name token if available: `{{ first_name }}, your figurine is ready`
-- Avoid spam triggers: no ALL CAPS, no "FREE", no excessive punctuation
-
-### Body
-
-- Open with the key message in the first sentence — do not bury the point
-- One primary CTA per email, styled as a button label (3–5 words): "See Your Figurine"
-- Transactional emails (order confirmed, shipped, ready): keep copy under 100 words;
-  customers just need the facts and a tracking link
-- Promotional emails: 150–250 words, one hero image, one CTA
-
-### Tone in email
-
-Slightly more personal than web copy. Use "you" frequently. Sign off from
-"The Figurio Team" — not a fictional persona.
+- Overusing "drop" or "collab" — feels forced for a figurine brand.
+- Vague superlatives: "incredible," "amazing," "must-have."
+- Excessive emoji stacking — one or two purposeful ones max.
+- Asking multiple questions in one caption.
 
 ---
 
-## General Rules
+## Shared Rules (All Content Types)
 
-- Czech Republic is the primary market; default currency is CZK; use EUR as secondary
-- Sizes always in centimeters (cm), never inches
-- "PolyJet" is a proper noun — always capitalize
-- "Stratasys J55" on first mention per page; "J55" acceptable on subsequent references
-- Do not claim turnaround times in evergreen content — times change; link to the FAQ
-- Spell "figurine" — not "figuriene", "figuring", or "figure" when referring to the product
+- **Spell out "PolyJet"** — not "polyjet" or "poly jet."
+- **Size references:** always include the cm measurement alongside the tier name on first mention
+  (e.g., "Medium (15cm)").
+- **"Prompt to Print"** and **"Ready to Print"** are proper Figurio product line names — capitalize
+  and use consistently.
+- **MCAE / Stratasys J55** — mention when print quality is the topic; omit in lightweight social posts.
+- **Czech Republic / EU shipping context** — relevant in posts targeting CZ/SK audience;
+  use Zásilkovna reference for Czech readers, DHL for EU/world.

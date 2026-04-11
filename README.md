@@ -1,90 +1,103 @@
 # Figurio
 
-Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. Based in Czech Republic, powered by Stratasys J55 PolyJet technology via MCAE partnership.
+Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. Based in Czech Republic.
 
 ## Product Lines
 
-1. **Catalog Figurines ("Ready to Print")** — Curated, rotating catalog of pre-designed figurines
-2. **AI Custom Figurines ("Prompt to Print")** — Describe a figurine in natural language, get a 3D-printed result
-3. **3D Scan-to-Print ("Scan Yourself")** — Phase 2 future product line
+- **Catalog Figurines** ("Ready to Print") — Curated, rotating catalog of pre-designed figurines across trending, seasonal, and evergreen categories
+- **AI-Prompted Custom Figurines** ("Prompt to Print") — Customers describe a figurine in natural language, AI generates a 3D model, customer approves a rendered preview before production
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, Vite |
-| Backend | Python, FastAPI, PostgreSQL, Alembic, uv |
-| AI Pipeline | PyTorch, Blender Python API, text-to-3D service APIs |
-| Payments | Stripe (cards, Apple Pay, Google Pay, SEPA) |
-| Infrastructure | Docker, Kubernetes (microk8s), Traefik, GitHub Actions, Terraform |
-| Shipping | Zasilkovna (Czech/EU), DHL (international) |
+| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, GSAP |
+| Backend | Python, FastAPI, PostgreSQL |
+| Infrastructure | Docker, Kubernetes (microk8s), Helm, Traefik, GitHub Actions |
+| Payments | Stripe (checkout sessions, webhooks, two-stage for custom) |
+| AI Pipeline | Text-to-3D (Meshy/Tripo3D), automated mesh repair |
+| Shipping | Zasilkovna (CZ), DHL (EU/international) |
+| Production | MCAE (Stratasys J55 PolyJet) |
 
 ## Org Chart
 
 ```
 CEO
-├── CTO
-│   ├── Backend Engineer
-│   ├── Frontend Engineer
-│   ├── ML Engineer (3D Pipeline)
-│   └── DevOps Engineer
-├── CMO
-│   └── Content Creator
-└── Head of Operations
+ ├── CTO
+ │    ├── Backend Engineer
+ │    ├── Frontend Engineer
+ │    ├── DevOps Engineer
+ │    └── UI Designer
+ ├── CMO
+ │    └── Content Creator
+ ├── Head of Operations
+ ├── Product Manager
+ └── Customer Support
 ```
 
-**9 agents** | **18 custom skills** | **18 subagents** | **~$980/mo total budget**
+**11 agents** | **~$1,100/mo total budget**
 
 ## Company Goals
 
-1. Launch MVP e-commerce platform with catalog browsing, Stripe checkout, and order management
-2. Build AI prompt-to-print pipeline for custom figurine generation with mesh repair and customer preview
-3. Establish Figurio brand and acquire first 100 paying customers
-4. Operationalize production and fulfillment with MCAE printing partnership
+1. Launch MVP e-commerce platform with catalog browsing, AI custom figurines, and Stripe payments
+2. Build a launch-ready catalog of 30+ print-ready figurine designs
+3. Establish production & fulfillment pipeline with MCAE printing partner
+4. Build brand identity and acquire first 100 paying customers
 
 ## Projects
 
 | Project | Owner | Description |
 |---------|-------|-------------|
-| `mvp-backend` | Backend Engineer | FastAPI backend with catalog, Stripe, orders |
-| `mvp-frontend` | Frontend Engineer | React storefront with cart, checkout, admin |
-| `ai-pipeline` | ML Engineer | Text-to-3D generation, mesh repair, preview |
-| `brand-and-marketing` | Content Creator | Brand identity, social media, SEO, campaigns |
-| `operations` | Head of Operations | MCAE partnership, shipping, packaging, SOPs |
+| mvp-backend | Backend Engineer | FastAPI backend with product catalog, order pipeline, Stripe, AI queue |
+| mvp-frontend | Frontend Engineer | React storefront with catalog, AI prompt flow, cart, checkout |
+| platform-infra | DevOps Engineer | Docker, K8s deployment, CI/CD, monitoring |
 
 ## Importing Into Paperclip
 
-### Via Paperclip UI/API
-
-1. Push this repo to GitHub
-2. Import via Paperclip UI (Company Import page) or API:
-   ```
-   POST /companies/import
-   { "source": { "type": "github", "url": "https://github.com/cellarwood/figurio" } }
-   ```
-3. The import deploys all agent configs, skills, projects, tasks, and runtime files
-
-### Global Config (manual)
-
-1. Copy `global/settings.json` and `global/plugins.json` into `.company/claude/` in the Paperclip repo root
-2. Rebuild/restart the container
-
-## Setup
-
-After import, run the secrets setup script:
+### 1. Company Import (spec-compliant files)
 
 ```bash
-bash scripts/setup-secrets.sh
+# Push to GitHub
+git add -A && git commit -m "Figurio company package"
+git push origin main
+
+# Import via Paperclip UI or API
+curl -X POST https://your-paperclip/api/companies/import \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"source": {"type": "github", "repo": "cellarwood/figurio"}}'
 ```
 
-Required secrets:
-- `GH_TOKEN` — GitHub personal access token
-- `DOCKER_HUB_USERNAME` / `DOCKER_HUB_TOKEN` — Docker Hub credentials
-- `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` — Stripe API keys
-- `DATABASE_URL` — PostgreSQL connection string
-- `GEMINI_API_KEY` — Google Gemini for media generation
-- `ELEVENLABS_API_KEY` — ElevenLabs for text-to-speech (optional)
+### 2. Global Config (manual setup)
+
+```bash
+# Copy global config into Paperclip repo
+cp global/settings.json /path/to/paperclip/docker/init/claude/settings.json
+cp global/plugins.json /path/to/paperclip/docker/init/claude/plugins.json
+
+# Add volume mount in docker-compose.yml:
+# volumes:
+#   - ./init/claude:/docker-init/claude:ro
+
+# Rebuild container
+docker compose up -d --build
+```
+
+### 3. Secrets
+
+Run `scripts/setup-secrets.sh` to configure required environment variables (Stripe, GitHub, Docker Hub, database, etc.).
+
+## Infrastructure
+
+| Service | Value |
+|---------|-------|
+| Domain | cellarwood.org |
+| Google Workspace | cellarwood.org |
+| GitHub | github.com/cellarwood/figurio |
+| Docker Hub | lukekelle00 |
+| Slack | 00aiworkspace.slack.com |
+| Stripe | Cellarwood |
+| K8s | microk8s-local |
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT

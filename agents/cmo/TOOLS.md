@@ -4,32 +4,31 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `design-plugin` | Generate and iterate on visual creative: brand assets, ad creatives, social graphics, logo variants |
-| `media-plugin` | Web screenshots for competitor and inspiration research, Mermaid diagrams for campaign flow planning, ElevenLabs for voiceover or audio branding experiments |
-| `office-plugin` | Read and write documents and spreadsheets; useful for campaign trackers, briefs, and KPI dashboards |
+| `office-plugin` | Create and edit structured documents, spreadsheets, and presentations for briefs, reports, and planning materials |
+| `media-plugin` | Process images and video assets, take screenshots, generate audio via ElevenLabs, and capture web pages for competitive research |
+| `design-plugin` | Generate and iterate on visual assets, mockups, ad creatives, and brand materials |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`figurio-cmo@cellarwood.org`).
+Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`cmo@cellarwood.org`).
 
 **Services:**
-
-- **Gmail** -- influencer outreach, press and partner communications, internal threads with CEO and content-creator
-- **Drive** -- brand guidelines storage, campaign asset library, creative brief archive
-- **Docs** -- brand guidelines, creative briefs, press kit, campaign post-mortems
-- **Sheets** -- campaign tracker, influencer roster, KPI dashboard, customer acquisition funnel
-- **Calendar** -- campaign calendar, content publication schedule, launch countdown milestones
-- **Forms** -- post-purchase customer surveys, waitlist capture, influencer interest forms
+- **Gmail** (`gws-gmail`) -- read, triage, send, and reply to email. Primary channel for influencer outreach, vendor communication, and executive updates.
+- **Drive** (`gws-drive`) -- store and share brand assets, campaign briefs, strategy documents, and reports. Treat Drive as the single source of truth for all marketing materials.
+- **Docs** (`gws-docs`) -- write campaign briefs, brand voice guidelines, SEO strategy documents, and creative direction docs.
+- **Sheets** (`gws-sheets`) -- maintain the marketing calendar, influencer outreach tracker, marketing spend log, and acquisition metrics dashboard.
+- **Calendar** (`gws-calendar`) -- track campaign launch dates, seasonal deadlines, review milestones, and Content Creator check-ins.
+- **Forms** (`gws-forms`) -- collect customer feedback, run post-purchase surveys, or gather audience research data.
 
 Run `gws --help` or `gws <service> --help` for CLI documentation.
 
 ## Usage Guidelines
 
-- Use `design-plugin` early in any campaign cycle to lock visual direction before briefing content-creator -- do not send a brief without a clear visual reference or at minimum a described aesthetic.
-- Use `media-plugin` for competitor landscape sweeps: screenshot competitor social profiles and product pages quarterly and store findings in Drive for reference during positioning reviews.
-- Keep the influencer tracker in Sheets as the single source of truth -- all outreach sent via Gmail should be logged back to the Sheets row with date, message summary, and response status.
-- Use Docs for all creative briefs handed to content-creator; link the Doc directly in the issue comment so there is no ambiguity about which version is current.
-- Use Sheets for the weekly KPI dashboard update; do not report metrics to the CEO in prose alone -- always link the Sheets row or range so numbers are verifiable.
+- Use `design-plugin` to produce reference visuals and mockups when briefing the Content Creator — a visual brief produces better output than a text description alone.
+- Use `media-plugin` to screenshot competitor social accounts, capture reference content, and process any raw image assets from print production before passing them to the Content Creator.
+- All campaign briefs should live in Google Drive (Docs) and be linked from the corresponding Paperclip issue — never attach docs only to a comment.
+- The influencer tracker and marketing spend log must be kept in Google Sheets and updated every session. These are the source of truth the CEO reviews.
+- Use Gmail for all external outreach (influencers, PR contacts, vendors). Keep outreach threads labeled and tracked so follow-ups don't fall through.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

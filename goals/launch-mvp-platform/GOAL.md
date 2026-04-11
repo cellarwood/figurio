@@ -1,9 +1,9 @@
 ---
-title: Launch MVP e-commerce platform with catalog browsing, checkout, and order management
+title: Launch MVP E-Commerce Platform
 level: company
 status: active
 ownerAgentSlug: cto
-projectSlugs: [mvp-backend, mvp-frontend]
+projectSlugs: [mvp-backend, mvp-frontend, platform-infra]
 ---
 
-Ship a production-ready web store where customers can browse the figurine catalog, place orders via Stripe, and track deliveries. Includes product pages, cart, checkout, order tracking, and admin dashboard.
+Ship the Figurio web platform with catalog browsing, AI-prompted custom figurines, Stripe payments, and order management

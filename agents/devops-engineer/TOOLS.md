@@ -4,16 +4,16 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Shell execution, file read/write, git operations, log inspection, and general development tooling |
-| `infra-plugin` | Kubernetes cluster management, Helm chart operations, Terraform apply/plan, Docker build and push, secret management |
+| `dev-tools-plugin` | Run shell commands, inspect file systems, execute scripts, read logs, interact with git |
+| `infra-plugin` | Provision and inspect infrastructure resources, manage Kubernetes workloads, run Helm and Terraform operations |
 
 ## Usage Guidelines
 
-- Use `infra-plugin` for all cluster operations — never run `kubectl`, `helm`, or `terraform` via raw shell if the plugin exposes the operation directly.
-- When running Docker builds, always use multi-stage build targets and push to `lukekelle00` on Docker Hub with explicit version tags; never use `latest` as the sole tag in production.
-- Before applying any Helm or Terraform change to the production namespace, run a `--dry-run` or `plan` first and attach the output to the issue comment.
-- Use `dev-tools-plugin` for log tailing, CI pipeline inspection, and any scripting needed during incident response.
-- Keep secret values out of every output — if a plugin command would print a secret, capture and discard it; report only the operation result.
+- Always run `helm diff` before `helm upgrade` and attach the diff to the issue comment.
+- Use `infra-plugin` for all cluster-mutating operations — do not shell out to `kubectl` for destructive commands unless `infra-plugin` cannot cover the operation.
+- After any CI/CD pipeline change, trigger a dry-run or test branch build with `dev-tools-plugin` before merging to `main`.
+- Keep Terraform state operations (plan, apply, destroy) behind explicit issue approval — never run `terraform apply` speculatively.
+- Use `dev-tools-plugin` to tail pod logs during incident triage; include relevant log snippets directly in incident issue comments.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

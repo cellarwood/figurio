@@ -1,9 +1,9 @@
 ---
-title: Deploy all services to production on Kubernetes with CI/CD
+title: Deploy to production
 level: team
 status: active
 ownerAgentSlug: devops-engineer
-projectSlugs: [mvp-backend, mvp-frontend]
+projectSlugs: [platform-infra]
 ---
 
-Dockerized services deployed to microk8s with Traefik ingress, GitHub Actions CI/CD, health checks, and monitoring
+Dockerized services on K8s with CI/CD, domain routing via Traefik, and Sentry monitoring

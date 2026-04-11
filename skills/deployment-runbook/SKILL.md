@@ -1,14 +1,15 @@
 ---
 name: deployment-runbook
 description: >
-  Step-by-step deployment runbook for Figurio services on microk8s. Covers Helm
-  chart rollout, Traefik ingress configuration, Docker Hub image tagging
-  (lukekelle00), health checks, rollback procedure, and secret rotation for
-  Stripe and database credentials.
+  Step-by-step deployment procedure for Figurio services to microk8s — Docker
+  multi-stage builds, push to Docker Hub (lukekelle00), Helm chart upgrades,
+  Traefik ingress routing, and TLS certificate management. Use this skill
+  whenever deploying or redeploying any Figurio service to the Kubernetes cluster.
 allowed-tools:
-  - Read
-  - Grep
   - Bash
+  - Read
+  - Write
+  - Glob
 metadata:
   paperclip:
     tags:
@@ -19,195 +20,147 @@ metadata:
 
 # Deployment Runbook
 
-Standard operating procedure for deploying Figurio services to the microk8s
-Kubernetes cluster. Follow this runbook for every production deployment.
-
 ## When to Use
 
-Use this runbook when:
-- Promoting a GitHub Actions CI/CD build to production
-- Performing a hotfix rollout outside the normal release cadence
-- Rotating Stripe or database secrets
-- Recovering from a failed rollout
+Use this skill when deploying a Figurio service — new release, hotfix, config change, or infrastructure update. Covers the full pipeline from image build through live traffic.
 
-## Pre-flight Checks
+## Prerequisites
 
-Before initiating a rollout, confirm:
+- Docker daemon running locally
+- `kubectl` configured against the microk8s cluster (`microk8s kubectl` or aliased)
+- `helm` v3 available
+- Docker Hub credentials active for `lukekelle00`
+- GitHub Actions pipeline is the preferred path; this runbook covers both CI and manual procedures
 
-1. GitHub Actions workflow is green on `main` — Docker image pushed to
-   `lukekelle00/<service>:<sha>` on Docker Hub.
-2. Sentry release is tagged so errors from the new version are attributed
-   correctly.
-3. No active P1/P2 incidents are open (hold deployment until resolved).
-4. Run a quick sanity check on the target cluster:
+## Step 1 — Build the Docker Image
+
+Figurio services use multi-stage Docker builds. The `Dockerfile` must have a `builder` stage and a lean final stage.
 
 ```bash
-microk8s kubectl get nodes          # all nodes Ready
-microk8s kubectl get pods -n figurio  # no pods in CrashLoopBackOff
+# From the service root
+docker build \
+  --target production \
+  --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+  --build-arg GIT_SHA=$(git rev-parse --short HEAD) \
+  -t lukekelle00/<service-name>:<git-sha> \
+  -t lukekelle00/<service-name>:latest \
+  .
 ```
 
-## Image Tagging Convention
+- Always tag with the Git SHA — `latest` alone is not acceptable for production deploys.
+- Verify the final image size is reasonable; if the production stage exceeds ~200 MB, investigate layer bloat.
 
-All production images are tagged with both the Git SHA and `latest`:
-
-```
-lukekelle00/<service>:<git-sha-7>
-lukekelle00/<service>:latest
-```
-
-Never deploy `latest` directly in Helm values — always pin the SHA tag so
-rollbacks are unambiguous.
-
-## Helm Rollout
-
-Figurio services live under `helm/figurio/`. Each service has a
-`values-prod.yaml` override file.
-
-### Update the image tag
+## Step 2 — Push to Docker Hub
 
 ```bash
-# Edit helm/figurio/values-prod.yaml
+docker push lukekelle00/<service-name>:<git-sha>
+docker push lukekelle00/<service-name>:latest
+```
+
+Confirm the push completed by checking Docker Hub: `https://hub.docker.com/r/lukekelle00/<service-name>/tags`
+
+## Step 3 — Update Helm Values
+
+Helm charts live at `helm/<service-name>/`. The image tag must be pinned to the SHA, never a mutable tag.
+
+Edit `helm/<service-name>/values.yaml` (or the environment override):
+
+```yaml
 image:
-  repository: lukekelle00/<service>
-  tag: "<git-sha-7>"
+  repository: lukekelle00/<service-name>
+  tag: "<git-sha>"   # pin to exact SHA
+  pullPolicy: IfNotPresent
 ```
 
-### Apply the release
+Commit the values change to the repository before proceeding.
+
+## Step 4 — Deploy with Helm
 
 ```bash
-microk8s helm3 upgrade --install figurio-<service> helm/figurio/ \
-  -f helm/figurio/values-prod.yaml \
+helm upgrade --install <release-name> ./helm/<service-name>/ \
   --namespace figurio \
+  --values helm/<service-name>/values.yaml \
   --atomic \
-  --timeout 5m
+  --timeout 3m \
+  --wait
 ```
 
-`--atomic` rolls back automatically if pods do not become Ready within the
-timeout. Check Helm history after:
+- `--atomic` rolls back automatically on failure.
+- `--wait` blocks until all pods are ready or the timeout fires.
+- Use `--dry-run` first when making chart structural changes.
+
+## Step 5 — Verify Rollout
 
 ```bash
-microk8s helm3 history figurio-<service> --namespace figurio
+kubectl rollout status deployment/<service-name> -n figurio
+kubectl get pods -n figurio -l app=<service-name>
+kubectl logs -n figurio -l app=<service-name> --tail=50
 ```
 
-## Traefik Ingress Configuration
+Healthy state: all pods `Running`, no crash-loops, no OOMKilled events.
 
-Ingress resources are declared in `helm/figurio/templates/ingress.yaml`. Key
-conventions:
+## Step 6 — Traefik Ingress Check
 
-- Ingress class: `traefik` (set via `kubernetes.io/ingress.class: traefik`)
-- TLS termination handled by Traefik with Let's Encrypt — do not add manual
-  cert-manager annotations unless instructed.
-- Host patterns:
-  - `figurio.cz` → frontend service
-  - `api.figurio.cz` → backend API service
-  - `ai.figurio.cz` → AI custom figurine pipeline service
-
-When adding a new route, update `values-prod.yaml` ingress block and verify
-Traefik picks it up:
+Traefik is the ingress controller. After a deploy, confirm routing is intact:
 
 ```bash
-microk8s kubectl get ingressroute -n figurio
+kubectl get ingressroute -n figurio
+kubectl describe ingressroute <service-name>-route -n figurio
 ```
 
-## Health Checks
+Expected: `entryPoints` includes `websecure`, `tls` block references the correct certificate resolver, routes match the expected host rules (e.g., `api.figurio.com`).
 
-After every rollout, verify:
+If a new IngressRoute was added, confirm Traefik picked it up:
 
 ```bash
-# Pod readiness
-microk8s kubectl rollout status deployment/<service> -n figurio --timeout=3m
-
-# HTTP smoke test
-curl -sf https://api.figurio.cz/health | jq .status  # expect "ok"
-curl -sf https://figurio.cz/                          # expect HTTP 200
-curl -sf https://ai.figurio.cz/health | jq .status   # expect "ok"
+kubectl logs -n kube-system -l app.kubernetes.io/name=traefik --tail=30
 ```
 
-Check Sentry for any new error spike in the first 5 minutes post-deploy.
+## Step 7 — TLS Certificate Verification
 
-## Rollback Procedure
-
-### Helm rollback (preferred)
+Figurio uses Traefik's ACME resolver. After ingress changes:
 
 ```bash
-microk8s helm3 rollback figurio-<service> --namespace figurio
+# Check cert state
+kubectl get certificate -n figurio
+kubectl describe certificate <service-name>-tls -n figurio
 ```
 
-This reverts to the previous Helm revision. Confirm with:
+Expected: `Ready = True`. If `False`, check the cert-manager / Traefik ACME logs for DNS-01 or HTTP-01 challenge failures.
+
+## Step 8 — Smoke Test
+
+Run the service-level smoke test against the live endpoint:
 
 ```bash
-microk8s helm3 history figurio-<service> --namespace figurio
-microk8s kubectl rollout status deployment/<service> -n figurio
+curl -sf https://api.figurio.com/health | jq .
 ```
 
-### Manual image pin (emergency)
+Expected response: `{"status": "ok"}`. For checkout-critical services, also verify Stripe webhook endpoint reachability.
 
-If Helm state is inconsistent, patch the deployment directly:
+## GitHub Actions Pipeline
+
+The preferred deployment path is the `deploy.yml` workflow in `.github/workflows/`. It executes Steps 1-8 automatically on merge to `main`. Manual deploys should only occur for hotfixes or when the pipeline is broken.
+
+To trigger a manual pipeline run:
 
 ```bash
-microk8s kubectl set image deployment/<service> \
-  <container>=lukekelle00/<service>:<previous-sha> \
-  -n figurio
+gh workflow run deploy.yml --ref main -f service=<service-name>
 ```
 
-Then reconcile Helm values to match so the next `helm upgrade` does not
-re-introduce the broken image.
+## Rollback
 
-## Secret Rotation
-
-### Stripe credentials
-
-Stripe keys are stored in the `figurio-stripe` Kubernetes Secret.
-
-1. Generate new restricted key in the Stripe Dashboard.
-2. Update the secret:
+If a deployment fails and `--atomic` did not catch it (e.g., app-level regression):
 
 ```bash
-microk8s kubectl create secret generic figurio-stripe \
-  --from-literal=STRIPE_SECRET_KEY=sk_live_... \
-  --from-literal=STRIPE_WEBHOOK_SECRET=whsec_... \
-  --namespace figurio \
-  --dry-run=client -o yaml | microk8s kubectl apply -f -
+helm rollback <release-name> -n figurio
 ```
 
-3. Restart the backend deployment to pick up the new secret:
+Then investigate via Sentry before re-deploying. See the `incident-response` skill for full rollback procedures.
 
-```bash
-microk8s kubectl rollout restart deployment/backend -n figurio
-```
+## Anti-patterns
 
-4. Verify Stripe webhook delivery in the Stripe Dashboard — confirm at least
-   one successful event within 2 minutes.
-5. Revoke the old Stripe key only after confirming the new one is active.
-
-### Database credentials
-
-DB credentials are stored in the `figurio-db` Kubernetes Secret.
-
-1. Rotate the password in the database (coordinate with backend-engineer if
-   schema migrations are pending — do not rotate mid-migration).
-2. Update the secret:
-
-```bash
-microk8s kubectl create secret generic figurio-db \
-  --from-literal=DATABASE_URL=postgres://... \
-  --namespace figurio \
-  --dry-run=client -o yaml | microk8s kubectl apply -f -
-```
-
-3. Restart all workloads that mount the secret:
-
-```bash
-microk8s kubectl rollout restart deployment/backend deployment/ai-pipeline \
-  -n figurio
-```
-
-4. Confirm pod restarts succeed and `/health` endpoints return `"ok"`.
-
-## Post-Deploy Checklist
-
-- [ ] All pods in `figurio` namespace are Running/Ready
-- [ ] HTTP smoke tests pass for all three hosts
-- [ ] Sentry shows no new error spikes
-- [ ] Helm history shows `DEPLOYED` status for the new revision
-- [ ] Stripe test transaction completes end-to-end (for backend deploys)
+- Do NOT push only `latest` without a SHA tag — rollback becomes impossible.
+- Do NOT edit running pods directly with `kubectl edit` — all changes go through Helm.
+- Do NOT bypass the `--atomic` flag — silent broken deploys are harder to recover from.
+- Do NOT deploy on Friday afternoon without on-call coverage.

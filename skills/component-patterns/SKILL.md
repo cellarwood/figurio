@@ -1,133 +1,151 @@
 ---
 name: component-patterns
 description: >
-  React/shadcn-ui component conventions for the Figurio storefront — covers
-  product cards with size selector, cart drawer, Stripe Elements checkout form,
-  three.js 3D model preview viewer, order status timeline, and responsive layout
-  patterns. Use this skill when building or modifying any UI component in the
-  Figurio frontend.
+  React/shadcn-ui component conventions for the Figurio storefront — product cards,
+  3D model preview viewer, AI prompt interface (Prompt to Print), cart/checkout flow,
+  and order tracking dashboard. Covers composition patterns, prop contracts, and
+  TypeScript strict-mode requirements specific to Figurio UI.
 allowed-tools:
   - Read
   - Grep
-  - Write
-  - Edit
+  - Glob
 metadata:
   paperclip:
-    tags:
-      - engineering
-      - frontend
+    tags: [engineering, frontend, react]
 ---
 
 # Component Patterns
 
-Figurio's frontend is React 18 with TypeScript strict mode, shadcn-ui + Radix UI primitives, Tailwind CSS utility classes, and Vite as the build tool.
+Conventions for building React/TypeScript components in the Figurio storefront. The stack is React + TypeScript strict mode, shadcn-ui (Radix UI primitives), Tailwind CSS, and GSAP for animation.
 
 ## General Rules
 
-- All components are typed with TypeScript strict mode — no `any`, no non-null assertions without a comment explaining why.
-- Use shadcn-ui primitives (Button, Dialog, Sheet, Select, etc.) as the base layer. Do not re-implement what shadcn already provides.
-- Co-locate component-specific types in the same file unless shared across more than one file, in which case they live in `src/types/`.
-- Props interfaces are named `{ComponentName}Props` and exported.
-- Default exports for page-level components; named exports for reusable UI components.
+- All components are TypeScript strict mode — no `any`, no non-null assertions without a comment.
+- Export a named `type Props` from every component file.
+- Use shadcn-ui primitives (Button, Card, Dialog, etc.) as the base layer. Only build custom primitives when shadcn has no equivalent.
+- Co-locate component CSS only when Tailwind utilities are insufficient; prefer Tailwind utility classes.
+- GSAP animations live in `useEffect`/`useLayoutEffect` with `gsap.context()` for cleanup — never inline styles that conflict with GSAP targets.
 
-## Product Card
+## Product Card (`ProductCard`)
 
-The product card is the primary catalog unit. It renders a figurine photo, name, base price, and an inline size selector.
+Used in catalog browsing and search results.
 
 ```tsx
-// src/components/catalog/ProductCard.tsx
-export interface ProductCardProps {
-  product: CatalogProduct; // id, name, slug, basePrice, sizes, imageUrl
-  onAddToCart: (productId: string, sizeId: string) => void;
+type Props = {
+  sku: string
+  name: string
+  thumbnailUrl: string
+  sizeTier: 'small' | 'medium' | 'large'   // ~8 cm / ~15 cm / ~25 cm
+  priceEur: number
+  badge?: 'new' | 'trending' | 'seasonal'
+  onAddToCart: (sku: string) => void
 }
 ```
 
-- Size selector uses shadcn `Select` (Radix `SelectRoot`). Default to the first available size on mount.
-- Display price as `Kč {amount}` (Czech koruna) formatted with `Intl.NumberFormat('cs-CZ', { style: 'currency', currency: 'CZK' })`.
-- Figurine photos use `<img>` with an explicit `alt` matching the product name and size (e.g., `"Dragon figurine – 15 cm"`).
-- Wrap the card in a `<article>` element for semantic meaning.
-- Hover state: `group` class on the article, `group-hover:scale-105` transition on the image container.
+- Use shadcn `Card` + `CardContent` as wrapper.
+- Thumbnail renders in a fixed 1:1 aspect ratio container using Tailwind `aspect-square`.
+- Badge maps to a `<span>` with Tailwind color variants: `new` → blue, `trending` → orange, `seasonal` → green.
+- `onAddToCart` fires from a shadcn `Button` with `variant="default"`. Button is disabled while the cart mutation is in-flight — pass a `isPending` prop.
+- Price always formats as `€{n.toFixed(2)}` — do not use Intl.NumberFormat (it varies by browser locale in tests).
 
-## Cart Drawer
+## 3D Model Preview Viewer (`ModelViewer`)
 
-The cart lives in a shadcn `Sheet` (slide-over from the right). It is always mounted but toggled via a Zustand store flag.
-
-```tsx
-// src/components/cart/CartDrawer.tsx
-// Trigger: <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-```
-
-- Cart line items show product name, size, quantity stepper (shadcn `Button` with `+`/`-`), unit price, and line total.
-- Quantity stepper dispatches to the cart Zustand store; min quantity is 1.
-- "Proceed to Checkout" button navigates to `/checkout` via `react-router-dom` `useNavigate`.
-- Show a `Badge` with item count on the cart icon in the header; hide the badge (not just zero it) when the cart is empty.
-- Empty cart state: centered illustration + "Your cart is empty" text + "Browse figurines" link to `/catalog`.
-
-## Stripe Elements Checkout Form
-
-The checkout page embeds Stripe Elements for card collection. Never handle raw card data outside of Stripe Elements.
+Used on product detail pages and in the AI prompt approval flow.
 
 ```tsx
-// src/pages/CheckoutPage.tsx
-// Uses: @stripe/react-stripe-js, @stripe/stripe-js
-// Wrap in <Elements stripe={stripePromise} options={elementsOptions}>
-```
-
-- `stripePromise` is initialised once at module level (`loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)`).
-- Use `<PaymentElement>` (not the older `<CardElement>`) for the payment method UI — it supports local Czech payment methods.
-- Form sections: Shipping address → Payment → Order summary (sticky right column on desktop).
-- On submit: call `stripe.confirmPayment({ elements, confirmParams: { return_url } })`. Handle `error` from the result inline — display it in a shadcn `Alert` variant `destructive` below the submit button.
-- Disable the submit button while `stripe.confirmPayment` is in flight (track with local `useState<boolean>`).
-
-## 3D Model Preview Viewer
-
-AI-custom figurines show a three.js WebGL preview of the generated model.
-
-```tsx
-// src/components/preview/ModelViewer.tsx
-export interface ModelViewerProps {
-  modelUrl: string;   // URL to .glb file
-  loading?: boolean;  // show skeleton while model loads
+type Props = {
+  modelUrl: string          // .glb or .obj URL from our CDN
+  autoRotate?: boolean      // default true on catalog detail, false in prompt approval
+  onApprove?: () => void    // present only in AI prompt approval context
+  onRequestRevision?: () => void
+  isLoading?: boolean
 }
 ```
 
-- Initialise the three.js renderer inside a `useEffect` with a cleanup that calls `renderer.dispose()`.
-- Use `OrbitControls` from `three/examples/jsm/controls/OrbitControls` for mouse/touch rotation.
-- While `loading` is true, render a `Skeleton` (shadcn) the same dimensions as the canvas.
-- Canvas is always `width: 100%`, `aspect-ratio: 1 / 1` via Tailwind `aspect-square`.
-- If the browser reports `!renderer.capabilities.isWebGL2`, render a static `<img>` fallback with `alt="3D preview unavailable — figurine render"` and a tooltip explaining WebGL is required.
+- Wrap the 3D renderer in a `<Suspense>` boundary with a skeleton placeholder matching the viewer dimensions.
+- Use `autoRotate` GSAP tween on the container's CSS `rotateY` transform — not on the underlying renderer — so we don't conflict with pointer-drag events.
+- When `onApprove` is present (approval context), render two shadcn `Button` elements below the viewer: `Approve` (variant `default`) and `Request Revision` (variant `outline`). Both are disabled while `isLoading` is true.
+- Error state: show a shadcn `Alert` with `variant="destructive"` and a retry link.
 
-## Order Status Timeline
+## AI Prompt Interface (`PromptStudio`)
 
-Displayed on the `/orders/{orderId}` page. Shows steps: Order Placed → Payment Confirmed → Sent to MCAE → Printing → Shipped → Delivered.
+The "Prompt to Print" entry point where customers describe a custom figurine.
 
 ```tsx
-// src/components/orders/OrderTimeline.tsx
-export type OrderStep =
-  | 'placed' | 'paid' | 'sent_to_mcae' | 'printing' | 'shipped' | 'delivered';
-
-export interface OrderTimelineProps {
-  currentStep: OrderStep;
-  steps: { key: OrderStep; label: string; timestamp?: string }[];
+type Props = {
+  onSubmit: (prompt: string, sizeTier: SizeTier) => Promise<void>
+  isGenerating: boolean
+  generationError?: string
 }
 ```
 
-- Render as a vertical `<ol>` with a connecting line (Tailwind `border-l-2`).
-- Completed steps: filled circle icon (`bg-primary`), full opacity text.
-- Current step: filled circle with a `ring-2 ring-primary/40` pulse animation.
-- Upcoming steps: hollow circle (`border-2 border-muted`), muted text.
-- Timestamp (if present) shown in `cs-CZ` locale: `new Date(timestamp).toLocaleDateString('cs-CZ')`.
+- Textarea (shadcn `Textarea`) with max 300 characters. Show remaining character count below using a `<p aria-live="polite">`.
+- Size tier selection uses shadcn `RadioGroup` with three options (Small / Medium / Large), each showing the cm height and base price.
+- Submit button text changes: idle → "Generate Figurine", generating → "Generating…" (with a spinner icon from `lucide-react`). Button is disabled while `isGenerating` is true.
+- Content moderation error (IP/copyright rejection) renders as a `callout` style `Alert` beneath the textarea, not a toast.
+- Deposit pricing note ("50% charged now, 50% on preview approval") is a static `<p>` in `text-muted-foreground` below the submit button — always visible, not hidden.
 
-## Responsive Patterns
+## Cart & Checkout Flow
 
-Figurio targets mobile-first. Common breakpoints used are `sm` (640 px) and `lg` (1024 px).
+### `CartDrawer`
 
-| Context | Mobile | Desktop (`lg:`) |
-|---|---|---|
-| Catalog grid | 1 column | 3 columns (`lg:grid-cols-3`) |
-| Checkout layout | Single column | 2-column with sticky summary (`lg:grid lg:grid-cols-[1fr_360px]`) |
-| Product detail | Stacked image then info | Side-by-side (`lg:flex lg:gap-12`) |
-| Cart drawer | Full-width (100vw) | 400 px fixed (`w-[400px]`) |
+Slides in from the right using a shadcn `Sheet` (not a full-page route). Items list is scrollable; total and checkout CTA are sticky at the bottom.
 
-- Use `container mx-auto px-4` as the page wrapper. Max width is set in `tailwind.config.ts` to `1280px`.
-- Navigation collapses to a bottom tab bar on mobile (not a hamburger menu).
+```tsx
+type CartItem = {
+  sku: string
+  name: string
+  sizeTier: SizeTier
+  priceEur: number
+  quantity: number
+  thumbnailUrl: string
+  type: 'catalog' | 'ai-custom'
+}
+```
+
+- AI-custom items show a "Preview approved" badge and cannot have quantity > 1.
+- Catalog items support quantity increment/decrement with shadcn `Button` (`variant="ghost"`, size `icon`).
+- Checkout button navigates to `/checkout` and closes the drawer.
+
+### `CheckoutForm`
+
+Wraps Stripe Elements. Layout is a two-column grid on desktop (order summary left, payment form right), single column on mobile.
+
+- Order summary is a read-only `CartSummary` component (not the full `CartDrawer`).
+- Stripe `PaymentElement` is the sole payment UI — do not build custom card inputs.
+- A `<p>` above the pay button always lists accepted payment methods: Visa, Mastercard, Apple Pay, Google Pay, iDEAL, SEPA.
+- Form submission disables the pay button and shows a spinner; never navigate away until Stripe confirms `payment_intent.succeeded`.
+
+## Order Tracking Dashboard (`OrderTracker`)
+
+Post-purchase status page at `/orders/{orderId}`.
+
+```tsx
+type OrderStatus =
+  | 'payment_captured'
+  | 'model_in_queue'
+  | 'printing'
+  | 'quality_check'
+  | 'shipped'
+  | 'delivered'
+
+type Props = {
+  orderId: string
+  status: OrderStatus
+  estimatedDelivery?: string   // ISO date string
+  trackingUrl?: string
+}
+```
+
+- Status pipeline renders as a horizontal stepper on desktop, vertical on mobile. Use Tailwind `flex-row` / `flex-col` with a responsive breakpoint (`md:flex-row`).
+- Active step is highlighted; completed steps have a checkmark icon (`lucide-react` `CheckCircle2`).
+- `trackingUrl` renders as an external link (`target="_blank" rel="noopener noreferrer"`) — only shown when status is `shipped` or `delivered`.
+- Poll for status updates every 60 seconds using a `useEffect`-based interval. Cancel on unmount.
+
+## GSAP Animation Conventions
+
+- Always initialize inside `useLayoutEffect` (for DOM-sync) or `useEffect` (for async triggers).
+- Wrap all tweens in `gsap.context(ctx => { ... }, containerRef)` and return `() => ctx.revert()` for cleanup.
+- Page-level transitions (catalog → product detail) use `gsap.timeline()` with an `opacity` + `y` entrance. Duration: 0.35 s, ease: `power2.out`.
+- Do not use GSAP for hover states — use Tailwind `hover:` utilities instead.
+- Respect `prefers-reduced-motion`: check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` at the start of every GSAP context and skip tweens if true.

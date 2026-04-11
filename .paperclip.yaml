@@ -1,60 +1,42 @@
-schema: agentcompanies/v1
+schema: paperclip/v1
 company: figurio
 
 adapterConfig:
-  model: claude-sonnet-4-6
-  maxTurns: 50
+  adapter: claude_local
+  model: sonnet
   env:
-    GH_TOKEN:
-      source: secret
-      key: GH_TOKEN
-    DOCKER_HUB_USERNAME:
-      source: secret
-      key: DOCKER_HUB_USERNAME
-    DOCKER_HUB_TOKEN:
-      source: secret
-      key: DOCKER_HUB_TOKEN
-    STRIPE_SECRET_KEY:
-      source: secret
-      key: STRIPE_SECRET_KEY
-    STRIPE_WEBHOOK_SECRET:
-      source: secret
-      key: STRIPE_WEBHOOK_SECRET
-    DATABASE_URL:
-      source: secret
-      key: DATABASE_URL
-    SENTRY_DSN:
-      source: plain
-      value: ""
-    GEMINI_API_KEY:
-      source: secret
-      key: GEMINI_API_KEY
-    ELEVENLABS_API_KEY:
-      source: secret
-      key: ELEVENLABS_API_KEY
-    MEDIA_OUTPUT_DIR:
-      source: plain
-      value: /paperclip/media-output
-    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
-      source: plain
-      value: /paperclip/.gws/figurio.json
+    GH_TOKEN: "${{ secrets.GH_TOKEN }}"
+    DOCKER_HUB_USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
+    DOCKER_HUB_TOKEN: "${{ secrets.DOCKER_HUB_TOKEN }}"
+    STRIPE_SECRET_KEY: "${{ secrets.STRIPE_SECRET_KEY }}"
+    STRIPE_WEBHOOK_SECRET: "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
+    DATABASE_URL: "${{ secrets.DATABASE_URL }}"
+    SENTRY_DSN: "${{ vars.SENTRY_DSN }}"
+    GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
+    ELEVENLABS_API_KEY: "${{ secrets.ELEVENLABS_API_KEY }}"
+    MEDIA_OUTPUT_DIR: "/paperclip/media"
+    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: "/paperclip/.gws/figurio.json"
 
-agents:
+budgets:
   ceo:
-    budget: 10000
+    monthlyCents: 10000
   cto:
-    budget: 15000
-  cmo:
-    budget: 10000
+    monthlyCents: 15000
   backend-engineer:
-    budget: 12000
+    monthlyCents: 12000
   frontend-engineer:
-    budget: 12000
-  ml-engineer:
-    budget: 15000
+    monthlyCents: 12000
   devops-engineer:
-    budget: 10000
+    monthlyCents: 10000
+  cmo:
+    monthlyCents: 12000
   content-creator:
-    budget: 6000
+    monthlyCents: 8000
   head-of-operations:
-    budget: 8000
+    monthlyCents: 10000
+  ui-designer:
+    monthlyCents: 8000
+  product-manager:
+    monthlyCents: 8000
+  customer-support:
+    monthlyCents: 5000

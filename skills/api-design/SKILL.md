@@ -1,58 +1,143 @@
 ---
 name: api-design
 description: >
-  REST API conventions for Figurio's FastAPI backend — endpoint naming for
-  products, orders, and users; pagination and error response shapes; Stripe
-  checkout session and webhook integration patterns; order lifecycle state
-  machine. Use whenever designing or reviewing API endpoints for the Figurio
-  platform.
+  REST API conventions for the Figurio D2C 3D-figurine platform built with FastAPI.
+  Covers endpoint naming for catalog products, AI generation job queue, order pipeline,
+  Stripe checkout and webhook integration, pagination, error responses, and authentication patterns.
 allowed-tools:
   - Read
   - Grep
+  - Write
+  - Bash
 metadata:
   paperclip:
-    tags:
-      - engineering
-      - backend
+    tags: [engineering, backend, api]
 ---
 
 # API Design
 
-## URL Structure
+## Base URL Structure
 
-All Figurio API endpoints are versioned and grouped by resource:
+All public API endpoints live under `/api/v1/`. Services are grouped by resource domain.
 
 ```
-/api/v1/products
-/api/v1/products/{sku}
-/api/v1/products/{sku}/images
-/api/v1/categories
-/api/v1/categories/{slug}/products
-
-/api/v1/orders
-/api/v1/orders/{order_id}
-/api/v1/orders/{order_id}/items
-
-/api/v1/users/me
-/api/v1/users/me/orders
-
-/api/v1/checkout/session          # create Stripe checkout session
-/api/v1/webhooks/stripe           # Stripe webhook receiver
-
-/api/v1/ai/generate               # submit AI custom figurine job
-/api/v1/ai/jobs/{job_id}          # poll AI generation job status
+/api/v1/products/          # Catalog figurines
+/api/v1/orders/            # Order lifecycle
+/api/v1/generation-jobs/   # AI prompt-to-print pipeline
+/api/v1/users/             # Account management
+/api/v1/webhooks/stripe    # Stripe event sink (no /v1/ version prefix — Stripe controls the URL)
 ```
 
-Rules:
-- Resource names are **plural nouns** in kebab-case (`size-tiers`, not `sizeTier`)
-- SKUs are used as natural IDs for products; UUIDs for orders, users, jobs
-- No trailing slashes
+## Endpoint Naming
 
-## Request / Response Conventions
+- Collections: plural noun, no trailing slash — `/api/v1/products`
+- Single resource: `/{id}` suffix — `/api/v1/products/{product_id}`
+- Sub-resources follow the parent: `/api/v1/orders/{order_id}/items`
+- Actions that are not CRUD go on a verb sub-path: `/api/v1/generation-jobs/{job_id}/approve`
+- Use kebab-case for multi-word path segments: `/api/v1/generation-jobs`
 
-### Pagination
+## Key Resource Endpoints
 
-All collection endpoints return the same envelope:
+### Products (Catalog)
+
+```
+GET    /api/v1/products                  # paginated list with filters
+GET    /api/v1/products/{product_id}     # detail
+POST   /api/v1/products                  # admin: create
+PATCH  /api/v1/products/{product_id}     # admin: update
+DELETE /api/v1/products/{product_id}     # admin: soft-delete (sets is_active=false)
+```
+
+Query params: `?category=fantasy&size_tier=medium&page=1&page_size=20`
+
+### Orders
+
+```
+POST   /api/v1/orders                         # create order, returns checkout session URL
+GET    /api/v1/orders/{order_id}              # order detail + current state
+GET    /api/v1/orders                         # user's orders (paginated)
+POST   /api/v1/orders/{order_id}/cancel       # request cancellation (only in placed state)
+```
+
+Orders are created with status `placed`. The state machine is driven by Stripe webhooks
+and internal transitions — never by direct PATCH to the status field from outside.
+
+### AI Generation Jobs
+
+```
+POST   /api/v1/generation-jobs                        # submit prompt, creates job
+GET    /api/v1/generation-jobs/{job_id}               # poll status + preview URL
+POST   /api/v1/generation-jobs/{job_id}/approve       # customer approves preview → triggers order
+POST   /api/v1/generation-jobs/{job_id}/reject        # customer rejects → job loops back to queued
+GET    /api/v1/generation-jobs                        # user's jobs (paginated)
+```
+
+Job polling should be done client-side at a reasonable interval (5–10 seconds). Do not
+use long-polling or SSE for the MVP — simple GET is sufficient.
+
+### Stripe Integration
+
+#### Checkout
+
+Order creation (`POST /api/v1/orders`) responds with a Stripe Checkout Session URL.
+The frontend redirects the customer there. Do not handle card data server-side.
+
+```python
+# Response shape for POST /api/v1/orders
+{
+  "order_id": "ord_abc123",
+  "checkout_url": "https://checkout.stripe.com/pay/cs_live_..."
+}
+```
+
+For AI-custom orders, a 50% deposit Checkout Session is created at job submission
+(`POST /api/v1/generation-jobs`). The remaining 50% is charged on approval.
+
+#### Webhooks
+
+All Stripe events are received at `POST /webhooks/stripe`.
+
+- Verify the `Stripe-Signature` header using `stripe.Webhook.construct_event()` before processing.
+- Return `200 OK` immediately after signature verification, then process async to avoid Stripe retries.
+- Events handled: `checkout.session.completed`, `payment_intent.succeeded`,
+  `payment_intent.payment_failed`, `charge.dispute.created`.
+
+```python
+@router.post("/webhooks/stripe", status_code=200)
+async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature")
+    event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
+    background_tasks.add_task(handle_stripe_event, event)
+    return {"received": True}
+```
+
+## Authentication
+
+- JWT Bearer tokens for all authenticated endpoints.
+- Token issued at `/api/v1/auth/token` (POST, body: email + password).
+- Token refresh at `/api/v1/auth/refresh`.
+- Admin-only endpoints protected by a `require_admin` dependency — check `user.role == "admin"`.
+- The Stripe webhook endpoint is authenticated by signature verification only — no JWT.
+
+```python
+# Dependency pattern
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+    ...
+
+async def require_admin(user: User = Depends(get_current_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+```
+
+## Pagination
+
+All list endpoints use cursor-free offset pagination for the MVP.
+
+**Request:** `?page=1&page_size=20` (page is 1-indexed; default page_size=20, max=100)
+
+**Response envelope:**
 
 ```json
 {
@@ -64,122 +149,43 @@ All collection endpoints return the same envelope:
 }
 ```
 
-Query params: `?page=1&page_size=20` (default page_size: 20, max: 100).
+Use a shared `PaginatedResponse[T]` generic Pydantic model — do not repeat this shape per endpoint.
 
-### Error Responses
+## Error Responses
 
-All errors follow a consistent shape. Use FastAPI's `HTTPException` with a detail dict — never a plain string for client-facing errors:
+All errors follow a single envelope:
 
 ```json
 {
   "error": {
     "code": "ORDER_NOT_FOUND",
-    "message": "Order abc123 does not exist.",
-    "field": null
+    "message": "Order ord_abc123 does not exist.",
+    "details": {}
   }
 }
 ```
 
-`code` is a SCREAMING_SNAKE_CASE string used by the frontend for i18n.
-`field` is populated for validation errors (points to the offending request field).
+| HTTP Status | When to use |
+|-------------|-------------|
+| 400 | Validation errors, bad request body |
+| 401 | Missing or invalid token |
+| 403 | Authenticated but insufficient permissions |
+| 404 | Resource not found |
+| 409 | State conflict (e.g., cancelling a shipped order) |
+| 422 | FastAPI/Pydantic schema validation failure (default behavior) |
+| 500 | Unexpected server error — never leak stack traces |
 
-Standard error codes:
+Use string `code` values in SCREAMING_SNAKE_CASE for programmatic handling by the frontend.
 
-| HTTP status | code |
-|-------------|------|
-| 400 | `INVALID_REQUEST` |
-| 401 | `UNAUTHENTICATED` |
-| 403 | `FORBIDDEN` |
-| 404 | `{RESOURCE}_NOT_FOUND` |
-| 409 | `{RESOURCE}_CONFLICT` |
-| 422 | `VALIDATION_ERROR` |
-| 500 | `INTERNAL_ERROR` |
+## Request / Response Schemas
 
-Implement a shared `ErrorResponse` Pydantic model and a FastAPI exception handler that converts `HTTPException` to this shape.
+- Define separate Pydantic models for request body (input) and response (output) — never reuse the ORM model directly.
+- Naming convention: `ProductCreate`, `ProductUpdate`, `ProductResponse`, `ProductListResponse`.
+- All timestamps as ISO 8601 strings in UTC: `"2026-04-11T14:00:00Z"`.
+- Monetary amounts in **integer cents** (CZK or EUR), never floats. Include the currency code field.
+- Size tier values: `"small"`, `"medium"`, `"large"` (lowercase string enum).
 
-### Success Responses
+## Versioning
 
-- Single resource: return the resource object directly (no envelope)
-- Created resource: `201 Created` with the resource object
-- Deleted resource: `204 No Content` with empty body
-- Collection: pagination envelope (see above)
-
-## Stripe Integration
-
-### Checkout Session
-
-`POST /api/v1/checkout/session` creates a Stripe Checkout session for a pending order.
-
-Flow:
-1. Validate the order belongs to the authenticated user and is in `PENDING` state
-2. Call `stripe.checkout.Session.create()` with `line_items` mapped from order items
-3. Set `metadata={"order_id": str(order.id)}` on the session — this is how webhooks correlate events back to orders
-4. Set `success_url` and `cancel_url` pointing to the frontend
-5. Return `{"checkout_url": session.url}` — the frontend redirects the user
-
-Never store raw Stripe session IDs as the source of truth for payment status — use webhook events instead.
-
-### Webhook Handler
-
-`POST /api/v1/webhooks/stripe` — unauthenticated, verified by Stripe signature.
-
-```python
-@router.post("/webhooks/stripe", status_code=200)
-async def stripe_webhook(request: Request):
-    payload = await request.body()
-    sig = request.headers.get("stripe-signature")
-    event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
-    # dispatch by event type
-```
-
-Events to handle:
-
-| Stripe event | Action |
-|---|---|
-| `checkout.session.completed` | Transition order `PENDING` → `PAID`; persist `stripe_payment_intent_id` |
-| `checkout.session.expired` | Transition order `PENDING` → `CANCELLED` |
-| `charge.refunded` | Transition order `PAID` → `REFUNDED` |
-
-Always return `200` quickly and process asynchronously (or in a background task) to avoid Stripe retry storms. Log unhandled event types but do not error.
-
-## Order Lifecycle State Machine
-
-```
-PENDING → PAID → PROCESSING → SHIPPED → DELIVERED
-   │         │
-   └─────────┴──→ CANCELLED
-                      │
-              PAID ──→ REFUNDED
-```
-
-Valid transitions (enforce in the service layer, not the router):
-
-| From | To | Trigger |
-|---|---|---|
-| `PENDING` | `PAID` | `checkout.session.completed` webhook |
-| `PENDING` | `CANCELLED` | `checkout.session.expired` webhook or user cancellation |
-| `PAID` | `PROCESSING` | MCAE fulfillment job started |
-| `PAID` | `CANCELLED` | Admin cancellation before fulfillment |
-| `PROCESSING` | `SHIPPED` | Tracking number recorded |
-| `SHIPPED` | `DELIVERED` | Delivery confirmed |
-| `PAID` | `REFUNDED` | `charge.refunded` webhook |
-| `CANCELLED` | — | Terminal state |
-| `DELIVERED` | — | Terminal state |
-| `REFUNDED` | — | Terminal state |
-
-Attempting an invalid transition raises `409 INVALID_ORDER_TRANSITION`.
-
-## FastAPI Router Layout
-
-Routers live in `app/routers/` and are included in `app/main.py`:
-
-```python
-# app/routers/products.py  → prefix="/api/v1/products"
-# app/routers/orders.py    → prefix="/api/v1/orders"
-# app/routers/users.py     → prefix="/api/v1/users"
-# app/routers/checkout.py  → prefix="/api/v1/checkout"
-# app/routers/webhooks.py  → prefix="/api/v1/webhooks"
-# app/routers/ai.py        → prefix="/api/v1/ai"
-```
-
-Each router only handles HTTP wiring. Business logic lives in `app/services/`. Database access lives in `app/repositories/`.
+The current version is `v1`. Breaking changes require a new prefix (`/api/v2/...`).
+Non-breaking additions (new optional fields, new endpoints) do not require a version bump.

@@ -1,134 +1,127 @@
 ---
 name: campaign-planning
 description: >
-  Marketing campaign planning for Figurio — direct-to-consumer 3D-printed figurine brand.
-  Covers seasonal themes (Christmas, Halloween, Valentine's), channel mix (Instagram, TikTok,
-  SEO), budget allocation across paid and organic, and figurine-specific viral hook strategies
-  for catalog and AI custom products.
+  Marketing campaign framework for Figurio — a D2C 3D-printed figurine brand.
+  Covers product launch campaigns, seasonal drops (Christmas, Halloween, Valentine's),
+  influencer seeding, and social commerce loops on Instagram and TikTok.
+allowed-tools:
+  - Read
+  - Write
+  - Grep
 metadata:
   paperclip:
-    tags: [marketing, campaigns, social-media, seo]
+    tags:
+      - marketing
+      - campaigns
+      - social-commerce
 ---
 
 # Campaign Planning
 
-## When to Use
+Figurio campaigns run on two tracks: **seasonal windows** (fixed calendar deadlines with high purchase intent) and **catalog drops** (ongoing, evergreen or culture-reactive launches). Both share the same planning structure — but seasonal windows have zero tolerance for late starts.
 
-Use this skill when planning, structuring, or reviewing a Figurio marketing campaign —
-seasonal promotions, product launches, or always-on brand-building pushes.
+## Campaign Types
 
-## Seasonal Campaign Calendar
+### Seasonal Drops
+The three mandatory seasonal campaigns are Christmas, Valentine's Day, and Halloween. These are the highest-revenue windows of the year.
 
-Figurio runs three anchor seasons per year. All other campaigns are secondary.
-
-| Season | Campaign Window | Lead Time | Hero Product |
+| Campaign | Brief deadline | Launch | Key message angle |
 |---|---|---|---|
-| Valentine's Day | Jan 20 – Feb 14 | 3 weeks pre | AI custom couples figurine |
-| Halloween | Oct 1 – Oct 31 | 4 weeks pre | spooky catalog figurines, custom monsters |
-| Christmas | Nov 15 – Dec 23 | 5 weeks pre | gift-ready figurines, family sets |
+| Christmas | Oct 20 | Nov 25 | "Give them something no one else has" — custom figurine as the gift |
+| Valentine's Day | Jan 5 | Jan 28 | "A tiny version of the two of you" — couple figurines, romantic gift angle |
+| Halloween | Sep 1 | Oct 1 | "Order your spooky self before October sells out" — character figurines, limited catalog |
 
-Secondary opportunities: Easter (custom bunny figurines), Pride (vibrant color showcase),
-back-to-school gifting (desk figurines for teachers/students).
+**Rule:** Miss the brief deadline and the campaign launches late. A late Halloween campaign is a failed Halloween campaign. Plan backward from the launch date, not forward from when you feel ready.
 
-### Seasonal Themes by Campaign
+### Product Launch (Catalog Drop)
+Used when adding a new figurine design, a new category, or an AI-powered "Prompt to Print" feature promotion.
 
-**Valentine's Day**
-- Angle: "The most personal gift" — AI custom captures real likeness, unlike generic gifts.
-- Hooks: couple figurine side-by-side comparisons, "what my partner looks like in 3D" UGC.
-- Urgency: production + shipping lead time from MCAE (Stratasys J55). Always communicate
-  order cutoff dates clearly (typically Feb 7 for Czech → EU delivery).
+Structure:
+1. **Teaser** (3–5 days before): single image or short video, no product name, build curiosity
+2. **Launch day**: full reveal with product page link, price, and sizing callout
+3. **Social proof window** (days 2–7): repost first customer photos, creator reactions, UGC
+4. **Tail content** (days 8–21): repurposed content, different angles (collector, gift, humor)
 
-**Halloween**
-- Angle: Full-color PolyJet makes horror figurines vivid — lean into color realism.
-- Hooks: "rate my monster" TikTok challenges, before/after AI model renders.
-- Catalog: push in-stock spooky figurines for impulse buyers who missed custom cutoff.
+### Culture-Reactive Drops
+A meme, game release, or viral moment creates a figurine opportunity. These have a 48–72 hour execution window before the cultural moment fades. The drop is catalog-only (no custom), copy is punchy, social is the sole channel.
 
-**Christmas**
-- Angle: Premium collectible gift — positions Figurio above generic novelty gifts.
-- Hooks: family figurine sets, "preserve the memory" emotional angle, unboxing UGC.
-- Dual push: AI custom (order early) + catalog (last-minute gifting option).
+## Campaign Brief Structure
 
-## Channel Mix
+Every campaign brief passed to the Content Creator must include:
 
-### Instagram
+```
+Campaign name:
+Type: [seasonal / launch / culture-reactive]
+Launch date:
+Content deadline (from Content Creator):
 
-Primary brand channel. Use for:
-- High-quality product photography — macro shots showing PolyJet color fidelity.
-- Reels: process videos (3D print time-lapses, paint-like surface close-ups).
-- Stories: limited-time offers, order cutoff countdowns, UGC reposts.
-- Carousel: before/after AI custom (photo → figurine), figurine comparison by scale.
+Audience: [collectors / gift buyers / culture fans — pick the primary one]
+Platform(s): [Instagram / TikTok / Email / all three]
+Key message (one sentence):
+Tone: [playful / warm / proud-collector — pick one]
+CTA: [shop link / waitlist / DM to order]
 
-Content cadence: 4-5 feed posts/week during campaign peaks, 2-3 during off-season.
+Assets needed:
+- [list formats: Reel, Story, feed post, email header, etc.]
 
-### TikTok
+What NOT to do:
+- [any specific things to avoid for this campaign]
+```
 
-Primary viral/acquisition channel. Use for:
-- "Wow factor" content — first reveal of a custom figurine unboxing.
-- Trend hijacking: adapt current TikTok audio/formats to figurine reveals.
-- Hooks within first 2 seconds: show the finished figurine before anything else.
-- Duets and stitches with UGC — encourage customers to post their own reveals.
+A brief without a content deadline is not a brief — it's a wish.
 
-Content cadence: daily during seasonal peaks, 3-4/week otherwise.
+## Influencer / Creator Seeding
 
-### SEO / Content
+Figurio's influencer strategy at MVP stage is micro-influencer seeding, not paid macro deals.
 
-Long-term organic acquisition. Priority keyword clusters:
-- `custom 3D figurine` / `personalized figurine` (high intent, gift searches)
-- `3D printed miniature` (hobbyist/collector segment)
-- `[occasion] gift ideas` pages — Valentine's, Christmas, birthday gift roundups
-- Blog: "How Figurio makes your figurine" (process transparency builds trust)
+**Target profiles:**
+- Figurine/miniature/tabletop collectors (Instagram, TikTok, YouTube)
+- Gift-idea content creators ("things to buy your partner/friend/gamer")
+- Internet culture / meme accounts with an engaged, not just large, following
 
-Backlink targets: gift guide blogs, Czech tech/startup press, 3D printing hobbyist sites.
+**Outreach approach:**
+- Send a free figurine (catalog item, Small tier) — no paid arrangement required for the first post
+- DM with a genuine message referencing their content, not a template pitch
+- Ask for an honest reaction — unboxing or "look what I got" format
+- No scripted copy — their voice sells better than ours
 
-## Budget Allocation Framework
+**Tracking:** note every outreach in the influencer log (name, platform, handle, date sent, post date, link). Follow up once if no post after 14 days.
 
-Adjust by season — Christmas gets the largest share.
+## Social Commerce Loop (Instagram / TikTok)
 
-| Channel | Off-Season | Seasonal Peak |
-|---|---|---|
-| Instagram Ads | 25% | 30% |
-| TikTok Ads | 20% | 30% |
-| Google Ads (Shopping + Search) | 30% | 25% |
-| Content / SEO | 15% | 5% |
-| Influencer / UGC | 10% | 10% |
+The core loop for organic growth:
 
-Minimum viable campaign budget per seasonal push: set aside enough for at least 2 weeks of
-paid amplification at meaningful daily spend before the cutoff date.
+1. Post figurine content (product, customer, behind-the-scenes print reveal)
+2. Comment section converts curious viewers — answer every question publicly
+3. DMs from interested buyers → send product page link
+4. First purchase → ask for a photo/video when it arrives
+5. Repost UGC → feeds step 1
 
-## Figurine-Specific Viral Hooks
+**Content split target (weekly):**
+- 50% product/catalog showcases
+- 30% UGC and customer moments
+- 20% behind-the-scenes (printing process, packaging, model previews)
 
-These hooks consistently perform for the Figurio product type:
+**Platform defaults:**
+- TikTok: short Reels (15–30s), trending audio, hook in first 2 seconds
+- Instagram: feed posts for catalog quality, Stories for urgency/CTA, Reels for reach
 
-1. **The Reveal** — show a real photo of a person, then cut to their figurine. Keep it under
-   3 seconds before the reveal. Works on TikTok and Instagram Reels.
+## Success Metrics
 
-2. **Scale comparison** — figurine next to everyday objects (coffee cup, hand) shows how
-   premium and detailed it looks at small scale.
+Track weekly during active campaigns:
 
-3. **The reaction** — film the recipient receiving the figurine, not the figurine itself.
-   Emotional reactions drive shares.
+- Link clicks from social → product page
+- Orders attributed to campaign (UTM or promo code)
+- UGC posts generated
+- New followers (input metric only — not a success indicator alone)
 
-4. **Process transparency** — short clips of the Stratasys J55 printing or post-processing
-   build credibility and justify premium price.
-
-5. **"Would you rather" or "rate it"** — interactive posts asking followers to rank figurine
-   styles, vote on color variants, etc. Drive comment engagement.
-
-## Campaign Brief Template
-
-Every campaign should define these before execution:
-
-- **Campaign name and season**
-- **Primary product** (catalog SKU or AI custom)
-- **Order cutoff date** (back-calculate from MCAE production + shipping time)
-- **Primary channel** and content formats
-- **Single hero hook** (one viral angle per campaign — do not split focus)
-- **Paid budget** and daily spend targets
-- **KPIs**: ROAS target, CPM benchmark, conversion rate goal
+**The only outcome that matters:** paying customers. Optimize every campaign element toward conversion, not engagement.
 
 ## Anti-patterns
 
-- Launching a campaign without publishing the order cutoff date — creates CS complaints.
-- Running the same creative across Instagram and TikTok without format adaptation.
-- Generic "great gift" copy with no figurine-specific hook — does not differentiate Figurio.
-- Starting seasonal paid spend too late to optimize before cutoff (minimum 2 weeks runway).
+- Launching a seasonal campaign less than 4 weeks before the key date
+- Writing a brief without a content deadline
+- Running a single 6-week campaign with no mid-point checkpoint — add a week-2 review
+- Chasing follower growth as a goal in itself
+- Using marketing jargon in consumer-facing copy ("unique," "premium experience," "leverage")
+- Paid macro-influencer deals before product-market fit is confirmed

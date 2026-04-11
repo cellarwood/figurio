@@ -9,22 +9,21 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/daily.md` for today's plan and open threads.
-- Review in-flight work: any unresolved visual bugs, blocked API dependencies, or pending QA items.
-- Update daily notes with current status before proceeding.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan and carryover blockers.
+- Identify what is in flight, what is blocked, and what is next.
+- Record any updates before continuing.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
-- Retrieve the approval record and its linked issues.
-- If the approval was accepted, merge or apply the approved changes and close the issue.
-- If rejected, read the rejection comment, update the implementation accordingly, and resubmit or comment with your plan.
+- Review the approval and its linked issues.
+- Close resolved issues or comment on what remains open.
 
 ## 4. Get Assignments
 
 - `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task above all others.
+- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can now unblock it.
+- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
 
 ## 5. Checkout and Work
 
@@ -32,32 +31,31 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Frontend Workflow
+## 6. Frontend Engineering Workflow
 
-For each task:
+For each task, follow this sequence:
 
-1. Identify the page or component scope. Check whether a related shadcn-ui component already exists in the design system before building from scratch.
-2. Implement the feature or fix in TypeScript. Use Tailwind utility classes; avoid inline styles.
-3. Ensure all interactive elements are keyboard-accessible and have appropriate ARIA roles/labels (WCAG 2.1 AA).
-4. Visual verify using Chrome DevTools MCP (`mcp__chrome`) or Playwright (`mcp__plugin_web-design-plugin_webdesign-playwright`) -- screenshot at minimum mobile (375px) and desktop (1280px) breakpoints.
-5. If the task involves Stripe Elements (checkout, payment method updates), verify the payment flow in Stripe test mode before marking done.
-6. If the task involves the 3D model viewer, confirm model loads, rotates, and renders correctly in Chrome.
-7. If you need a backend endpoint that does not yet exist, comment on the issue with the exact route, method, request body, and expected response shape. Set status to `blocked` and note the dependency.
-8. Mark task `done` and post a summary comment with a screenshot link or description of what changed.
+1. **Understand the spec.** Read the issue description, linked designs, and any API contracts. If the design or contract is missing, post a blocking comment to the CTO with the exact gap, then move to a non-blocked task.
+2. **Scaffold components.** Create or update components under the appropriate feature directory. Apply TypeScript strict typing from the start.
+3. **Build mobile-first.** Start at 375 px. Add responsive breakpoints after the base layout is solid.
+4. **Integrate with mocks if needed.** If a backend endpoint is not ready, define a typed mock in `src/mocks/` and open a blocking issue for the CTO with the required contract.
+5. **Add ARIA and keyboard support.** Every interactive component must be keyboard-operable and have appropriate ARIA roles/labels before the task is marked done.
+6. **Test.** Write or update component tests. Run the test suite locally before posting completion.
+7. **Validate in Chrome DevTools.** Use the chrome-devtools MCP to check layout, performance budget, and accessibility audit scores on the affected pages.
+8. **Comment with outcome.** Close the task with a brief comment: what was built, any deviations from spec, and links to relevant files.
 
 ## 7. Fact Extraction
 
-- Extract durable facts (API shapes discovered, design decisions made, component naming conventions) into `$AGENT_HOME/memory/`.
-- Update `$AGENT_HOME/notes/daily.md` with what was completed and what is pending.
+- Extract durable facts (API contracts confirmed, component decisions, design tokens) into `$AGENT_HOME/memory/`.
+- Update `$AGENT_HOME/notes/daily.md` with what was completed and what carries over.
 
 ## 8. Exit
 
-- Comment on any `in_progress` task before exiting, even if just a brief status note.
+- Comment on any `in_progress` tasks before exiting with current status.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never commit secrets, API keys, or .env files to source.
-- Stripe keys are always read from environment variables -- never hardcoded.
+- Never leave a task in `in_progress` without a comment explaining where it stands.

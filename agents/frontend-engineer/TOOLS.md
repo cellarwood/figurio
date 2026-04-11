@@ -4,25 +4,25 @@
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `dev-tools-plugin` | Development utilities: code execution, file operations, shell access for running builds and tests |
-| `design-plugin` | Design asset access and manipulation; depends on media-plugin and office-plugin |
-| `web-design-plugin` | Browser automation via Playwright for visual testing and interaction verification; depends on design-plugin |
-| `media-plugin` | Mermaid diagram rendering, Playwright browser automation, general media handling, ElevenLabs audio |
-| `office-plugin` | Document and spreadsheet handling; underpins the design-plugin dependency chain |
+| `dev-tools-plugin` | Code generation, linting, test running, file system operations, shell commands |
+| `design-plugin` | Access and inspect design specs, tokens, and component references |
+| `web-design-plugin` | Browser-based design rendering and Playwright-driven visual inspection |
+| `media-plugin` | Image and media processing, Mermaid diagram generation, Playwright screenshots |
+| `office-plugin` | Read and write structured documents; dependency of web-design-plugin |
 
 ## MCP Servers
 
 | Server | Permission | What it does |
 |--------|-----------|-------------|
-| `chrome` | `mcp__chrome` | Chrome DevTools Protocol access via `@anthropic-ai/chrome-devtools-mcp` -- inspect live pages, capture screenshots, run JS in the browser context, profile performance |
+| `chrome-devtools` | `mcp__chrome-devtools` | Live Chrome DevTools access — inspect DOM, run audits, capture performance traces, debug layout and network |
 
 ## Usage Guidelines
 
-- Use `mcp__chrome` for live visual verification: open the dev server URL, take viewport screenshots at 375px (mobile) and 1280px (desktop), and confirm layout before closing any UI task.
-- Use `mcp__plugin_web-design-plugin_webdesign-playwright` for automated interaction tests: form submission flows, checkout steps, navigation, and any user journey that involves multiple clicks.
-- Use `mcp__plugin_media-plugin_media-playwright` when you need lower-level Playwright control (e.g., intercepting network requests to simulate API states).
-- Use `mcp__plugin_media-plugin_mermaid` to diagram component trees or data flow when documenting a new feature or explaining an architecture decision in an issue comment.
-- Stripe Elements testing must always use Stripe test mode card numbers (e.g., `4242 4242 4242 4242`). Never use real card data in automated tests.
+- Use `chrome-devtools` MCP to run Lighthouse accessibility and performance audits on every major page before marking a task done. A failing accessibility score is a blocker, not a warning.
+- Use `web-design-plugin` with Playwright to take screenshots of components at 375 px, 768 px, and 1280 px viewports and attach them to task completion comments as visual confirmation.
+- Use `media-plugin` Mermaid support to produce component-tree or data-flow diagrams when documenting a new feature's architecture in the issue comment.
+- Use `design-plugin` to inspect token values and spacing scales before hardcoding any sizing in Tailwind classes -- always prefer design tokens over arbitrary values.
+- Use `dev-tools-plugin` for code generation scaffolding, running `npm test`, and executing build checks. Never run destructive shell commands without an explicit instruction in the task.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

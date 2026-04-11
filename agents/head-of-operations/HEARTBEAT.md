@@ -4,14 +4,14 @@ Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
 
-- `GET /api/agents/me` -- confirm your id, role, budget, and chainOfCommand.
+- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
 - Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
 
 ## 2. Local Planning Check
 
-- Read today's plan from `$AGENT_HOME/daily-notes/`.
-- Review in-flight items, resolve blockers, record updates.
-- Check Google Tasks for any pending personal follow-ups.
+- Read `$AGENT_HOME/notes/daily.md` for today's plan.
+- Review open action items; flag any that are overdue against their expected resolution date.
+- Update the note with progress before moving on.
 
 ## 3. Approval Follow-Up (if applicable)
 
@@ -31,46 +31,52 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Operations-Specific Workflow
+## 6. Fulfillment Pipeline Check
 
-### 6a. Inbox Triage
-- `gws gmail triage` -- scan figurio-ops@cellarwood.org for new messages from MCAE, DHL, Zasilkovna, and customers.
-- Respond to any time-sensitive messages (delivery exceptions, reprint requests, vendor confirmations).
-- Log any new issues as Paperclip tasks if they require tracked follow-up.
+**Active print runs:**
+- For each MCAE job currently in flight, verify it is within its SLA window.
+- If a job is overdue by more than 4 hours: send an escalation email via `gws gmail`, comment on the linked issue with the escalation details, and set issue status to `blocked` if you are waiting on MCAE response.
 
-### 6b. Order Pipeline Review
-- Open the live order tracking Google Sheet.
-- Identify any orders overdue relative to their SLA column value.
-- For MCAE batches submitted more than 3 business days ago with no print confirmation: send a follow-up email to MCAE.
-- For carrier exceptions (failed delivery, wrong address): action within 24 hours.
-- For orders awaiting QC sign-off: confirm status with MCAE and update the sheet.
+**Incoming orders:**
+- Check Stripe for new `payment_intent.succeeded` events not yet linked to a fulfillment issue.
+- For each new paid order: create a fulfillment issue, attach order details, assign size tier, queue for print file preparation.
 
-### 6c. Stripe Check
-- Use the Stripe MCP to scan for recent disputes or payment failures that may be blocking production jobs.
-- Flag any disputes to the CEO via issue comment and put the corresponding order on hold.
+**Shipping:**
+- For jobs that have passed QA and are ready to ship, generate carrier labels:
+  - CZ orders: Zásilkovna label
+  - EU/international orders: DHL shipment via MCP tool
+- Update fulfillment issue with tracking number and set status to `done`.
 
-### 6d. DHL Shipment Tracking
-- Use the DHL API Assistant MCP to pull delivery confirmation for any packages shipped in the last 7 days.
-- Mark delivered orders in the tracking sheet and close their Paperclip issues.
-- Escalate failed deliveries immediately.
+**Blocked orders:**
+- Review all `blocked` fulfillment issues. For each, confirm the expected resolution date is still valid. If not, update it and re-escalate if needed.
 
-### 6e. SOP Maintenance
-- If any process was performed today that is not yet documented, add or update the relevant runbook in Google Docs.
-- SOPs live in the Figurio Operations folder in Google Drive.
+## 7. Vendor and Carrier Inbox
 
-## 7. Fact Extraction
+- Run `gws gmail` triage on `ops@cellarwood.org`.
+- Act on MCAE messages: job confirmations, QA flags, delivery notifications.
+- Act on DHL/Zásilkovna messages: exception alerts, customs holds, delivery confirmations.
+- Archive resolved threads; apply labels to active ones.
 
-- Extract durable facts (MCAE pricing, carrier rates, packaging dimensions, SLA agreements) from conversations into memory.
-- Update daily notes with significant decisions or process changes.
+## 8. SLA and Cost Register
 
-## 8. Exit
+- If any new data points exist (completed jobs, new invoices, shipping invoices), update the Sheets SLA register and cost model.
+- Flag any variance outside expected ranges as a comment on the relevant tracking issue.
 
-- Comment on any in_progress work before exiting -- include current status, next action, and ETA.
+## 9. Fact Extraction
+
+- Extract durable facts from conversations and vendor interactions into memory.
+- Log any new vendor terms, pricing, SLA changes, or process decisions to the relevant Docs or Sheets file.
+- Update `$AGENT_HOME/notes/daily.md` with a closing summary.
+
+## 10. Exit
+
+- Comment on any `in_progress` issues before exiting, even if only a one-line status note.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never send an email from figurio-ops@cellarwood.org without logging the action as a comment on the relevant Paperclip issue.
-- Never submit a batch to MCAE without a corresponding Paperclip issue to track the job.
+- Never leave an `in_progress` fulfillment issue silent for more than 24 hours.
+- When you update the SOP, link the updated document in the relevant issue comment.
+- Landed cost = print cost + QA allocation + packaging + carrier fee. Always compute all four components.

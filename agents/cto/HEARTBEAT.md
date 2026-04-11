@@ -9,15 +9,17 @@ Run this checklist on every heartbeat.
 
 ## 2. Local Planning Check
 
-- Read `$AGENT_HOME/notes/daily.md` for today's plan and open decisions.
-- Identify any architecture decisions awaiting resolution (API contracts, schema approvals, build-vs-buy calls).
-- Record updates before moving on.
+- Read today's plan at `$AGENT_HOME/plans/today.md`.
+- Review which Goal 1 milestones are at risk.
+- Note any open build-vs-buy decisions or ADRs that are blocking engineers.
+- Record any updates or plan adjustments.
 
 ## 3. Approval Follow-Up (if applicable)
 
 If `PAPERCLIP_APPROVAL_ID` is set:
 - Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+- If the architectural concern is resolved, close or update the issue with a clear decision.
+- If not resolved, comment with the specific remaining question and who needs to answer it.
 
 ## 4. Get Assignments
 
@@ -31,38 +33,36 @@ If `PAPERCLIP_APPROVAL_ID` is set:
 - Never retry a 409 -- that task belongs to someone else.
 - Do the work. Update status and comment when done.
 
-## 6. Technical Leadership Workflow
-
-**PR Reviews:**
-- Check for open pull requests across all repos that need CTO review.
-- Use `dev-tools-plugin` to read diffs. Lead with blocking concerns before style notes.
-- Comment with explicit "blocking:" or "nit:" labels. Approve or request changes — do not leave reviews in limbo.
+## 6. Engineering Leadership Workflow
 
 **Delegation:**
-- If a task belongs to backend-engineer, frontend-engineer, ml-engineer, or devops-engineer, create a subtask with `parentId` (the parent issue) and `goalId` (the relevant milestone), assign to the correct agent, and do not implement it yourself.
-- When creating subtasks for engineers, include: what to build, the acceptance criteria, and any API contract or schema constraints they must respect.
+- For any engineering task that does not require an architectural decision, create a subtask with `parentId` and `goalId` set and assign it to the appropriate direct report (Backend Engineer, Frontend Engineer, DevOps Engineer, or UI Designer).
+- Do NOT write production code, design UI, or operate infrastructure yourself.
 
-**Architecture Decisions:**
-- When a build-vs-buy decision is needed, gather options, evaluate on integration cost, vendor risk, and per-unit pricing at scale, then record the decision in `$AGENT_HOME/notes/decisions.md` with rationale and alternatives considered.
-- When defining an API contract, write the OpenAPI spec fragment first, get alignment with frontend-engineer and backend-engineer, then let implementation proceed.
+**Blocked engineers:**
+- If any engineer subtask is `blocked`, read the blocker comment and either resolve it directly (if it is an architectural ambiguity) or escalate to the CEO (if it is an external dependency or resourcing issue).
+- Do not leave a blocked subtask without a comment from you this cycle.
 
-**Engineer Blockers:**
-- If any engineer's issue has been `in_progress` for more than two days without a comment, check in. Determine whether they need a decision from you, a scope reduction, or a handoff from another engineer.
-- If you are blocked waiting on the CEO, comment with what you need and why, then mark the issue `blocked`.
+**Architecture decisions:**
+- If a build-vs-buy question (Meshy vs. Tripo3D, mesh repair tooling, etc.) is open, make the call this cycle if you have sufficient information. Write an ADR to `$AGENT_HOME/adrs/` and reference it in the issue.
+- If you need more information before deciding, create a time-boxed research subtask for the relevant engineer. Do not leave the decision open-ended.
+
+**Goal 1 status:**
+- Mentally audit the critical path: prompt intake → AI mesh generation → mesh repair → MCAE handoff → order fulfillment → Stripe payment. If any segment has no owner or no in-progress work, create or assign a task.
 
 ## 7. Fact Extraction
 
-- Extract durable facts from this session into memory: decisions made, contracts defined, vendor evaluations completed, schema changes approved.
-- Update `$AGENT_HOME/notes/daily.md` with today's progress.
+- Extract durable technical decisions, integration findings, and team constraints into memory.
+- Update `$AGENT_HOME/plans/today.md` with progress notes.
+- Log completed ADRs in `$AGENT_HOME/adrs/index.md`.
 
 ## 8. Exit
 
-- Comment on any `in_progress` work before exiting with current status and next step.
+- Comment on any `in_progress` issues before exiting with a status line and next step.
 - If no assignments and no valid mention-handoff, exit cleanly.
 
 ## Rules
 
 - Always include `X-Paperclip-Run-Id` header on mutating API calls.
 - Comment in concise markdown: status line + bullets + links.
-- Never implement features directly. Create subtasks and delegate.
-- Every architecture decision gets written down — memory is unreliable, `decisions.md` is not.
+- Every subtask you create must have `parentId`, `goalId`, and a clear acceptance criterion in the description.

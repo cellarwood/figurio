@@ -1,10 +1,10 @@
 ---
 name: fulfillment-sop
 description: >
-  Standard operating procedures for Figurio order fulfillment end-to-end.
-  Covers MCAE print file handoff, quality inspection criteria, branded packaging
-  assembly, shipping label generation via Zasilkovna and DHL, and returns and
-  refund handling for both catalog and AI-custom figurine orders.
+  Standard operating procedure for end-to-end order fulfillment at Figurio. Covers order
+  capture from Stripe, print file handoff to MCAE, quality inspection, branded packaging,
+  carrier dispatch via Zásilkovna (Czech Republic) and DHL (EU and international), and
+  customer-facing tracking updates.
 allowed-tools:
   - Read
   - Write
@@ -14,155 +14,153 @@ metadata:
     tags:
       - operations
       - fulfillment
-      - sop
+      - shipping
 ---
 
 # Fulfillment SOP
 
-This SOP covers the full lifecycle of a Figurio order from payment confirmation to delivery. It applies to both catalog figurines and AI-custom figurine orders. Custom orders have additional steps noted inline.
+## When to Use
+
+Use this skill whenever processing or auditing an order from payment through delivery. It is the
+authoritative procedure for the Head of Operations and any fulfillment staff handling Figurio orders.
+
+## Overview — Fulfillment Pipeline
+
+```
+Stripe payment confirmed
+  → Order captured in OMS
+    → Print file prepared & sent to MCAE
+      → MCAE prints & ships to Figurio
+        → Quality inspection
+          → Branded packaging
+            → Carrier handoff (Zásilkovna or DHL)
+              → Tracking update to customer
+```
 
 ---
 
-## Step 1 — Print File Handoff to MCAE
+## Step 1 — Order Capture from Stripe
 
-**Trigger:** Stripe payment confirmed, order status set to `PAID`.
+- Stripe webhook fires on `payment_intent.succeeded`.
+- OMS automatically creates an order record with: customer name, delivery address, size tier
+  (Small / Medium / Large), figurine model reference, and Stripe payment ID.
+- Verify the order record is complete within 15 minutes of webhook receipt.
+- If the webhook fails, manually reconcile from the Stripe dashboard daily at 09:00.
 
-### Catalog Orders
-
-1. Retrieve the pre-approved print file for the SKU from the print file library (Google Drive → Operations/Print Files/Catalog).
-2. Verify file version matches the current approved revision (check filename suffix, e.g., `figurine-knight-v3.stl`).
-3. Bundle the print file with the MCAE order form (template: Operations/Templates/MCAE-Order-Form.xlsx), filling in:
-   - Order ID
-   - SKU and quantity
-   - Requested delivery date (today + 5 business days)
-   - Finish: PolyJet full-color, no post-processing
-4. Send to MCAE via email to `production@mcae.cz` with subject: `[FIGURIO] Order {ORDER_ID} — Print Request`.
-
-### AI-Custom Orders
-
-1. Confirm the AI-generated 3D model has passed automated geometry validation (watertight mesh, no inverted normals). If validation failed, escalate to the backend engineer before proceeding.
-2. Run a brief manual check: correct figurine identity, no obvious artifacts, appropriate scale for the selected size tier.
-3. Store the approved model in Google Drive → Operations/Print Files/Custom/{ORDER_ID}/.
-4. Proceed with MCAE order form as above, noting "CUSTOM — do not reuse file" in the comments field.
-
-**MCAE SLA:** 5 business days from file receipt. If no acknowledgment within 4 business hours, follow up by phone.
+**Flags to check at capture:**
+- Address outside CZ/EU → route to DHL international; flag for possible customs documentation.
+- Multiple size tiers in one order → create one MCAE job per tier; ship together.
+- Rush orders (same-day flag) → contact MCAE immediately to request priority queue slot.
 
 ---
 
-## Step 2 — Quality Inspection
+## Step 2 — Print File Handoff to MCAE
 
-**Trigger:** MCAE delivers print(s) to Figurio (or to the designated QC address).
-
-Inspect each figurine against the following checklist. Fail any unit that does not meet all criteria:
-
-| Check | Pass Criteria |
-|-------|--------------|
-| Color fidelity | No visible banding; colors match reference render within reasonable tolerance |
-| Surface finish | No layer artifacts, no support marks on visible surfaces |
-| Dimensional accuracy | Height within ±2 mm of spec for the size tier |
-| Structural integrity | No cracks, warping, or brittle joints |
-| Base stability | Figurine stands upright unaided on flat surface |
-
-- **Pass:** proceed to Step 3.
-- **Fail (single unit in batch):** set aside, reorder replacement from MCAE referencing the same order ID with suffix `-R1`. Do not delay shipping of passing units if the order contains multiple items and at least one is passing.
-- **Fail (full batch):** escalate to MCAE with photos. Pause shipment. Notify customer with a delay email (template: Operations/Templates/Email-Delay-Custom.txt). Do not issue refund until MCAE root cause is confirmed.
+- Retrieve the approved `.3mf` or `.stl` print file from the asset library using the model
+  reference on the order.
+- Confirm file version matches the last QA-approved revision before sending.
+- Send files to MCAE via the agreed secure transfer method (MCAE SFTP or email with password).
+  Never attach customer PII — send only: order reference ID, size tier, quantity, and print file.
+- MCAE must confirm receipt within 4 business hours (per vendor SLA). Log confirmation timestamp.
+- Expected MCAE turnaround: Small 3 days, Medium 4 days, Large 5 days (business days from
+  file confirmation).
 
 ---
 
-## Step 3 — Branded Packaging Assembly
+## Step 3 — Quality Inspection on Receipt from MCAE
 
-All figurines ship in Figurio-branded packaging regardless of order type.
+Inspect every unit before packaging. Use the checklist below — reject any unit that fails a
+single criterion.
 
-### Assembly Steps
+| Check                  | Pass condition                                              |
+|------------------------|-------------------------------------------------------------|
+| Dimensional accuracy   | Height within ±1 mm of stated tier (8 / 15 / 25 cm)        |
+| Surface quality        | No visible layer lines at 30 cm; no support artefacts on front |
+| Colour accuracy        | Visually consistent with reference render; no bleed or fade |
+| Structural integrity   | No cracks, delamination, or base warping > 0.5 mm           |
+| Cleanliness            | No residual support material, dust, or surface contamination|
 
-1. Wrap figurine in acid-free tissue paper (white).
-2. Place in the appropriately sized box:
-   - S tier: 120×120×120 mm box
-   - M tier: 180×120×120 mm box
-   - L tier: 250×180×150 mm box
-3. Fill void with biodegradable packing peanuts — figurine must not shift when box is shaken.
-4. Insert the branded thank-you card (pre-printed, stored in ops stock). For AI-custom orders, use the custom variant card which includes a note about the personalized process.
-5. Seal box with Figurio-branded tape.
-6. Affix the printed packing slip (generated from the order system) inside the lid.
+**On rejection:** set unit aside, photograph defect, log in the reject tracker (date, order ref,
+defect type, tier). Notify MCAE same day — replacements must arrive within 3 business days at
+no charge per SLA. Update order status to "Pending Reprint" in OMS.
 
----
-
-## Step 4 — Shipping Label Generation
-
-### Zasilkovna (domestic CZ and parcel shop delivery)
-
-Use the Zasilkovna Shipper API or portal:
-
-1. Log in to Zasilkovna Shipper (credentials in 1Password → Operations).
-2. Create shipment with:
-   - Recipient name, address, and phone from order data
-   - Parcel shop ID if the customer selected pickup (field: `pickup_point_id` in order record)
-   - Weight: weigh the packed box on the ops scale; enter in grams
-   - COD: leave blank (Figurio uses Stripe — no COD)
-3. Download the label PDF and print on label printer (Dymo LabelWriter 4XL).
-4. Affix label to top face of box.
-5. Update order status to `LABEL_CREATED` in the backend admin panel.
-
-### DHL (EU international orders)
-
-1. Log in to DHL Express portal (credentials in 1Password → Operations).
-2. Create shipment using DHL MyDHL+ or the DHL API integration (if automated pipeline is active).
-3. Select service: **DHL Express Worldwide** for non-CZ EU orders.
-4. Enter customs data for non-EU shipments: commodity description "Decorative figurine — 3D printed", HS code `9505.90.80`, value from order total in EUR.
-5. Print label and affix to box.
-6. Update order status to `LABEL_CREATED`.
+Reject rate above 3% in any rolling 4-week window triggers a formal quality review with MCAE
+(see `vendor-evaluation` skill).
 
 ---
 
-## Step 5 — Handoff to Carrier
+## Step 4 — Branded Packaging
 
-- **Zasilkovna:** Drop parcels at the designated Zasilkovna pickup point by 14:00 for same-day dispatch. Collect the drop-off receipt and photograph it.
-- **DHL:** Schedule DHL pickup (daily standing pickup booked for 15:00) or drop at DHL ServicePoint.
+All figurines ship in Figurio branded packaging. Match packaging to tier:
 
-Update order status to `SHIPPED` and trigger the shipping confirmation email with tracking number (automated from order system on status change).
+| Tier   | Box spec                      | Inner protection                        |
+|--------|-------------------------------|-----------------------------------------|
+| Small  | 120×120×120 mm white box      | Foam insert, tissue wrap                |
+| Medium | 200×200×200 mm white box      | Foam insert, tissue wrap, cardboard tray|
+| Large  | 300×300×300 mm white box      | Foam cradle, tissue wrap, cardboard lid |
 
----
+Include in every parcel:
+- Figurio thank-you card (current version from assets/packaging/)
+- Care instructions insert
+- Return address label (Figurio warehouse address)
 
-## Returns and Refund Handling
-
-### Customer-Initiated Return
-
-1. Customer submits return request via the Figurio website or emails support.
-2. Ops reviews eligibility:
-   - **Eligible:** damaged on arrival, wrong item, print quality failure. Window: 30 days from delivery.
-   - **Not eligible:** AI-custom orders where the 3D model was customer-approved before printing (unless defect is Figurio's fault).
-3. For eligible returns: send the customer a prepaid Zasilkovna return label (generated in Shipper portal, cost charged to Figurio account).
-4. On return receipt, inspect the item:
-   - Confirmed defect: issue full refund via Stripe (Refunds API or Stripe dashboard). Update order status to `REFUNDED`.
-   - No defect found: contact customer, offer store credit or re-shipment. Escalate disputes to Head of Operations.
-
-### Stripe Refund Process
-
-- Full refund: `POST /v1/refunds` with `payment_intent` from order record.
-- Partial refund: specify `amount` in CZK smallest unit (haléře).
-- Refunds typically appear within 5–10 business days depending on customer bank.
-- Log all refunds in the Refunds sheet (Google Sheets → Operations/Finance/Refunds-{YEAR}.xlsx) with order ID, reason, and amount.
+Do not include invoices in the parcel — invoices are sent by email via Stripe.
 
 ---
 
-## Order Status Reference
+## Step 5 — Carrier Dispatch
 
-| Status | Meaning |
-|--------|---------|
-| `PAID` | Payment confirmed, awaiting print handoff |
-| `IN_PRINT` | Sent to MCAE |
-| `QC` | Print received, under inspection |
-| `PACKING` | Passed QC, being packaged |
-| `LABEL_CREATED` | Shipping label generated |
-| `SHIPPED` | Handed to carrier |
-| `DELIVERED` | Carrier confirmed delivery |
-| `REFUNDED` | Refund issued |
-| `ON_HOLD` | Issue requiring manual resolution |
+### Czech Republic — Zásilkovna
+
+- Use Zásilkovna for all delivery addresses with CZ postal code.
+- Generate label via Zásilkovna API or Packeta portal; attach to parcel.
+- Drop parcels at the designated Zásilkovna drop-off point by 14:00 for same-day collection.
+- Zásilkovna parcel ID must be written into the OMS order record immediately after label
+  generation.
+- Customer can choose home delivery or pickup point (Z-BOX / partner point) — honour the
+  selection made at checkout.
+
+### EU & International — DHL
+
+- Use DHL Express for EU addresses (non-CZ) and all international destinations.
+- Generate shipment via DHL MyDHL+ or API; use Figurio's account number.
+- For destinations outside the EU, generate a commercial invoice (3 copies) with:
+  - HS code: 9503.00 (toys/models — verify annually)
+  - Declared value = Stripe order amount in EUR
+  - Country of origin: CZ
+- Attach DHL waybill and customs documents to parcel exterior in clear pouch.
+- DHL tracking number must be entered into OMS immediately.
+
+---
+
+## Step 6 — Customer Tracking Update
+
+- Once the carrier has the parcel, update the OMS order status to "Shipped".
+- Trigger the transactional email (configured in Stripe/email platform) that sends the
+  tracking number and carrier link to the customer.
+- Expected delivery windows to communicate:
+  - CZ (Zásilkovna): 1–3 business days
+  - EU (DHL): 2–5 business days
+  - International (DHL): 5–10 business days
+
+---
+
+## Escalation Paths
+
+| Issue                              | Action                                                       |
+|------------------------------------|--------------------------------------------------------------|
+| MCAE misses receipt confirmation   | Chase by phone; log; escalate if unresolved in 8 hours       |
+| Reject rate > 3% in 4-week window  | Formal quality review with MCAE (see vendor-evaluation skill)|
+| DHL customs hold                   | Contact DHL proactively; resend commercial invoice if needed |
+| Customer reports non-delivery      | Open carrier investigation; reship if unresolved in 10 days  |
+| Zásilkovna parcel lost             | File claim via Packeta portal; reship within 3 business days |
 
 ---
 
 ## Anti-patterns
 
-- Do not ship an AI-custom order without confirming geometry validation passed — a failed print wastes MCAE capacity and delays the customer.
-- Do not generate a Zasilkovna label without the customer's `pickup_point_id` if they selected parcel shop delivery — the parcel will be undeliverable.
-- Do not issue a Stripe refund before the return is physically received and inspected, except in cases of clear non-delivery confirmed by carrier.
+- Never send customer name or address to MCAE — use order reference IDs only.
+- Never dispatch a unit that failed quality inspection, even under deadline pressure.
+- Do not generate DHL labels for CZ addresses or Zásilkovna labels for international addresses.
+- Do not skip the OMS status update steps — tracking records are the primary customer
+  service evidence trail.

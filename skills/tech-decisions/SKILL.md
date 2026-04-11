@@ -1,141 +1,111 @@
 ---
 name: tech-decisions
 description: >
-  Framework for build-vs-buy and vendor-selection decisions at Figurio —
-  text-to-3D service selection (Meshy vs Tripo3D vs others), mesh repair tooling,
-  3D preview rendering approach, and infrastructure choices for the K8s/FastAPI/React stack.
-allowed-tools:
-  - Read
-  - Grep
+  Build-vs-buy decision framework for Figurio — evaluating text-to-3D services
+  (Meshy, Tripo3D, Luma), mesh repair tooling, hosting options, and
+  infrastructure choices against cost, quality, and speed tradeoffs specific
+  to a D2C 3D-print business in the Czech Republic.
 metadata:
   paperclip:
     tags:
       - engineering
       - architecture
-      - decisions
+      - strategy
 ---
 
 # Tech Decisions
 
-Use this skill when evaluating whether to build a capability in-house or adopt a
-third-party tool, API, or library for any part of the Figurio platform.
-
 ## When to Use
 
-- Selecting or switching a text-to-3D generation provider
-- Evaluating mesh repair or validation libraries
-- Choosing a 3D preview/rendering approach for the storefront
-- Picking infrastructure components (ingress, object storage, job queue, observability)
-- Assessing a new Python library or npm package for a core pipeline stage
+Apply this skill when evaluating:
+- A new external SaaS or API to add to the Figurio stack
+- Whether to build an internal tool or adopt an existing library/service
+- Hosting and infrastructure changes (cloud, on-prem, managed services)
+- AI provider selection or switching for the text-to-3D pipeline
 
 ## Decision Framework
 
-### Step 1 — Define the Constraint Set
+Every significant build-vs-buy decision at Figurio is evaluated across four axes:
 
-Before evaluating options, establish hard constraints for Figurio:
+| Axis | Key Question |
+|------|-------------|
+| **Cost** | What is the total cost at Figurio's current and projected order volume? |
+| **Quality** | Does the output meet print-ready mesh standards (manifold, full-color, correct scale)? |
+| **Speed** | What is the end-to-end latency from customer input to print-ready file? |
+| **Lock-in** | Can we swap this out in < 2 weeks if the vendor fails or pricing changes? |
 
-| Constraint | Detail |
-|---|---|
-| Print target | Stratasys J55 PolyJet via MCAE; output must be J55-compatible (build volume 342 × 228 × 200 mm, full-color, watertight mesh) |
-| Latency budget | Custom figurine generation must complete within 5 minutes end-to-end for a good customer experience |
-| Cost ceiling | Per-unit generation cost must remain below the margin floor (currently ~€4 per figurine at catalog prices) |
-| Data residency | No hard EU data residency requirement today, but prefer EU or US providers; avoid providers with training-on-input clauses for customer uploads |
-| Ops complexity | Team is small; prefer managed services over self-hosted where ops burden is the primary differentiator |
+Default to **buy** for non-core infrastructure (email, payments, DNS). Default to **build** when the capability is core to Figurio's product differentiation (mesh quality pipeline, custom figurine UX).
 
-### Step 2 — Score Against Figurio-Specific Criteria
+## Text-to-3D Provider Evaluation
 
-Rate each option (1–5) on:
+Figurio's current providers: **Meshy** and **Tripo3D**. Luma AI is a candidate.
 
-1. **Output quality** — Does the mesh produce acceptable full-color PolyJet prints? Request test prints if possible.
-2. **Mesh quality** — Watertight, manifold, within J55 tolerances without heavy post-processing?
-3. **API maturity** — Webhook support, stable versioning, clear SLA, idempotency keys?
-4. **Cost per generation** — At expected volume (catalog + custom orders)?
-5. **Latency** — P95 generation time within the 5-minute budget?
-6. **Vendor risk** — Funding stage, contractual lock-in, data ownership clauses?
-7. **Integration effort** — Days to wire into the existing FastAPI pipeline?
+### Evaluation Criteria (in priority order)
 
-### Step 3 — Document the Decision
+1. **Print-ready mesh quality** — output must be manifold, watertight, and carry full vertex/texture color. Assess polygon count vs. print resolution requirements (typical target: 50k–200k polys for figurine scale).
+2. **Generation latency** — customer-facing flow requires < 3 min from prompt to preview mesh. Background high-res generation can be up to 15 min.
+3. **API reliability and SLA** — check uptime history; a provider outage blocks all custom orders. Prefer providers with a stated SLA or status page.
+4. **Pricing per generation** — calculate at 100, 500, and 2000 custom orders/month. Factor in retries for failed generations (assume 10–15% failure rate).
+5. **Data residency** — customer-submitted images and generated meshes must not be retained by the provider for training without opt-in. Confirm in provider DPA (important for Czech/EU compliance).
+6. **Swap cost** — the internal adapter layer must abstract all provider-specific parameters. Score how much adapter code changes if we switch.
 
-Record the outcome in the repo at `docs/decisions/<YYYY-MM-DD>-<slug>.md` using the ADR format below.
+### Current Provider Notes
 
----
+| Provider | Strengths | Weaknesses |
+|----------|-----------|------------|
+| Meshy | Good texture color fidelity, active API development | Mesh manifold quality inconsistent on complex poses |
+| Tripo3D | Fast generation, good topology | Color/texture less detailed than Meshy |
+| Luma AI | High realism | Primarily NeRF/video-oriented; mesh export quality for print not validated |
 
-## Domain-Specific Guidance
+### Decision Rule
 
-### Text-to-3D Generation (Meshy vs Tripo3D vs others)
+Run A/B print tests on a sample of 20+ figurines per candidate provider before committing. Evaluate against print-reject rate, not just visual preview quality.
 
-**Current baseline:** Meshy API (text-to-3D and image-to-3D endpoints).
+## Mesh Repair Tooling
 
-When evaluating alternatives or re-evaluating Meshy:
+Figurio requires a mesh repair step before any mesh enters the print queue.
 
-- **Must have:** OBJ/GLB/STL output with per-vertex or texture color; no post-processing should be needed to get color into the PolyJet workflow
-- **Must have:** Async job model with webhook callbacks (polling is a fallback, not preferred)
-- **Watch out for:** Providers that output single-color or uncolored meshes — full-color is non-negotiable for Figurio's product
-- **Tripo3D:** Strong mesh quality, competitive latency; evaluate texture resolution and API rate limits at Figurio's projected order volume
-- **Shap-E / custom PyTorch:** Building in-house is only justified if no commercial provider meets quality or cost targets at scale; ops burden is high
-- **Decision trigger:** Re-evaluate providers when cost per generation exceeds €2 or P95 latency exceeds 4 minutes
+| Option | Approach | Notes |
+|--------|----------|-------|
+| **Manifold** (open source) | Self-hosted, local binary | Fast, no API cost, requires K8s job; current preference |
+| **Microsoft 3MF Toolkit** | Library | Good for format conversion alongside repair |
+| **Netfabb (Autodesk cloud)** | Managed API | High quality but per-call cost and vendor lock-in |
+| **Build custom** | Python + open3d | Only if Manifold fails on Figurio-specific mesh patterns |
 
-### Mesh Repair Tooling
+Default: use **Manifold** as the self-hosted repair step. Escalate to Netfabb only for meshes that Manifold cannot repair after two retries.
 
-**Current approach:** Pipeline stage after generation, before preview.
+## Hosting & Infrastructure
 
-Options and tradeoffs:
+Figurio currently runs on **microk8s** (self-managed, single-node). Evaluate cloud migration only when:
+- Monthly infra cost of managed K8s (GKE, AKS) is competitive with current hardware + ops burden, OR
+- Single-node reliability is causing customer-visible downtime > 0.5% monthly
 
-| Tool | Type | Strengths | Weaknesses |
-|---|---|---|---|
-| Manifold (C++/Python bindings) | Library | Fast, robust boolean ops, good for PolyJet | No color/texture repair |
-| pymeshfix | Library | Simple API, good watertight repair | Slow on large meshes |
-| Meshmixer (CLI) | Desktop app | Full-featured | Not headless-friendly |
-| Microsoft 3D Builder API | Cloud | Managed | Vendor lock-in, not production API |
+### Cloud Provider Shortlist (if migration warranted)
 
-**Recommendation:** Use `manifold` for geometry repair + `trimesh` for validation checks; only escalate to heavier tools if manifold cannot resolve the mesh.
+- **Hetzner Cloud (CX series)** — preferred for EU data residency, lowest cost, good Prague/Frankfurt latency
+- **Google GKE Autopilot** — simpler ops, higher cost; viable if AI pipeline GPU workloads are needed
+- Avoid AWS/Azure as primary unless a specific managed service (e.g., RDS, managed Redis) justifies the overhead
 
-Build vs buy: **buy** (use open-source libraries). Building a mesh repair pipeline from scratch is not justified.
+## Payments
 
-### 3D Preview Rendering (Storefront)
+Stripe is the fixed choice for Figurio. Do not re-evaluate unless:
+- A Czech payment method (SEPA, GoPay, Comgate) requires a local gateway with no Stripe support
+- Stripe pricing becomes uncompetitive at > 5000 orders/month
 
-Options:
+## Build-vs-Buy Scorecard Template
 
-- **React Three Fiber + Three.js (current direction):** In-browser WebGL; no server cost, good interactivity. Use for catalog and custom order confirmation preview.
-- **Model Viewer (`<model-viewer>` web component):** Lower complexity, good mobile support; acceptable for catalog cards where interactivity is limited.
-- **Server-side rendering (Blender headless):** Only justified for high-fidelity marketing images, not real-time preview.
+Use this when writing up a decision:
 
-**Decision rule:** Use `<model-viewer>` for catalog thumbnails (performance), React Three Fiber for the full-screen configurator and order confirmation view.
+```
+## Option: <name>
 
-### Infrastructure Choices
+- Cost (monthly at 500 orders): 
+- Quality score (1–5, print-reject rate): 
+- Latency (p50 / p95): 
+- Lock-in risk (low / medium / high): 
+- EU data residency compliant: yes / no
+- Swap effort (days): 
 
-**Job queue:** Use a simple PostgreSQL-backed queue (e.g., `pgqueue` pattern) before introducing Redis/Celery. Add Redis only when job throughput exceeds what PG can handle (benchmark threshold: >50 concurrent generation jobs).
-
-**Object storage:** S3-compatible (MinIO on-cluster for dev, Backblaze B2 or Cloudflare R2 for production). Avoid AWS S3 unless the team is already paying for AWS — cost at Figurio's scale doesn't justify the complexity.
-
-**Observability:** OpenTelemetry traces exported to a managed backend (Grafana Cloud or similar). Do not build a custom logging pipeline.
-
-**Build vs buy default:** Prefer managed/hosted for anything outside the core product (auth, email, payments, observability). Build only for the text-to-3D pipeline, mesh processing, and the React configurator — these are Figurio's differentiators.
-
----
-
-## ADR Template
-
-```markdown
-# ADR: <title>
-
-Date: YYYY-MM-DD
-Status: Accepted | Superseded by ADR-XXX
-
-## Context
-<What problem are we solving? What constraints apply?>
-
-## Options Considered
-| Option | Score | Notes |
-|---|---|---|
-| ... | ... | ... |
-
-## Decision
-<What we chose and why.>
-
-## Consequences
-<Trade-offs accepted. What becomes easier, what becomes harder.>
-
-## Review Trigger
-<Condition that should prompt revisiting this decision.>
+Recommendation: Build | Buy | Defer
+Rationale: <2–3 sentences>
 ```

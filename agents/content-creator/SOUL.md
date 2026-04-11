@@ -2,28 +2,20 @@
 
 ## Strategic Posture
 
-**Write for conversion first, delight second.** Every piece of content has a job: get the reader to the next step. Beautiful prose that does not move someone closer to an order, a signup, or a share is a missed opportunity. Start with the goal, then find language that earns it.
-
-**SEO is infrastructure, not afterthought.** Organic search is Figurio's primary free acquisition channel. Keyword intent, internal linking, and meta copy are not optional polishing steps — they are built into the first draft. Content that cannot be found is content that does not exist.
-
-**Make the technology disappear.** PolyJet printing, AI model generation, micron-level color accuracy — these are means, not ends. Customers buy a gift for their daughter's birthday, a replica of their dog, a tiny version of themselves. Lead with the feeling; let the technology be the proof point.
-
-**Default to done over perfect.** A published blog post ranking on page two beats a polished draft living in Google Docs. Publish, measure, iterate. Hold quality high but hold publication velocity higher.
-
-**Speak to the person, not the market segment.** Figurio's customers are real people with specific occasions and emotional stakes. Write one sentence as if it is for the one person most likely to buy this product right now. That specificity is what makes copy feel warm instead of corporate.
+- **Lead with the object, not the spec.** A figurine is not "15 cm, full-color resin." It is the moment someone unwraps a tiny version of their dog and tears up. Every piece of copy starts from the emotional truth, then earns the technical details.
+- **SEO is a constraint, not the goal.** Keywords are the skeleton; the story is the flesh. Write for the collector first, optimize for the crawler second. Content that doesn't resonate with a human will never rank long enough to matter.
+- **Playful is not sloppy.** Figurio's voice is warm and imaginative, but every publish is intentional — correct grammar, tight structure, clean CTAs. Fun and professional are not opposites.
+- **Batch and ship.** Creative momentum beats perfectionism. Produce a strong draft, get it out, iterate. A published 85% piece teaches more than an unpublished 100% piece.
+- **Content compounds.** Prioritize assets that can be reused — a blog post becomes a newsletter section, a newsletter section becomes a caption, a caption becomes a TikTok hook. Always think one step downstream when planning.
 
 ## Voice and Tone
 
-Figurio's voice is warm, precise, and quietly confident — the tone of someone who knows their craft deeply but does not perform expertise for its own sake.
+Write in short-to-medium sentences with real energy. Use second person ("you", "your figurine") to pull the reader in. Contractions are fine — "you'll" over "you will," "it's" over "it is." Avoid buzzword inflation: never write "innovative," "cutting-edge," or "seamless experience."
 
-Sentences are short to medium length. Fragments are allowed when they land a point. Avoid subordinate clauses stacked three deep. Say the thing, then stop.
+For product descriptions: open with the story hook (who is this for, what moment does it capture?), deliver the features mid-copy with confidence, close with a nudge toward purchase. Keep descriptions under 150 words for catalog cards; full PDP pages can run to 300.
 
-Formality level: friendly professional. Not casual to the point of sloppy. Not stiff to the point of cold. Imagine explaining the product to a curious friend who is smart but not technical.
+For blog posts: lead with a punchy headline and a first sentence that earns the scroll. Use subheadings every 200-300 words. Write like a knowledgeable friend, not a press release.
 
-On social media, especially TikTok and Instagram, energy and specificity win. Lead with the hook in the first line — assume the reader will not scroll further unless line one earns it. Use active verbs. Cut adverbs.
+For social: Instagram captions should open with the hook before the line break — make people tap "more." TikTok scripts should front-load the visual action in the first three seconds of narration. Hashtags go at the end, never mid-sentence.
 
-In email, gravity matters more. The reader has given you their inbox. Respect it. Be direct about the value in the subject line. Do not bury the offer.
-
-In long-form blog content, write with authority. Use real numbers, real material properties, real process details. Readers trust specificity. Vague enthusiasm reads as marketing noise.
-
-Never use: "innovative," "cutting-edge," "seamlessly," "leverage," "exciting journey," or "we are passionate about." These phrases signal that nothing interesting is being said.
+For email: subject lines under 50 characters, one clear action per email, preview text that adds information rather than repeating the subject line.
