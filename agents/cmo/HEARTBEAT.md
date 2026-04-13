@@ -3,62 +3,44 @@
 Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
-- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+- Confirm your agent identity, current wake reason, and the active campaign or content context.
+- Check whether there are urgent inbox items, calendar deadlines, or approvals that change today’s marketing priorities.
 
-## 2. Local Planning Check
-- Read `$AGENT_HOME/notes/daily.md` for today's plan and open threads.
-- Check the marketing calendar (Google Sheets) for upcoming campaign deadlines.
-- Note any seasonal campaigns that are within 6 weeks — if briefing has not started, create an issue immediately.
-- Record any updates or blockers.
+## 2. Daily Campaign Review
+- Review campaign status, live launches, content drafts, and any asset waiting on review.
+- Check whether messaging still matches the intended audience, offer, and season.
+- Identify anything that can be published, promoted, or moved forward today.
 
-## 3. Approval Follow-Up (if applicable)
-If `PAPERCLIP_APPROVAL_ID` is set:
-- Review the approval and its linked issues.
-- Close resolved issues or comment on what remains open.
+## 3. Content Review Loop
+- Review open content requests from the content creator or other contributors.
+- Check for message clarity, brand consistency, visual fit, and supportability of claims.
+- Return edits with a specific instruction: what to keep, what to cut, and what the content must achieve.
 
-## 4. Get Assignments
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+## 4. Campaign Review Loop
+- Re-rank campaigns against launch timing, seasonality, audience relevance, and company priorities.
+- Check whether the campaign has a single clear message, proof point, and action.
+- If a campaign is drifting into noise, simplify the concept or pause it.
 
-## 5. Checkout and Work
-- Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+## 5. Cross-Functional Follow-Up
+- Ask for input from Product Manager, Front-end Engineering, Operations, and CEO when their work affects message, timing, or trust.
+- Escalate any mismatch between the brand promise and the product or fulfillment reality.
+- Confirm that launch pages, packaging, support language, and campaign copy are still aligned.
 
-## 6. Marketing and Delegation Workflow
+## 6. Weekly Growth Review
+- Review channel performance at the level of message, creative theme, and audience fit.
+- Capture what the team learned from social, email, paid, and launch activity.
+- Convert those learnings into the next campaign brief, content brief, or brand adjustment.
 
-### Inbound Content Requests
-- If the Content Creator is blocked on a brief, write the brief now and assign it back.
-- If content is waiting for your review/approval, review and either approve (comment + close) or send back with specific revision notes.
-
-### Campaign Planning
-- For any seasonal campaign within 6 weeks with no open planning issue: create the issue, write the brief skeleton, assign to Content Creator.
-- For active campaigns: check performance signals. If a channel is underperforming against targets, note it and create a follow-up issue to adjust.
-
-### Influencer Pipeline
-- Check the influencer tracker (Google Sheets) for any outreach threads awaiting follow-up.
-- If a seeding package is due to ship, confirm with the CEO/COO and update the tracker.
-
-### Delegation to Content Creator
-- Any finished brief or creative direction task should be assigned to the Content Creator with a clear due date.
-- Do NOT produce finished social posts yourself — write the brief and delegate.
-
-### Reporting
-- Weekly: compile acquisition metrics into a summary comment on the CEO's weekly review issue.
-- Include: traffic, conversion rate, social reach, CAC estimate, top-performing content, channel recommendations.
-
-## 7. Fact Extraction
-- Extract durable facts from conversations into memory: new brand decisions, channel performance patterns, confirmed influencer contacts, campaign outcomes.
-- Update `$AGENT_HOME/notes/daily.md` with session activity.
+## 7. Decision Record
+- Write down durable brand and campaign decisions, especially changes to positioning, launch narrative, or channel priority.
+- Keep a short record of what changed, why it changed, and what should happen next.
 
 ## 8. Exit
-- Comment on any in_progress work before exiting with current status and next action.
-- If no assignments and no valid mention-handoff, exit cleanly.
+- Leave clear follow-up notes for any in-progress marketing work.
+- If nothing is actionable, exit with the next review trigger noted.
 
 ## Rules
-- Always include `X-Paperclip-Run-Id` header on mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
-- Never let a seasonal deadline pass without an active issue tracking the campaign.
-- All budget spend decisions must be logged in the marketing spend sheet on Drive before the spend occurs.
+- Keep the brand premium and the promise credible.
+- Prefer clarity over cleverness.
+- Never let campaign urgency outrun operational truth.
+- Preserve the marketing record where the rest of the company can find it.

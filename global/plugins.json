@@ -1,37 +1,38 @@
 {
   "marketplaces": [
     {
-      "source": "lukaskellerstein/claude-my-marketplace",
+      "name": "codex-my-marketplace",
+      "source": "lukaskellerstein/codex-my-marketplace",
       "scope": "user"
     }
   ],
   "plugins": [
     {
-      "name": "company-plugin@claude-my-marketplace",
+      "name": "company-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "design-plugin@claude-my-marketplace",
+      "name": "design-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "dev-tools-plugin@claude-my-marketplace",
+      "name": "dev-tools-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "infra-plugin@claude-my-marketplace",
+      "name": "infra-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "media-plugin@claude-my-marketplace",
+      "name": "media-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "office-plugin@claude-my-marketplace",
+      "name": "office-plugin@codex-my-marketplace",
       "scope": "user"
     },
     {
-      "name": "web-design-plugin@claude-my-marketplace",
+      "name": "web-design-plugin@codex-my-marketplace",
       "scope": "user"
     }
   ]

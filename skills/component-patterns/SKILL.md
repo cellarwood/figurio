@@ -1,151 +1,100 @@
 ---
 name: component-patterns
-description: >
-  React/shadcn-ui component conventions for the Figurio storefront — product cards,
-  3D model preview viewer, AI prompt interface (Prompt to Print), cart/checkout flow,
-  and order tracking dashboard. Covers composition patterns, prop contracts, and
-  TypeScript strict-mode requirements specific to Figurio UI.
-allowed-tools:
-  - Read
-  - Grep
-  - Glob
-metadata:
-  paperclip:
-    tags: [engineering, frontend, react]
+description: Design reusable React, TypeScript, Tailwind, shadcn-ui, and Radix component patterns for Figurio storefront, checkout, preview, order, and admin surfaces. Use when creating, refactoring, or reviewing shared UI primitives, composition patterns, state handling, or accessibility behavior.
 ---
 
 # Component Patterns
 
-Conventions for building React/TypeScript components in the Figurio storefront. The stack is React + TypeScript strict mode, shadcn-ui (Radix UI primitives), Tailwind CSS, and GSAP for animation.
+Use this skill when building shared UI components for Figurio. The goal is to make patterns reusable, predictable, and easy to compose across storefront, product detail, checkout, approval, tracking, and admin views.
 
-## General Rules
+## What Good Looks Like
 
-- All components are TypeScript strict mode — no `any`, no non-null assertions without a comment.
-- Export a named `type Props` from every component file.
-- Use shadcn-ui primitives (Button, Card, Dialog, etc.) as the base layer. Only build custom primitives when shadcn has no equivalent.
-- Co-locate component CSS only when Tailwind utilities are insufficient; prefer Tailwind utility classes.
-- GSAP animations live in `useEffect`/`useLayoutEffect` with `gsap.context()` for cleanup — never inline styles that conflict with GSAP targets.
+- Components map to real commerce concepts, not generic UI widgets.
+- Props are explicit, typed, and stable in strict TypeScript.
+- Composition is preferred over deep configuration objects.
+- Visual variants are controlled through a small, finite API.
+- Loading, empty, error, and disabled states are part of the component contract.
+- Accessibility is built in, not added later.
 
-## Product Card (`ProductCard`)
+## Default Implementation Rules
 
-Used in catalog browsing and search results.
+- Prefer shadcn-ui and Radix primitives before building custom interactive controls.
+- Keep shared components presentational by default; pass data and actions in from the feature layer.
+- Avoid coupling a reusable component to routing, fetch logic, analytics, or browser storage.
+- If a component has multiple visual modes, use a clear `variant` or `size` API and keep the set small.
+- Use `className` escape hatches sparingly and only for layout or one-off composition needs.
+- Keep the DOM shallow. Prefer slots, children, and subcomponents over wrapper chains.
 
-```tsx
-type Props = {
-  sku: string
-  name: string
-  thumbnailUrl: string
-  sizeTier: 'small' | 'medium' | 'large'   // ~8 cm / ~15 cm / ~25 cm
-  priceEur: number
-  badge?: 'new' | 'trending' | 'seasonal'
-  onAddToCart: (sku: string) => void
-}
-```
+## Pattern Selection
 
-- Use shadcn `Card` + `CardContent` as wrapper.
-- Thumbnail renders in a fixed 1:1 aspect ratio container using Tailwind `aspect-square`.
-- Badge maps to a `<span>` with Tailwind color variants: `new` → blue, `trending` → orange, `seasonal` → green.
-- `onAddToCart` fires from a shadcn `Button` with `variant="default"`. Button is disabled while the cart mutation is in-flight — pass a `isPending` prop.
-- Price always formats as `€{n.toFixed(2)}` — do not use Intl.NumberFormat (it varies by browser locale in tests).
+### Use a shared component when
 
-## 3D Model Preview Viewer (`ModelViewer`)
+- The same layout or interaction appears in more than one Figurio surface.
+- The component carries business meaning, such as price, shipping, proof status, or order status.
+- The component needs consistent behavior across responsive breakpoints.
+- Accessibility, focus management, or keyboard handling should be standardized.
 
-Used on product detail pages and in the AI prompt approval flow.
+### Keep it local when
 
-```tsx
-type Props = {
-  modelUrl: string          // .glb or .obj URL from our CDN
-  autoRotate?: boolean      // default true on catalog detail, false in prompt approval
-  onApprove?: () => void    // present only in AI prompt approval context
-  onRequestRevision?: () => void
-  isLoading?: boolean
-}
-```
+- The UI is a one-off layout for a single page.
+- The interaction is tightly bound to page-specific logic.
+- Reuse would make the API broad, ambiguous, or brittle.
 
-- Wrap the 3D renderer in a `<Suspense>` boundary with a skeleton placeholder matching the viewer dimensions.
-- Use `autoRotate` GSAP tween on the container's CSS `rotateY` transform — not on the underlying renderer — so we don't conflict with pointer-drag events.
-- When `onApprove` is present (approval context), render two shadcn `Button` elements below the viewer: `Approve` (variant `default`) and `Request Revision` (variant `outline`). Both are disabled while `isLoading` is true.
-- Error state: show a shadcn `Alert` with `variant="destructive"` and a retry link.
+## Recommended Building Blocks
 
-## AI Prompt Interface (`PromptStudio`)
+- `Section`, `Stack`, `Cluster`, and `Split` for layout structure.
+- `Card`, `InsetCard`, and `Surface` for visual containment.
+- `Badge`, `StatusPill`, and `Tag` for compact semantic labels.
+- `Price`, `DiscountedPrice`, and `Money` for money formatting.
+- `Stepper`, `Timeline`, and `ProgressBar` for fulfillment and proof flows.
+- `Field`, `FieldHint`, `FieldError`, and `FormRow` for form composition.
+- `EmptyState`, `ErrorState`, and `Skeleton` for non-happy paths.
+- `ActionBar` and `StickySummary` for conversion-critical actions.
 
-The "Prompt to Print" entry point where customers describe a custom figurine.
+## Commerce-Specific Patterns
 
-```tsx
-type Props = {
-  onSubmit: (prompt: string, sizeTier: SizeTier) => Promise<void>
-  isGenerating: boolean
-  generationError?: string
-}
-```
+- Model product selection as a clear state machine: variant, quantity, customization, lead time, and availability.
+- Show price changes as the result of user choice, not as surprise updates.
+- Make shipping, delivery windows, and production timing visible wherever they affect intent.
+- Treat proof approval and revision as first-class workflow states.
+- Show order status as a timeline with clear next action, not just a static label.
 
-- Textarea (shadcn `Textarea`) with max 300 characters. Show remaining character count below using a `<p aria-live="polite">`.
-- Size tier selection uses shadcn `RadioGroup` with three options (Small / Medium / Large), each showing the cm height and base price.
-- Submit button text changes: idle → "Generate Figurine", generating → "Generating…" (with a spinner icon from `lucide-react`). Button is disabled while `isGenerating` is true.
-- Content moderation error (IP/copyright rejection) renders as a `callout` style `Alert` beneath the textarea, not a toast.
-- Deposit pricing note ("50% charged now, 50% on preview approval") is a static `<p>` in `text-muted-foreground` below the submit button — always visible, not hidden.
+## Form And Interaction Rules
 
-## Cart & Checkout Flow
+- Every input must have a label, and every error must be tied to the relevant field.
+- Use inline validation for recoverable problems and keep submit errors near the action.
+- Preserve focus order and keyboard access across all interactive elements.
+- Never hide essential checkout or approval actions behind hover-only affordances.
+- Disable destructive or irreversible actions only when the required preconditions are truly unmet.
 
-### `CartDrawer`
+## Responsive Behavior
 
-Slides in from the right using a shadcn `Sheet` (not a full-page route). Items list is scrollable; total and checkout CTA are sticky at the bottom.
+- Start mobile-first, then verify tablet and desktop refinements.
+- Keep critical actions reachable without precision gestures.
+- Avoid layout shifts when validation, pricing, or status content appears.
+- If a component collapses on mobile, keep the primary action visible or pinned.
 
-```tsx
-type CartItem = {
-  sku: string
-  name: string
-  sizeTier: SizeTier
-  priceEur: number
-  quantity: number
-  thumbnailUrl: string
-  type: 'catalog' | 'ai-custom'
-}
-```
+## Accessibility Checklist
 
-- AI-custom items show a "Preview approved" badge and cannot have quantity > 1.
-- Catalog items support quantity increment/decrement with shadcn `Button` (`variant="ghost"`, size `icon`).
-- Checkout button navigates to `/checkout` and closes the drawer.
+- Use semantic elements before ARIA.
+- Ensure focus rings are visible on every interactive primitive.
+- Provide descriptive labels for icon-only actions.
+- Announce dynamic state changes that matter, such as price updates, approval status, or errors.
+- Respect reduced motion and avoid animations that obscure content changes.
 
-### `CheckoutForm`
+## Anti-Patterns
 
-Wraps Stripe Elements. Layout is a two-column grid on desktop (order summary left, payment form right), single column on mobile.
+- Large prop bags that mix layout, content, and data-fetching concerns.
+- Custom controls that duplicate Radix behavior without a strong reason.
+- Variants that exist only because they are possible, not because the product needs them.
+- Components that hide business rules behind generic names like `InfoBox` or `Banner`.
+- Shared components that embed page-specific copy, routing, or analytics.
 
-- Order summary is a read-only `CartSummary` component (not the full `CartDrawer`).
-- Stripe `PaymentElement` is the sole payment UI — do not build custom card inputs.
-- A `<p>` above the pay button always lists accepted payment methods: Visa, Mastercard, Apple Pay, Google Pay, iDEAL, SEPA.
-- Form submission disables the pay button and shows a spinner; never navigate away until Stripe confirms `payment_intent.succeeded`.
+## Review Checklist
 
-## Order Tracking Dashboard (`OrderTracker`)
-
-Post-purchase status page at `/orders/{orderId}`.
-
-```tsx
-type OrderStatus =
-  | 'payment_captured'
-  | 'model_in_queue'
-  | 'printing'
-  | 'quality_check'
-  | 'shipped'
-  | 'delivered'
-
-type Props = {
-  orderId: string
-  status: OrderStatus
-  estimatedDelivery?: string   // ISO date string
-  trackingUrl?: string
-}
-```
-
-- Status pipeline renders as a horizontal stepper on desktop, vertical on mobile. Use Tailwind `flex-row` / `flex-col` with a responsive breakpoint (`md:flex-row`).
-- Active step is highlighted; completed steps have a checkmark icon (`lucide-react` `CheckCircle2`).
-- `trackingUrl` renders as an external link (`target="_blank" rel="noopener noreferrer"`) — only shown when status is `shipped` or `delivered`.
-- Poll for status updates every 60 seconds using a `useEffect`-based interval. Cancel on unmount.
-
-## GSAP Animation Conventions
-
-- Always initialize inside `useLayoutEffect` (for DOM-sync) or `useEffect` (for async triggers).
-- Wrap all tweens in `gsap.context(ctx => { ... }, containerRef)` and return `() => ctx.revert()` for cleanup.
-- Page-level transitions (catalog → product detail) use `gsap.timeline()` with an `opacity` + `y` entrance. Duration: 0.35 s, ease: `power2.out`.
-- Do not use GSAP for hover states — use Tailwind `hover:` utilities instead.
-- Respect `prefers-reduced-motion`: check `window.matchMedia('(prefers-reduced-motion: reduce)').matches` at the start of every GSAP context and skip tweens if true.
+- Can this be reused in another Figurio surface without rework?
+- Does the API express the business meaning clearly?
+- Are loading, empty, error, and disabled states defined?
+- Is it accessible by keyboard and screen reader?
+- Does the component still feel good in narrow mobile layouts?
+- Would a product or design review understand what the component does from its name and props?

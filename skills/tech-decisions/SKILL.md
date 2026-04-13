@@ -1,111 +1,120 @@
 ---
 name: tech-decisions
-description: >
-  Build-vs-buy decision framework for Figurio — evaluating text-to-3D services
-  (Meshy, Tripo3D, Luma), mesh repair tooling, hosting options, and
-  infrastructure choices against cost, quality, and speed tradeoffs specific
-  to a D2C 3D-print business in the Czech Republic.
-metadata:
-  paperclip:
-    tags:
-      - engineering
-      - architecture
-      - strategy
+description: Make Figurio technical decisions for commerce, custom generation, order states, admin workflows, integrations, infra, and launch risk with explicit tradeoffs and implementation guidance.
 ---
 
-# Tech Decisions
+# Technical Decisions
 
-## When to Use
+Use this skill when choosing between design options, defining a standard, or recording a decision that others will implement.
 
-Apply this skill when evaluating:
-- A new external SaaS or API to add to the Figurio stack
-- Whether to build an internal tool or adopt an existing library/service
-- Hosting and infrastructure changes (cloud, on-prem, managed services)
-- AI provider selection or switching for the text-to-3D pipeline
+## Decision Standard
 
-## Decision Framework
+A good Figurio technical decision must be:
 
-Every significant build-vs-buy decision at Figurio is evaluated across four axes:
+- Safe for commerce and fulfillment.
+- Clear enough for engineering to implement without guessing.
+- Robust against external failures and duplicate events.
+- Easy for operators to understand and recover.
+- Small enough to launch on time.
 
-| Axis | Key Question |
-|------|-------------|
-| **Cost** | What is the total cost at Figurio's current and projected order volume? |
-| **Quality** | Does the output meet print-ready mesh standards (manifold, full-color, correct scale)? |
-| **Speed** | What is the end-to-end latency from customer input to print-ready file? |
-| **Lock-in** | Can we swap this out in < 2 weeks if the vendor fails or pricing changes? |
+## Start With The Real Constraint
 
-Default to **buy** for non-core infrastructure (email, payments, DNS). Default to **build** when the capability is core to Figurio's product differentiation (mesh quality pipeline, custom figurine UX).
+Before choosing, identify which constraint matters most:
 
-## Text-to-3D Provider Evaluation
+- Revenue correctness.
+- Customer trust.
+- Production throughput.
+- Operator workload.
+- Launch speed.
+- Maintenance burden.
+- Vendor lock-in.
 
-Figurio's current providers: **Meshy** and **Tripo3D**. Luma AI is a candidate.
+Then optimize for that constraint first. Do not hide the tradeoff.
 
-### Evaluation Criteria (in priority order)
+## Figurio Decision Domains
 
-1. **Print-ready mesh quality** — output must be manifold, watertight, and carry full vertex/texture color. Assess polygon count vs. print resolution requirements (typical target: 50k–200k polys for figurine scale).
-2. **Generation latency** — customer-facing flow requires < 3 min from prompt to preview mesh. Background high-res generation can be up to 15 min.
-3. **API reliability and SLA** — check uptime history; a provider outage blocks all custom orders. Prefer providers with a stated SLA or status page.
-4. **Pricing per generation** — calculate at 100, 500, and 2000 custom orders/month. Factor in retries for failed generations (assume 10–15% failure rate).
-5. **Data residency** — customer-submitted images and generated meshes must not be retained by the provider for training without opt-in. Confirm in provider DPA (important for Czech/EU compliance).
-6. **Swap cost** — the internal adapter layer must abstract all provider-specific parameters. Score how much adapter code changes if we switch.
+Use these domain rules when the decision touches one of the core systems:
 
-### Current Provider Notes
+- Commerce flow: keep cart, checkout, payment, and confirmation simple and linear.
+- Stripe: make payment intent and webhook handling idempotent; never rely on one webhook arriving once.
+- Orders: maintain one canonical order state model across frontend, backend, admin, and fulfillment.
+- Custom generation: isolate slow, failure-prone, or human-reviewed steps behind durable jobs.
+- Admin tooling: make manual correction possible, logged, and reversible when feasible.
+- Integrations: assume the fulfillment partner, shipping, and creative tooling will be late, partial, or inconsistent.
+- Infra: prefer repeatable deployment and rollback over clever runtime behavior.
 
-| Provider | Strengths | Weaknesses |
-|----------|-----------|------------|
-| Meshy | Good texture color fidelity, active API development | Mesh manifold quality inconsistent on complex poses |
-| Tripo3D | Fast generation, good topology | Color/texture less detailed than Meshy |
-| Luma AI | High realism | Primarily NeRF/video-oriented; mesh export quality for print not validated |
+## Required Decision Questions
 
-### Decision Rule
+Answer these before finalizing a decision:
 
-Run A/B print tests on a sample of 20+ figurines per candidate provider before committing. Evaluate against print-reject rate, not just visual preview quality.
+- What problem is being solved, and what is out of scope?
+- What is the simplest safe option?
+- What failure modes does each option introduce?
+- How will the system recover from partial completion?
+- What is the operator fallback when automation fails?
+- What changes in the frontend, backend, database, jobs, and integrations?
+- What must be true before launch, and what can wait?
 
-## Mesh Repair Tooling
+## Preferred Patterns
 
-Figurio requires a mesh repair step before any mesh enters the print queue.
+- Use explicit state machines for order and fulfillment progress.
+- Use durable queues or jobs for generation, vendor handoff, and retryable work.
+- Use idempotency keys for customer-initiated payments and backend side effects.
+- Use audit logs for manual admin edits, refunds, reruns, and override actions.
+- Use typed contracts between services instead of implicit JSON shapes.
+- Use feature flags or staged rollout when a change affects checkout, payment, or production handoff.
 
-| Option | Approach | Notes |
-|--------|----------|-------|
-| **Manifold** (open source) | Self-hosted, local binary | Fast, no API cost, requires K8s job; current preference |
-| **Microsoft 3MF Toolkit** | Library | Good for format conversion alongside repair |
-| **Netfabb (Autodesk cloud)** | Managed API | High quality but per-call cost and vendor lock-in |
-| **Build custom** | Python + open3d | Only if Manifold fails on Figurio-specific mesh patterns |
+## When To Choose Simplicity
 
-Default: use **Manifold** as the self-hosted repair step. Escalate to Netfabb only for meshes that Manifold cannot repair after two retries.
+Prefer the simpler option when:
 
-## Hosting & Infrastructure
+- The feature is needed for launch but not yet differentiated by complexity.
+- The user-facing benefit does not depend on a more abstract architecture.
+- The operational benefit of the complex option is unproven.
+- The failure cost of the complex option is higher than the performance gain.
 
-Figurio currently runs on **microk8s** (self-managed, single-node). Evaluate cloud migration only when:
-- Monthly infra cost of managed K8s (GKE, AKS) is competitive with current hardware + ops burden, OR
-- Single-node reliability is causing customer-visible downtime > 0.5% monthly
+Do not add workflows, services, or state when a single table, queue, or API boundary is enough.
 
-### Cloud Provider Shortlist (if migration warranted)
+## When To Slow Down
 
-- **Hetzner Cloud (CX series)** — preferred for EU data residency, lowest cost, good Prague/Frankfurt latency
-- **Google GKE Autopilot** — simpler ops, higher cost; viable if AI pipeline GPU workloads are needed
-- Avoid AWS/Azure as primary unless a specific managed service (e.g., RDS, managed Redis) justifies the overhead
+Require a stronger justification before approving complexity in these cases:
 
-## Payments
+- Anything that can double-charge, mis-ship, or lose an order.
+- Anything that changes money movement, refunds, or tax-relevant records.
+- Anything that affects production handoff to the fulfillment partner.
+- Anything that changes the canonical meaning of an order status.
+- Anything that makes support and admin recovery harder.
 
-Stripe is the fixed choice for Figurio. Do not re-evaluate unless:
-- A Czech payment method (SEPA, GoPay, Comgate) requires a local gateway with no Stripe support
-- Stripe pricing becomes uncompetitive at > 5000 orders/month
+## Decision Writeup Template
 
-## Build-vs-Buy Scorecard Template
+Record the decision in this shape:
 
-Use this when writing up a decision:
+1. Decision: what we are choosing.
+2. Context: the constraint or problem.
+3. Options: the viable alternatives.
+4. Tradeoffs: why the selected option wins now.
+5. Risks: what can still go wrong.
+6. Mitigations: how we reduce those risks.
+7. Follow-ups: what to revisit after launch.
 
-```
-## Option: <name>
+## Launch-Risk Lens
 
-- Cost (monthly at 500 orders): 
-- Quality score (1–5, print-reject rate): 
-- Latency (p50 / p95): 
-- Lock-in risk (low / medium / high): 
-- EU data residency compliant: yes / no
-- Swap effort (days): 
+For each decision, state whether it:
 
-Recommendation: Build | Buy | Defer
-Rationale: <2–3 sentences>
-```
+- Blocks checkout.
+- Changes payment correctness.
+- Alters order state transitions.
+- Depends on vendor uptime.
+- Requires new operator training.
+- Adds on-call or support burden.
+
+If any answer is yes, document the recovery path and owner explicitly.
+
+## Output Style
+
+- Be concrete, not generic.
+- Name the exact subsystem affected.
+- Prefer numbers, thresholds, and state names over vague language.
+- Make the recommendation actionable for the engineer who has to implement it.
+- If the right answer is “not yet,” say what would need to change to revisit it.
+

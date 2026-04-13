@@ -1,42 +1,80 @@
-schema: paperclip/v1
-company: figurio
+company:
+  name: Figurio
+  slug: figurio
+  version: 0.1.0
 
 adapterConfig:
-  adapter: claude_local
-  model: sonnet
   env:
-    GH_TOKEN: "${{ secrets.GH_TOKEN }}"
-    DOCKER_HUB_USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
-    DOCKER_HUB_TOKEN: "${{ secrets.DOCKER_HUB_TOKEN }}"
-    STRIPE_SECRET_KEY: "${{ secrets.STRIPE_SECRET_KEY }}"
-    STRIPE_WEBHOOK_SECRET: "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-    DATABASE_URL: "${{ secrets.DATABASE_URL }}"
-    SENTRY_DSN: "${{ vars.SENTRY_DSN }}"
-    GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
-    ELEVENLABS_API_KEY: "${{ secrets.ELEVENLABS_API_KEY }}"
-    MEDIA_OUTPUT_DIR: "/paperclip/media"
-    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: "/paperclip/.gws/figurio.json"
+    GH_TOKEN:
+      source: secret
+      required: true
+    DOCKER_HUB_USERNAME:
+      source: secret
+      required: true
+    DOCKER_HUB_TOKEN:
+      source: secret
+      required: true
+    DATABASE_URL:
+      source: secret
+      required: false
+    SENTRY_DSN:
+      source: plain
+      required: false
+    GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE:
+      source: plain
+      required: true
+      value: /paperclip/.gws/figurio.json
+    GEMINI_API_KEY:
+      source: secret
+      required: false
+    ELEVENLABS_API_KEY:
+      source: secret
+      required: false
+    MEDIA_OUTPUT_DIR:
+      source: plain
+      required: false
+      value: /paperclip/media
+    STRIPE_SECRET_KEY:
+      source: secret
+      required: true
+    STRIPE_WEBHOOK_SECRET:
+      source: secret
+      required: false
 
 budgets:
+  defaultMonthlyBudgetCents: 9000
+  agents:
+    ceo:
+      monthlyBudgetCents: 12000
+    cto:
+      monthlyBudgetCents: 15000
+    product-manager:
+      monthlyBudgetCents: 9000
+    backend-engineer:
+      monthlyBudgetCents: 13000
+    frontend-engineer:
+      monthlyBudgetCents: 13000
+    qa-engineer:
+      monthlyBudgetCents: 8000
+    cmo:
+      monthlyBudgetCents: 11000
+    content-creator:
+      monthlyBudgetCents: 7000
+    head-of-operations:
+      monthlyBudgetCents: 9000
+    customer-support:
+      monthlyBudgetCents: 5000
+
+agents:
   ceo:
-    monthlyCents: 10000
-  cto:
-    monthlyCents: 15000
-  backend-engineer:
-    monthlyCents: 12000
-  frontend-engineer:
-    monthlyCents: 12000
-  devops-engineer:
-    monthlyCents: 10000
-  cmo:
-    monthlyCents: 12000
-  content-creator:
-    monthlyCents: 8000
-  head-of-operations:
-    monthlyCents: 10000
-  ui-designer:
-    monthlyCents: 8000
+    email: info@cellarwood.org
   product-manager:
-    monthlyCents: 8000
+    email: product-manager@cellarwood.org
+  cmo:
+    email: cmo@cellarwood.org
+  content-creator:
+    email: content-creator@cellarwood.org
+  head-of-operations:
+    email: head-of-operations@cellarwood.org
   customer-support:
-    monthlyCents: 5000
+    email: customer-support@cellarwood.org

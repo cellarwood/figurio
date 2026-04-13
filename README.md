@@ -1,103 +1,55 @@
 # Figurio
 
-Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines. Based in Czech Republic.
+Figurio is a Paperclip company package for a Czech direct-to-consumer brand focused on premium full-color 3D-printed figurines. It covers a curated catalog launch, an AI-assisted custom figurine workflow, outsourced production through MCAE, and the operational and marketing systems needed to take the company to market.
 
-## Product Lines
+## What This Package Contains
 
-- **Catalog Figurines** ("Ready to Print") — Curated, rotating catalog of pre-designed figurines across trending, seasonal, and evergreen categories
-- **AI-Prompted Custom Figurines** ("Prompt to Print") — Customers describe a figurine in natural language, AI generates a 3D model, customer approves a rendered preview before production
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React, TypeScript, shadcn-ui, Tailwind CSS, GSAP |
-| Backend | Python, FastAPI, PostgreSQL |
-| Infrastructure | Docker, Kubernetes (microk8s), Helm, Traefik, GitHub Actions |
-| Payments | Stripe (checkout sessions, webhooks, two-stage for custom) |
-| AI Pipeline | Text-to-3D (Meshy/Tripo3D), automated mesh repair |
-| Shipping | Zasilkovna (CZ), DHL (EU/international) |
-| Production | MCAE (Stratasys J55 PolyJet) |
+- `COMPANY.md` with `agentcompanies/v1` company metadata and measurable goals
+- `agents/` with role definitions, operating instructions, runtime config, and subagents
+- `goals/`, `projects/`, and `tasks/` generated from the confirmed launch plan
+- `skills/` with custom company skills and imported Google Workspace skills
+- `global/` with shared Codex plugin bootstrap files
+- `.paperclip.yaml` with budgets and environment inputs
 
 ## Org Chart
 
-```
-CEO
- ├── CTO
- │    ├── Backend Engineer
- │    ├── Frontend Engineer
- │    ├── DevOps Engineer
- │    └── UI Designer
- ├── CMO
- │    └── Content Creator
- ├── Head of Operations
- ├── Product Manager
- └── Customer Support
-```
+- `ceo` -> overall strategy, launch decisions, partnerships
+- `cto` -> platform architecture and technical execution
+- `product-manager` -> requirements, workflow design, launch coordination
+- `backend-engineer` -> APIs, order lifecycle, Stripe, custom pipeline backend
+- `frontend-engineer` -> storefront, approval flows, order UI
+- `qa-engineer` -> regression coverage and release confidence
+- `cmo` -> brand, campaigns, growth loops
+- `content-creator` -> product content, SEO, social assets
+- `head-of-operations` -> supplier coordination, shipping, service levels
+- `customer-support` -> support handling, escalation, customer trust
 
-**11 agents** | **~$1,100/mo total budget**
+## Source Context
 
-## Company Goals
+This package was generated from the business concept and infrastructure assumptions in:
 
-1. Launch MVP e-commerce platform with catalog browsing, AI custom figurines, and Stripe payments
-2. Build a launch-ready catalog of 30+ print-ready figurine designs
-3. Establish production & fulfillment pipeline with MCAE printing partner
-4. Build brand identity and acquire first 100 paying customers
-
-## Projects
-
-| Project | Owner | Description |
-|---------|-------|-------------|
-| mvp-backend | Backend Engineer | FastAPI backend with product catalog, order pipeline, Stripe, AI queue |
-| mvp-frontend | Frontend Engineer | React storefront with catalog, AI prompt flow, cart, checkout |
-| platform-infra | DevOps Engineer | Docker, K8s deployment, CI/CD, monitoring |
+- [IDEA.md](./IDEA.md)
+- [IDEA_values.md](./IDEA_values.md)
 
 ## Importing Into Paperclip
 
-### 1. Company Import (spec-compliant files)
+### 1. Import via Paperclip UI or API
 
-```bash
-# Push to GitHub
-git add -A && git commit -m "Figurio company package"
-git push origin main
+1. Push this package to a GitHub repository.
+2. Import it through the Paperclip Company Import UI or `POST /companies/import` with `source.type: "github"`.
+3. Let Paperclip ingest `COMPANY.md`, the agent bundles, goals, projects, tasks, skills, and `.paperclip.yaml`.
+4. Verify that runtime files under `agents/*/runtime/` are deployed into the agent workspaces.
 
-# Import via Paperclip UI or API
-curl -X POST https://your-paperclip/api/companies/import \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"source": {"type": "github", "repo": "cellarwood/figurio"}}'
-```
+### 2. Use the Global Config Manually
 
-### 2. Global Config (manual setup)
+1. Copy `global/config.toml` and `global/plugins.json` into `.company/codex/` at the Paperclip repo root.
+2. Ensure the required secrets and plain env vars from `.paperclip.yaml` are configured in the target environment.
+3. Rebuild or restart the container so Codex picks up the company configuration.
 
-```bash
-# Copy global config into Paperclip repo
-cp global/settings.json /path/to/paperclip/docker/init/claude/settings.json
-cp global/plugins.json /path/to/paperclip/docker/init/claude/plugins.json
+## Deployment Notes
 
-# Add volume mount in docker-compose.yml:
-# volumes:
-#   - ./init/claude:/docker-init/claude:ro
-
-# Rebuild container
-docker compose up -d --build
-```
-
-### 3. Secrets
-
-Run `scripts/setup-secrets.sh` to configure required environment variables (Stripe, GitHub, Docker Hub, database, etc.).
-
-## Infrastructure
-
-| Service | Value |
-|---------|-------|
-| Domain | cellarwood.org |
-| Google Workspace | cellarwood.org |
-| GitHub | github.com/cellarwood/figurio |
-| Docker Hub | lukekelle00 |
-| Slack | 00aiworkspace.slack.com |
-| Stripe | Cellarwood |
-| K8s | microk8s-local |
-
-## License
-
-MIT
+1. Run `scripts/setup-secrets.sh` and provide the required credentials.
+2. Confirm Google Workspace credentials are mounted at `/paperclip/.gws/figurio.json`.
+3. Verify Stripe secrets, GitHub token, and Docker Hub credentials are available.
+4. Run the Paperclip import flow.
+5. After import, smoke-test plugin access, Google Workspace access, and the generated agent runtime configs.

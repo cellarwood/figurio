@@ -1,0 +1,21 @@
+[plugins."paperclip-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."design-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."dev-tools-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."media-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."office-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."web-design-plugin@codex-my-marketplace"]
+enabled = true
+
+[mcp_servers.chrome-devtools]
+command = "npx"
+args = ["-y", "chrome-devtools-mcp@latest"]

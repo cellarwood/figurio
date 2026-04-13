@@ -1,145 +1,81 @@
 ---
 name: prd-template
-description: >
-  Product requirements document template for Figurio features. Covers the
-  structured format for defining user problem, proposed solution, acceptance
-  criteria, and scope across Figurio's core flows: catalog browsing, AI custom
-  figurine configuration, Stripe checkout, and order tracking.
-allowed-tools:
-  - Read
-  - Write
-  - Grep
-metadata:
-  paperclip:
-    tags:
-      - product
-      - documentation
+description: "Write Figurio PRDs for catalog, custom approval, and fulfillment work with clear scope, launch gates, dependencies, and acceptance criteria."
 ---
 
 # PRD Template
 
-Use this template when writing a PRD for any Figurio feature. Fill every section — no section should be left empty or marked "TBD" before a PRD is considered ready for engineering review.
+Use this skill when drafting or editing a PRD, decision note, launch brief, or implementation spec for Figurio.
 
-## When to Use
+## What A Good PRD Must Do
 
-Invoke this skill whenever you need to produce a PRD for a new feature, a significant change to an existing flow, or a cross-functional initiative that touches the React/TS frontend, FastAPI backend, or Stripe integration.
+- Explain the customer problem and the business outcome in one paragraph.
+- Make the launch sequence explicit: ready-to-print catalog first, then custom figurines only when the approval and supplier flows are ready.
+- State what is in scope, what is out of scope, and what is blocked.
+- Expose cross-functional dependencies on engineering, operations, support, suppliers, and finance.
+- Turn edge cases into testable requirements, not footnotes.
 
-## Template
+## Figurio Context To Bake In
 
-Copy the structure below and fill in each section.
+- Frontend is React/TypeScript.
+- Backend is FastAPI.
+- Checkout uses Stripe.
+- Physical production is supplier-backed, including MCAE handoff assumptions.
+- Core product flows include browse, buy, approve, produce, ship, and resolve exceptions.
+- High-risk areas are stock constraints, personalization limits, approval delays, vendor handoffs, payment failures, refunds, and order visibility.
 
----
+## Default PRD Structure
 
-### `[Feature Name]` — Product Requirements Document
+1. Title and owner
+1. Summary
+1. Problem statement
+1. Goals and non-goals
+1. User impact
+1. Proposed solution
+1. Requirements
+1. User flows / state transitions
+1. Dependencies
+1. Risks and mitigations
+1. Metrics and success criteria
+1. Acceptance criteria
+1. Rollout and launch gates
+1. Open questions and decisions needed
 
-**Author:** [PM name]
-**Created:** [YYYY-MM-DD]
-**Status:** Draft | In Review | Approved
-**Stakeholders:** [Engineering, Design, Ops, …]
+## Writing Rules
 
----
+- Write requirements as observable behavior.
+- Use `must`, `should`, and `must not` intentionally.
+- Put anything that changes order state, approval state, inventory state, or customer-visible promises in the requirements section.
+- Include explicit owner names or teams for every dependency.
+- Call out operational assumptions: supplier SLA, manual review time, reprint path, and support escalation path.
+- If a feature touches trust, mention what the customer sees when something goes wrong.
+- If a feature touches margin, mention the cost or margin mechanism, not just the revenue upside.
 
-#### 1. User Problem
+## Required Detail For Figurio Work
 
-_One to three sentences. Who is affected, what pain do they experience, and what is the evidence (user feedback, support tickets, conversion data)?_
+- For catalog work: item availability, variant rules, pricing, image/content requirements, and what happens when stock is low or missing.
+- For custom figurine work: intake constraints, approval workflow, revision limits, SLA targets, and rejection handling.
+- For fulfillment work: production trigger, supplier handoff payload, exception states, shipment confirmation, and customer notifications.
+- For support work: internal tooling, order lookup, status explanations, refund or reprint decision paths, and escalation ownership.
 
-> Example: Customers who want a fully custom figurine abandon the AI configuration flow at the pose-selection step (42% drop-off, April 2026 funnel data). They do not understand that the pose they select affects the final print price, because no price update is shown until checkout.
+## Acceptance Criteria Standard
 
----
+- Each criterion should be testable by QA, engineering, or operations.
+- Include happy path plus failure path when customer trust or money is involved.
+- If acceptance depends on another team, state the dependency explicitly.
+- Prefer concrete examples over vague statements like "works smoothly".
 
-#### 2. Goal & Success Metrics
+## Launch Gate Checklist
 
-| Metric | Baseline | Target | Measurement |
-|--------|----------|--------|-------------|
-| [e.g., AI flow completion rate] | [x%] | [y%] | [Mixpanel funnel event] |
-| [e.g., Support tickets re: pricing] | [n/week] | [n/week] | [Zendesk tag] |
+- Scope is frozen.
+- Dependencies have owners and dates.
+- Operational runbook exists for exception cases.
+- Customer-facing copy matches actual system behavior.
+- Success metrics and rollback conditions are defined.
 
----
+## Output Style
 
-#### 3. Proposed Solution
-
-_Describe the solution in plain language. Include the affected Figurio flow (catalog, AI custom, checkout, or order tracking) and the layers touched (frontend component, FastAPI endpoint, Stripe object, or ops tooling)._
-
-> Example: Show a real-time price estimate in the AI custom configurator sidebar. The FastAPI `/api/v1/quotes/estimate` endpoint already returns a price given model complexity; the frontend should call it on every pose or material change and render the result inline before the user reaches checkout.
-
----
-
-#### 4. Scope
-
-**In scope**
-- [Bullet list of what is included]
-
-**Out of scope**
-- [Explicit exclusions — prevents scope creep]
-
----
-
-#### 5. User Stories
-
-Format: _As a [persona], I want [capability] so that [outcome]._
-
-- As a **catalog browser**, I want …
-- As a **custom figurine buyer**, I want …
-- As an **ops team member**, I want …
-
-Add as many stories as needed; group them by persona.
-
----
-
-#### 6. Acceptance Criteria
-
-Each criterion must be testable. Use Given/When/Then where it helps clarity.
-
-| # | Criterion | Flow | Layer |
-|---|-----------|------|-------|
-| 1 | Given … When … Then … | AI custom | Frontend |
-| 2 | Given … When … Then … | Checkout | Stripe / FastAPI |
-| 3 | … | Order tracking | FastAPI |
-
-**Definition of Done checklist**
-- [ ] All acceptance criteria pass in staging
-- [ ] No regression in Stripe webhook handling (test mode)
-- [ ] Lighthouse performance score does not drop below current baseline on affected pages
-- [ ] Error states (API timeout, Stripe decline) are handled and user-facing messages are correct
-
----
-
-#### 7. Design & Technical Notes
-
-_Optional. Call out any known constraints, dependencies, or decisions that engineering must be aware of._
-
-- FastAPI endpoint(s) involved: `[e.g., GET /api/v1/quotes/estimate]`
-- Frontend component(s): `[e.g., ConfiguratorSidebar.tsx]`
-- Stripe objects affected: `[e.g., PaymentIntent metadata, Price object]`
-- Data / privacy considerations (Czech Republic / GDPR): `[note if personal data is stored or transmitted]`
-
----
-
-#### 8. Open Questions
-
-| Question | Owner | Due |
-|----------|-------|-----|
-| [e.g., Should price estimates be cached? At what TTL?] | Engineering | [date] |
-
----
-
-## Flow-Specific Guidance
-
-### Catalog Browsing
-Focus ACs on filter/sort correctness, pagination behavior, and product card data accuracy (SKU, material, price).
-
-### AI Custom Figurine Flow
-Call out each step of the multi-step configurator (photo upload → style → pose → material → review). ACs must cover the happy path and at least: unsupported file format, generation timeout, and price change between estimate and final checkout.
-
-### Checkout (Stripe)
-ACs must explicitly cover: successful payment, card decline, 3DS authentication, and webhook delivery. Reference the Stripe test card matrix when writing test scenarios.
-
-### Order Tracking
-ACs must cover status transitions (received → printing → shipped → delivered) and the customer-facing notifications triggered at each transition.
-
-## Anti-patterns
-
-- Writing acceptance criteria that test implementation details ("the button calls `handleSubmit`") rather than user-observable behavior.
-- Leaving the success metrics section blank — every PRD must have at least one measurable outcome.
-- Scoping a PRD to span multiple unrelated flows without splitting into separate documents.
-- Describing the solution before the problem — always establish the user problem first.
+- Keep the PRD concise enough to read in one sitting.
+- Use short sections and bullets.
+- Do not bury launch blockers in prose.
+- End with the decision required, if any.

@@ -1,26 +1,27 @@
-# Tools -- Product Manager
+# Tools - Product Manager
 
 ## Plugins
 
 | Plugin | Capabilities |
 |--------|-------------|
-| `office-plugin` | Create and manage issues in the Paperclip tracker; read and update agent and company state via the Paperclip API |
+| `paperclip-plugin@codex-my-marketplace` | Planning workflows, task coordination, agent handoffs, and heartbeat-driven execution artifacts. |
+| `office-plugin@codex-my-marketplace` | Docs, sheets, and presentations for PRDs, launch reviews, trackers, and decision logs. |
 
 ## Google Workspace
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`pm@cellarwood.org`).
+Available via the `gws` CLI. Email is configured through `AGENT_EMAIL`.
 
-**Services:** Gmail (triage, send, read, reply), Calendar (agenda, insert events), Drive (file storage and organization), Docs (PRD and meeting note authoring), Sheets (catalog SKU registry and roadmap tracking), Tasks (personal to-dos), shared workspace access across the cellarwood.org domain.
+**Services:** Gmail, Calendar, Drive, Docs, Sheets, Tasks.
 
-Run `gws --help` or `gws <service> --help` for CLI documentation.
+Use Google Workspace for PRDs, launch reviews, stakeholder approvals, shared notes, and execution tracking.
 
 ## Usage Guidelines
 
-- Use Google Sheets via `gws sheets` as the canonical home for the catalog SKU registry. Keep it in Drive so the CEO and COO can read it without being prompted.
-- Write all PRDs in Google Docs via `gws docs`, then link the Doc URL in the corresponding Paperclip issue. Do not paste PRD content directly into issue bodies.
-- Use `gws gmail` to send stakeholder summaries and follow-ups. Keep emails to one paragraph when possible — long emails do not get read.
-- Use `gws calendar` to schedule product syncs; always attach an agenda Doc link when inserting an event.
-- Use the `office-plugin` for all issue lifecycle operations: create, checkout, update status, comment. Never modify issue state via a workaround.
+- Draft PRDs and launch documents in Docs, then keep the link as the source of truth for downstream teams.
+- Use Sheets for prioritization matrices, launch readiness checklists, and order-flow tracking.
+- Use Calendar to lock review windows and approval checkpoints before a launch date is announced.
+- Use Gmail to request decisions, capture approvals, and follow up on blocked dependencies.
+- Use Tasks to keep owners and due dates attached to product decisions until they are closed.
 
 ---
 *Add personal tool notes below as you discover and use tools.*

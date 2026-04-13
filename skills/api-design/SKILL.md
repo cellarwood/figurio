@@ -1,191 +1,79 @@
 ---
 name: api-design
-description: >
-  REST API conventions for the Figurio D2C 3D-figurine platform built with FastAPI.
-  Covers endpoint naming for catalog products, AI generation job queue, order pipeline,
-  Stripe checkout and webhook integration, pagination, error responses, and authentication patterns.
-allowed-tools:
-  - Read
-  - Grep
-  - Write
-  - Bash
-metadata:
-  paperclip:
-    tags: [engineering, backend, api]
+description: REST and HTTP API conventions for Figurio's catalog, checkout, Stripe, order, and custom-generation backend endpoints.
 ---
 
-# API Design
+# Figurio API Design
 
-## Base URL Structure
+Use this skill when adding or changing backend HTTP APIs for Figurio's catalog products, checkout, orders, custom generation jobs, preview approval, Stripe webhooks, refunds, or operator-facing endpoints.
 
-All public API endpoints live under `/api/v1/`. Services are grouped by resource domain.
+## Defaults
 
-```
-/api/v1/products/          # Catalog figurines
-/api/v1/orders/            # Order lifecycle
-/api/v1/generation-jobs/   # AI prompt-to-print pipeline
-/api/v1/users/             # Account management
-/api/v1/webhooks/stripe    # Stripe event sink (no /v1/ version prefix — Stripe controls the URL)
-```
+- Prefer resource-oriented REST over ad hoc RPC.
+- Preserve existing request and response shapes unless a breaking change is explicitly approved.
+- Model workflow changes as explicit state transitions, not hidden side effects.
+- Keep client-triggered APIs separate from webhook-driven or background-job-driven APIs.
+- Return the canonical persisted resource after every successful write.
 
-## Endpoint Naming
+## Resource Rules
 
-- Collections: plural noun, no trailing slash — `/api/v1/products`
-- Single resource: `/{id}` suffix — `/api/v1/products/{product_id}`
-- Sub-resources follow the parent: `/api/v1/orders/{order_id}/items`
-- Actions that are not CRUD go on a verb sub-path: `/api/v1/generation-jobs/{job_id}/approve`
-- Use kebab-case for multi-word path segments: `/api/v1/generation-jobs`
+- Use plural nouns for collections and stable IDs for resources.
+- Keep one primary aggregate per endpoint group: `products`, `orders`, `generation-jobs`, `previews`, `payments`.
+- Use subresources for workflow artifacts that belong to a single aggregate, such as `orders/{id}/preview` or `orders/{id}/events`.
+- Expose workflow actions only when a pure CRUD shape would hide an important business transition.
+- Do not expose internal database joins, vendor payloads, or queue details directly to clients.
 
-## Key Resource Endpoints
+## Request And Response Shape
 
-### Products (Catalog)
+- Match the repo's existing JSON casing and naming; do not mix styles in one API.
+- Include stable identifiers, status fields, and timestamps on every persisted resource that clients need to reason about.
+- Make write endpoints return the updated resource or a small envelope that includes it.
+- Keep list responses explicit about pagination, sorting, and filters.
+- Accept only documented query params; reject silent, ambiguous filtering behavior.
 
-```
-GET    /api/v1/products                  # paginated list with filters
-GET    /api/v1/products/{product_id}     # detail
-POST   /api/v1/products                  # admin: create
-PATCH  /api/v1/products/{product_id}     # admin: update
-DELETE /api/v1/products/{product_id}     # admin: soft-delete (sets is_active=false)
-```
+## Validation Rules
 
-Query params: `?category=fantasy&size_tier=medium&page=1&page_size=20`
+- Validate ownership, payment state, and order state before applying a mutation.
+- Fail fast on invalid transitions instead of silently normalizing them.
+- Distinguish user-facing validation errors from internal consistency errors.
+- Treat duplicate submissions as a normal case when retries, refreshes, or webhook replays can happen.
+- Require idempotency keys for writes that can create charges, orders, jobs, or state transitions more than once.
 
-### Orders
+## Error Handling
 
-```
-POST   /api/v1/orders                         # create order, returns checkout session URL
-GET    /api/v1/orders/{order_id}              # order detail + current state
-GET    /api/v1/orders                         # user's orders (paginated)
-POST   /api/v1/orders/{order_id}/cancel       # request cancellation (only in placed state)
-```
+- Use standard HTTP semantics: `400/422` for invalid input, `401/403` for access problems, `404` for missing resources, `409` for state conflicts, `5xx` for server failures.
+- Use `409 Conflict` for stale updates, duplicate Stripe events, and disallowed state transitions.
+- Keep error payloads short, actionable, and safe to expose.
+- Never leak raw stack traces, vendor payload dumps, or secrets in API errors.
 
-Orders are created with status `placed`. The state machine is driven by Stripe webhooks
-and internal transitions — never by direct PATCH to the status field from outside.
+## Stripe And Webhooks
 
-### AI Generation Jobs
+- Treat Stripe webhooks as the source of truth for payment lifecycle changes.
+- Verify webhook signatures before processing.
+- Persist the external event ID before or as part of processing so replays stay idempotent.
+- Reconcile amounts, currency, and order identity before marking payment complete.
+- Never assume a client redirect, success page, or frontend callback means payment succeeded.
 
-```
-POST   /api/v1/generation-jobs                        # submit prompt, creates job
-GET    /api/v1/generation-jobs/{job_id}               # poll status + preview URL
-POST   /api/v1/generation-jobs/{job_id}/approve       # customer approves preview → triggers order
-POST   /api/v1/generation-jobs/{job_id}/reject        # customer rejects → job loops back to queued
-GET    /api/v1/generation-jobs                        # user's jobs (paginated)
-```
+## Figurio-Specific Patterns
 
-Job polling should be done client-side at a reasonable interval (5–10 seconds). Do not
-use long-polling or SSE for the MVP — simple GET is sufficient.
+- Catalog APIs should expose product availability, size tiers, and purchase constraints without revealing fulfillment internals.
+- Checkout APIs should create or confirm orders, not finalize production directly.
+- Custom workflow APIs should separate prompt intake, generation status, preview delivery, approval, revision requests, and production release.
+- Operator-facing endpoints may be more explicit than customer-facing ones, but they still need stable contracts and predictable state.
+- If a workflow needs a new state or endpoint, prefer a deliberate addition over overloading an existing meaning.
 
-### Stripe Integration
+## Testing Expectations
 
-#### Checkout
+- Add contract tests for every API shape that changes.
+- Test validation failures, idempotency behavior, forbidden transitions, and pagination edge cases.
+- For Stripe-facing APIs, test signature verification, duplicate delivery, and event-order anomalies.
+- For stateful endpoints, assert the exact fields returned before and after each write.
+- Prefer focused API and service tests over broad end-to-end tests unless the change crosses multiple systems.
 
-Order creation (`POST /api/v1/orders`) responds with a Stripe Checkout Session URL.
-The frontend redirects the customer there. Do not handle card data server-side.
+## Review Checklist
 
-```python
-# Response shape for POST /api/v1/orders
-{
-  "order_id": "ord_abc123",
-  "checkout_url": "https://checkout.stripe.com/pay/cs_live_..."
-}
-```
-
-For AI-custom orders, a 50% deposit Checkout Session is created at job submission
-(`POST /api/v1/generation-jobs`). The remaining 50% is charged on approval.
-
-#### Webhooks
-
-All Stripe events are received at `POST /webhooks/stripe`.
-
-- Verify the `Stripe-Signature` header using `stripe.Webhook.construct_event()` before processing.
-- Return `200 OK` immediately after signature verification, then process async to avoid Stripe retries.
-- Events handled: `checkout.session.completed`, `payment_intent.succeeded`,
-  `payment_intent.payment_failed`, `charge.dispute.created`.
-
-```python
-@router.post("/webhooks/stripe", status_code=200)
-async def stripe_webhook(request: Request, background_tasks: BackgroundTasks):
-    payload = await request.body()
-    sig = request.headers.get("stripe-signature")
-    event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
-    background_tasks.add_task(handle_stripe_event, event)
-    return {"received": True}
-```
-
-## Authentication
-
-- JWT Bearer tokens for all authenticated endpoints.
-- Token issued at `/api/v1/auth/token` (POST, body: email + password).
-- Token refresh at `/api/v1/auth/refresh`.
-- Admin-only endpoints protected by a `require_admin` dependency — check `user.role == "admin"`.
-- The Stripe webhook endpoint is authenticated by signature verification only — no JWT.
-
-```python
-# Dependency pattern
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
-    ...
-
-async def require_admin(user: User = Depends(get_current_user)) -> User:
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-```
-
-## Pagination
-
-All list endpoints use cursor-free offset pagination for the MVP.
-
-**Request:** `?page=1&page_size=20` (page is 1-indexed; default page_size=20, max=100)
-
-**Response envelope:**
-
-```json
-{
-  "items": [...],
-  "total": 142,
-  "page": 1,
-  "page_size": 20,
-  "pages": 8
-}
-```
-
-Use a shared `PaginatedResponse[T]` generic Pydantic model — do not repeat this shape per endpoint.
-
-## Error Responses
-
-All errors follow a single envelope:
-
-```json
-{
-  "error": {
-    "code": "ORDER_NOT_FOUND",
-    "message": "Order ord_abc123 does not exist.",
-    "details": {}
-  }
-}
-```
-
-| HTTP Status | When to use |
-|-------------|-------------|
-| 400 | Validation errors, bad request body |
-| 401 | Missing or invalid token |
-| 403 | Authenticated but insufficient permissions |
-| 404 | Resource not found |
-| 409 | State conflict (e.g., cancelling a shipped order) |
-| 422 | FastAPI/Pydantic schema validation failure (default behavior) |
-| 500 | Unexpected server error — never leak stack traces |
-
-Use string `code` values in SCREAMING_SNAKE_CASE for programmatic handling by the frontend.
-
-## Request / Response Schemas
-
-- Define separate Pydantic models for request body (input) and response (output) — never reuse the ORM model directly.
-- Naming convention: `ProductCreate`, `ProductUpdate`, `ProductResponse`, `ProductListResponse`.
-- All timestamps as ISO 8601 strings in UTC: `"2026-04-11T14:00:00Z"`.
-- Monetary amounts in **integer cents** (CZK or EUR), never floats. Include the currency code field.
-- Size tier values: `"small"`, `"medium"`, `"large"` (lowercase string enum).
-
-## Versioning
-
-The current version is `v1`. Breaking changes require a new prefix (`/api/v2/...`).
-Non-breaking additions (new optional fields, new endpoints) do not require a version bump.
+- Does the endpoint name describe a resource or workflow step clearly?
+- Is the mutation idempotent if the user retries it?
+- Does the response reveal enough state for the next client action?
+- Are payment, approval, and fulfillment boundaries preserved?
+- Would a replayed webhook, stale tab, or concurrent operator action stay safe?

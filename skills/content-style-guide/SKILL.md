@@ -1,142 +1,107 @@
 ---
 name: content-style-guide
-description: >
-  Writing style for Figurio content — product descriptions that highlight craftsmanship
-  and print detail, blog posts about 3D printing culture and collector community,
-  and social media captions designed to drive engagement and shares for a playful
-  D2C figurine brand.
-allowed-tools:
-  - Read
-  - Grep
-metadata:
-  paperclip:
-    tags:
-      - content
-      - marketing
-      - brand
+description: Figurio-specific content voice, copy standards, and narrative rules for product pages, seasonal campaigns, social posts, lifecycle messaging, and custom figurine storytelling.
 ---
 
-# Content Style Guide
+# Figurio Content Style Guide
 
-Figurio's voice is playful, craft-proud, and collector-savvy. Every piece of content should
-make readers feel they are discovering something worth owning, sharing, or gifting.
+Use this skill when writing or editing copy for Figurio so the output stays on-brand, conversion-aware, and specific to the product.
 
 ## Brand Voice
 
-| Trait | Meaning in practice |
-|-------|---------------------|
-| Playful | Light puns, pop-culture nods, exclamation points used sparingly but sincerely |
-| Craft-proud | Name the technology (PolyJet, full-color, multi-material) — don't obscure it |
-| Collector-savvy | Speak to the completionist instinct, limited runs, display potential |
-| Accessible | No jargon gatekeeping — a grandparent buying a gift should follow along |
+Figurio copy should feel:
 
-Never sound corporate, clinical, or generic. Avoid filler phrases like "high-quality product" or
-"great for any occasion."
+- Clear before clever.
+- Warm, human, and giftable.
+- Specific about what the customer is buying.
+- Confident without exaggeration.
+- Story-driven without drifting into vague branding language.
 
----
+The product is not just a figurine. It is a collectible, giftable, highly visual keepsake with a personal story behind it. The copy should make that value easy to see.
 
-## Product Descriptions
+## Core Voice Principles
 
-### Structure
+- Lead with the real object, outcome, or benefit.
+- Use concrete nouns and simple verbs.
+- Keep emotional language grounded in product truth.
+- Write like a brand that understands gifting, collecting, and personalization.
+- Match tone to surface: sharper for commerce pages, warmer for lifecycle and storytelling.
 
-1. **Hook line** (1 sentence) — lead with what makes this figurine interesting, not its specs.
-2. **Detail paragraph** (2–4 sentences) — highlight print quality, color accuracy, or design story.
-3. **Specs block** — size tier (Small 8cm / Medium 15cm / Large 25cm), material, print method.
-4. **CTA** — one line that nudges toward adding to cart or gifting.
+## Figurio Message Pillars
 
-### Tone
+- Custom figurines should feel personal, memorable, and easy to share.
+- Catalog products should feel ready to buy, gift, and display.
+- Seasonal campaigns should feel timely without losing product clarity.
+- Social copy should be short, visual, and easy to scan.
+- Post-purchase copy should reduce uncertainty and keep excitement high.
 
-- Write as if describing the figurine to someone holding it in their hands.
-- Use tactile and visual language: *crisp edges*, *vivid gradient*, *hand-painted-level detail*.
-- Reference the Stratasys J55 PolyJet process when precision is a selling point — it's a
-  genuine differentiator, not marketing fluff.
-- For catalog items call out the design origin when it adds prestige (e.g., "commissioned
-  from illustrator X" or "licensed from the official collection").
+## Copy Rules
 
-### Examples
+- Use the customer's context when it helps the sale: gift, celebration, milestone, fandom, desk display, keepsake, or surprise.
+- Prefer "show" language over abstract adjectives.
+- Keep claims defensible and product-specific.
+- Use short paragraphs and compact sentences for high-intent surfaces.
+- Avoid generic luxury language unless the product actually supports it.
+- Avoid filler phrases that could apply to any brand.
 
-**Good:**
-> Meet the Cyber Samurai — 15cm of obsessive detail, from the micro-etched visor reflections
-> to the layered armor plating. Printed on the Stratasys J55 PolyJet in full color with
-> multi-material precision. Every edge is crisp enough to cast a shadow.
+## What To Emphasize
 
-**Bad:**
-> This high-quality figurine is great for collectors and makes a perfect gift for any occasion.
+- Personalization options and what changes.
+- Visual detail, collectible value, and giftability.
+- Timing, production, approval, and delivery expectations when relevant.
+- Use cases such as birthdays, anniversaries, holidays, team gifts, desk decor, and surprise presents.
+- Trust cues that help the customer commit.
 
----
+## What To Avoid
 
-## Blog Posts
+- Vague hype with no product substance.
+- Overly sentimental language that makes the product feel less real.
+- Repeating the same benefit in different words.
+- Phrases that sound like placeholder marketing copy.
+- Writing that hides important constraints, timelines, or limitations.
 
-Figurio's blog covers 3D printing culture, behind-the-scenes production, collector spotlights,
-and seasonal/trending topics. Posts should inform and delight — not just promote.
+## Surface Guidelines
 
-### Structure
+### Product Pages
 
-- **Title:** Specific and curiosity-driven. Lead with the most interesting angle.
-  - Good: "Why Full-Color PolyJet Printing Changes What a Figurine Can Look Like"
-  - Bad: "Our 3D Printing Process Explained"
-- **Intro:** 2–3 sentences. Open with a surprising fact, a vivid image, or a relatable moment.
-- **Body:** Use subheadings every 200–300 words. Mix explanation with anecdote.
-- **Outro:** Close with a forward-looking line or a gentle product link — never a hard sell.
+- State what the product is in the first lines.
+- Make the main benefit obvious before the supporting detail.
+- Keep feature language tied to real use or visual effect.
+- Explain size, material, customization, and timing in plain language.
 
-### Topics and Framing
+### Seasonal Campaigns
 
-- **Production deep-dives:** Explain the Stratasys J55, the mesh repair pipeline, size tiers.
-  Show the craft. Readers should feel like insiders.
-- **Collector culture:** Limited runs, display tips, gifting occasions, seasonal collections.
-- **Custom figurine process:** Walk through the "Prompt to Print" flow — AI generation,
-  technician review, customer preview approval. Demystify it.
-- **Behind the design:** Commission stories, artist profiles, how a trend becomes a model.
+- Anchor the copy to the occasion quickly.
+- Balance seasonal energy with product clarity.
+- Make the offer, deadline, or event relevance easy to understand.
+- Avoid making every campaign sound like a generic holiday sale.
 
-### Tone
+### Social Posts
 
-Conversational but authoritative. Use "we" for Figurio. Use "you" to address the reader.
-Avoid first-person singular ("I think…") unless it's a signed personal piece.
+- Lead with the visual hook or emotional hook.
+- Keep the message short enough to scan on mobile.
+- Make the caption easy to pair with a strong image or video.
+- Use one clear idea per post.
 
----
+### Custom Figurine Storytelling
 
-## Social Media Captions
+- Treat the customer or recipient as the subject of the story.
+- Use specific details from the prompt, moment, or memory.
+- Make the output feel crafted, not templated.
+- Preserve a sense of play, sentiment, and personality without overexplaining.
 
-### Platform Defaults
+### Lifecycle Copy
 
-| Platform | Length | Tone | CTA |
-|----------|--------|------|-----|
-| Instagram | 80–150 words | Visual-first, playful | "Link in bio" or tag a friend |
-| TikTok | 30–60 words | Fast, punchy, trend-aware | Engage with the comment hook |
-| Facebook | 60–120 words | Slightly warmer, gift-oriented | Direct product link |
-| Pinterest | 40–80 words | Descriptive, keyword-rich | Product link |
+- Use reassuring language for order updates, approvals, and post-purchase messaging.
+- Explain what happens next, not just what happened.
+- Remove uncertainty around status, timing, and action required.
 
-### Caption Formula
+## Editing Checklist
 
-1. **Hook** — first line must earn the scroll-stop. Question, bold claim, or visual payoff teaser.
-2. **Body** — 1–2 sentences of context or delight.
-3. **CTA** — one clear action or social prompt (tag a friend, share, comment).
-4. **Hashtags** — 3–6, mix broad (#3Dprinting, #figurines) with niche (#PolyJet, #customfigurine,
-   #FigurioPrint). Never pad to 30.
+- Is the main point clear in the first pass?
+- Does the copy sound like Figurio, not a generic DTC brand?
+- Are the product details concrete and believable?
+- Does the message support the page's actual conversion goal?
+- Is the tone right for the surface: commerce, campaign, social, or storytelling?
+- Are any important constraints or expectations stated plainly?
 
-### Engagement Hooks That Work for Figurio
-
-- "Tag someone who needs this on their desk."
-- "Which size would you pick — 8cm, 15cm, or go full 25cm statement piece?"
-- "We printed [X] layers for this. Can you spot the detail?"
-- "What would your custom figurine look like? Drop your prompt below."
-
-### What to Avoid
-
-- Overusing "drop" or "collab" — feels forced for a figurine brand.
-- Vague superlatives: "incredible," "amazing," "must-have."
-- Excessive emoji stacking — one or two purposeful ones max.
-- Asking multiple questions in one caption.
-
----
-
-## Shared Rules (All Content Types)
-
-- **Spell out "PolyJet"** — not "polyjet" or "poly jet."
-- **Size references:** always include the cm measurement alongside the tier name on first mention
-  (e.g., "Medium (15cm)").
-- **"Prompt to Print"** and **"Ready to Print"** are proper Figurio product line names — capitalize
-  and use consistently.
-- **MCAE / Stratasys J55** — mention when print quality is the topic; omit in lightweight social posts.
-- **Czech Republic / EU shipping context** — relevant in posts targeting CZ/SK audience;
-  use Zásilkovna reference for Czech readers, DHL for EU/world.

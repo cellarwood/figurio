@@ -1,0 +1,11 @@
+[plugins."paperclip-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."dev-tools-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."infra-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."office-plugin@codex-my-marketplace"]
+enabled = true

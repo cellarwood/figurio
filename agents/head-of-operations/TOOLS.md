@@ -1,34 +1,35 @@
-# Tools -- Head of Operations
+# Tools - Head of Operations
 
-## Plugins
+## office
+Use `office` for the operational documents that keep Figurio moving: SOPs, packaging standards, supplier scorecards, exception logs, order handoff templates, and fulfillment reviews.
 
-| Plugin | Capabilities |
-|--------|-------------|
-| `office-plugin` | Google Workspace access via the `gws` CLI -- Gmail, Drive, Docs, Sheets, Calendar, Tasks |
-| `company-plugin` | Stripe MCP (payment events, refunds, disputes) and DHL API Assistant MCP (shipment creation, label generation, tracking) |
+Use it when the work needs durable structure rather than inbox-only coordination. For Figurio, that means:
+- documenting production and shipping workflows end to end,
+- comparing supplier performance and margin impact,
+- recording incident reviews and corrective actions,
+- keeping packaging and service standards visible to everyone who touches the order path.
 
-## MCP Servers
+## company
+Use `company` for agent-to-agent coordination, shared operating context, and the cross-functional handoffs that keep order fulfillment from fragmenting.
 
-| Server | Permission | What it does |
-|--------|-----------|-------------|
-| `plugin_company-plugin_stripe` | `mcp__plugin_company-plugin_stripe` | Query Stripe payment intents, monitor charge events, process refunds, retrieve dispute details |
-| `plugin_company-plugin_dhl-api-assistant` | `mcp__plugin_company-plugin_dhl-api-assistant` | Create DHL shipments, generate shipping labels, track parcels, manage EU and international carrier handoffs |
+For Figurio, this is the layer for:
+- translating paid orders into operational tasks,
+- aligning production, support, and leadership on current risk,
+- surfacing exceptions that affect launch readiness or customer trust,
+- preserving a shared view of what is blocked, delegated, or escalated.
 
 ## Google Workspace
+Use Google Workspace as the day-to-day operating surface.
 
-Available via the `gws` CLI. Email configured via `AGENT_EMAIL` env var (`ops@cellarwood.org`).
+Gmail is for supplier coordination, shipping exceptions, customer-impacting updates, and internal follow-up that needs a paper trail. Calendar is for supplier calls, dispatch checkpoints, and review cadence. Drive and Docs are for SOPs, supplier notes, escalation memos, and shipping or packaging standards. Sheets is for order queues, service metrics, margin review, and supplier comparison. Tasks is for unresolved actions that must not disappear.
 
-**Services:** Gmail (vendor and carrier comms, order escalations), Google Sheets (SLA register, cost model, fulfillment cycle log), Google Docs (fulfillment SOPs, vendor contracts, packaging specs), Google Drive (print files, QA photos, agreements, packaging assets), Google Calendar (MCAE submission deadlines, QA windows, vendor review calls), Google Tasks (personal follow-up queue).
+## Stripe and shipping adjacencies
+You do not run Stripe or DHL as standalone tools here, but operations must stay tightly coupled to both sides of the order.
 
-Run `gws --help` or `gws <service> --help` for CLI documentation.
+Use the available tools to keep payment, order, and shipment references aligned:
+- confirm that paid orders are represented correctly in the fulfillment queue,
+- record refund, chargeback, reshipment, or compensation decisions clearly,
+- keep shipment references, tracking numbers, and carrier exceptions attached to the right order,
+- flag any mismatch between payment status, production status, and shipping status immediately.
 
-## Usage Guidelines
-
-- Use the Stripe MCP to confirm payment status before triggering any fulfillment action -- never ship against an unconfirmed payment.
-- Use the DHL MCP for all EU and international label generation; do not generate DHL labels manually through the portal.
-- Triage `ops@cellarwood.org` via `gws gmail` on every heartbeat -- MCAE and carrier messages require same-day response.
-- Store all finalized SOPs, vendor agreements, and packaging specs in Google Drive under a consistent folder structure; link the Drive URL in the relevant Paperclip issue.
-- Use Google Sheets for any data that needs version history or formula-based cost calculations -- do not store cost models in issue comments.
-
----
-*Add personal tool notes below as you discover and use tools.*
+When a payment event or delivery exception changes the customer promise, update the shared operational record first, then coordinate the next action through the appropriate channel.

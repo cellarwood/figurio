@@ -1,102 +1,93 @@
 ---
 name: architecture-review
-description: >
-  Review system design decisions for the Figurio platform — FastAPI backend,
-  React/TS frontend, PostgreSQL, text-to-3D AI pipeline (Meshy/Tripo3D),
-  Stripe payments, and K8s deployment on microk8s. Use when evaluating new
-  services, integration patterns, data models, or infrastructure changes.
-metadata:
-  paperclip:
-    tags:
-      - engineering
-      - architecture
-      - review
+description: Review Figurio architecture for commerce flows, custom generation, order state design, admin tooling, Stripe and vendor integrations, deployment readiness, and launch risk.
 ---
 
 # Architecture Review
 
-## When to Use
+Use this skill when evaluating Figurio system design, proposed changes, or production risk.
 
-Apply this skill when:
-- A new service, integration, or infrastructure component is proposed
-- An existing subsystem needs significant refactoring
-- A cross-cutting concern (auth, caching, observability) needs a design decision
-- A new AI pipeline stage (generation, repair, validation) is being scoped
+## Default Approach
 
-## Platform Overview
+1. Inspect the real repository state before judging.
+2. Trace the full user and operator flow end to end.
+3. Prefer concrete failure modes over abstract style comments.
+4. Separate launch blockers from later hardening items.
+5. Recommend the simplest design that is safe enough for the phase.
 
-Figurio runs a D2C e-commerce platform for full-color 3D-printed figurines with two product lines:
-1. **Catalog products** — predefined figurine SKUs, standard order flow
-2. **AI custom products** — customer uploads or describes a figurine; text-to-3D pipeline produces the mesh, which is printed
+## What To Review
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React + TypeScript, shadcn-ui, Tailwind CSS |
-| Backend API | Python / FastAPI |
-| Database | PostgreSQL |
-| AI pipeline | Meshy or Tripo3D (external API), internal mesh repair/validation |
-| Payments | Stripe (checkout + webhooks) |
-| Container orchestration | Kubernetes via microk8s |
-| Ingress | Traefik |
-| Deployment | Docker images, K8s manifests |
+Focus on these areas whenever they are relevant:
+
+- Storefront purchase flow: product discovery, customization, cart, checkout, payment, confirmation.
+- Stripe flow: intent creation, webhook handling, idempotency, retries, refunds, dispute handling, reconciliation.
+- Order lifecycle: creation, payment pending, paid, queued, generating, review, ready for fulfillment, handed off, shipped, completed, canceled, refunded, failed.
+- Custom figurine pipeline: prompt or intake validation, asset generation, human review, preview artifacts, production handoff, exception recovery.
+- Admin tooling: order lookup, manual state changes, refund controls, resubmission, vendor reruns, audit history.
+- Integrations: outsourced fulfillment partner, 3D-print tooling, shipping, email, logging, analytics, and any external APIs.
+- Runtime: Docker, Kubernetes, Terraform, secrets, rollout strategy, observability, alerts, and rollback paths.
 
 ## Review Checklist
 
-### API & Service Boundaries
-- Does the proposed service have a single, well-scoped responsibility?
-- Are endpoints RESTful and consistent with existing Figurio conventions (`/api/v1/{resource}`)?
-- Is the service stateless? State must live in PostgreSQL, not in-process.
-- Are long-running tasks (AI mesh generation, print job processing) handled asynchronously via a task queue — not blocking the API response?
+For each significant change, answer these questions:
 
-### Data Model
-- Are new tables normalized and consistent with existing PostgreSQL schema conventions?
-- Are foreign keys and indexes defined for all join paths used by the application?
-- Are soft deletes used for customer-facing records (orders, custom designs) to preserve audit trail?
-- Is sensitive data (PII, payment tokens) kept out of application logs and avoided in custom columns?
+- Does the flow have a single source of truth for order state?
+- Are state transitions explicit, validated, and auditable?
+- Are retries and webhook replays safe?
+- Can operators recover from partial failures without editing the database by hand?
+- Are custom-generation and fulfillment steps isolated from customer-facing latency?
+- Is any irreversible action protected by a clear confirmation or idempotency key?
+- Can the system survive partner downtime, delayed jobs, duplicate messages, and stale UI state?
+- Are admin actions logged with actor, timestamp, reason, and before/after values?
+- Does the design preserve a clear customer promise for delivery time and status updates?
+- Is the launch path safe if one dependency is slow, missing, or returns malformed data?
 
-### AI Pipeline (text-to-3D)
-- Is the external AI provider call (Meshy / Tripo3D) isolated behind an internal adapter so the provider can be swapped?
-- Is mesh quality validation (polygon count, manifold check, color fidelity) a separate, mandatory step before the mesh reaches the print queue?
-- Are generation failures surfaced to the customer with actionable messaging, not raw API errors?
-- Is the generated mesh stored in object storage (not PostgreSQL) with only the reference URL in the DB?
+## Decision Rules
 
-### Payments (Stripe)
-- Are payment intents created server-side only — never from the frontend?
-- Is Stripe webhook signature verification enforced for all `/webhooks/stripe` endpoints?
-- Is the idempotency key pattern used for all Stripe API calls to prevent double-charges on retries?
-- Are order state transitions driven by Stripe webhook events, not by client-side callbacks?
+- Prefer explicit state machines over ad hoc status strings.
+- Prefer durable job orchestration over synchronous chains for vendor and generation steps.
+- Prefer append-only audit trails for financial and operational state changes.
+- Prefer narrow, typed interfaces between frontend, backend, and external services.
+- Prefer operator-safe tools over hidden background behavior.
+- Treat vendor APIs, model outputs, and fulfillment updates as untrusted inputs.
 
-### Kubernetes / microk8s
-- Does the new workload have defined CPU/memory `requests` and `limits`?
-- Are secrets stored in K8s Secrets (or an external secret store), not in ConfigMaps or environment variables baked into images?
-- Does the service expose a `/healthz` liveness probe and `/readyz` readiness probe?
-- Are AI pipeline workers deployed as a separate Deployment (not co-located with the API) so they can scale independently?
+## Common Red Flags
 
-### Security
-- Are all backend endpoints protected by authentication middleware unless explicitly exempted?
-- Is CORS restricted to the Figurio frontend origin in production?
-- Are file uploads (customer reference images) validated for MIME type and size before storage?
+- Checkout and fulfillment sharing a brittle code path.
+- Order states that can move backward without a deliberate recovery action.
+- Webhooks that can create duplicate orders or double-charge customers.
+- Custom generation that blocks checkout or payment confirmation.
+- Admin tools that allow silent edits without audit history.
+- Manual fulfillment steps with no retry or visibility path.
+- Production readiness depending on perfect vendor uptime.
+- A design that works in tests but cannot be operated during an incident.
 
-## Common Anti-Patterns
+## Launch Gates
 
-- Calling Meshy/Tripo3D synchronously from the API request path — use a task queue
-- Storing mesh files in PostgreSQL as BLOBs — use object storage
-- Triggering order fulfillment from a frontend success redirect — always use Stripe webhooks
-- Running microk8s workloads without resource limits — leads to noisy-neighbour failures on the single-node cluster
-- Hardcoding AI provider credentials in Dockerfiles or K8s manifests
+Call out a launch blocker when any of these are true:
 
-## Output Format for Reviews
+- Payment success or refund correctness is uncertain.
+- Order state can become inconsistent across systems.
+- A vendor failure can strand an order without operator recovery.
+- Customer-visible status can drift from actual fulfillment state.
+- Missing observability would make incident triage guesswork.
+- Secrets, environment config, or deployment state cannot be reproduced safely.
 
-When documenting a review decision, write:
+## Output Format
 
-```
-## Decision: <title>
+When you review architecture, write the result in this order:
 
-**Status:** Proposed | Accepted | Rejected | Superseded
+1. Recommendation: approve, approve with conditions, or block.
+2. Key risks: the top 3 to 5 issues, ranked by customer, revenue, or operational impact.
+3. Evidence: specific files, code paths, data models, or API boundaries.
+4. Required changes: what must change before launch or merge.
+5. Residual risk: what remains acceptable after the fixes.
 
-**Context:** <what problem this solves in Figurio terms>
+## Review Style
 
-**Decision:** <what we are doing>
+- Be direct about tradeoffs.
+- Distinguish “can ship” from “should harden later.”
+- If a proposal adds complexity, require a concrete operational payoff.
+- If the architecture depends on human intervention, specify exactly who does what and when.
+- If a choice affects launch timing, say so plainly.
 
-**Consequences:** <trade-offs, follow-up tasks, risks>
-```

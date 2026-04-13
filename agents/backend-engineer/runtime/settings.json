@@ -1,6 +1,0 @@
-{
-  "enabledPlugins": {
-    "dev-tools-plugin@claude-my-marketplace": true,
-    "infra-plugin@claude-my-marketplace": true
-  }
-}

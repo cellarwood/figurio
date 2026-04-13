@@ -1,166 +1,126 @@
 ---
 name: fulfillment-sop
-description: >
-  Standard operating procedure for end-to-end order fulfillment at Figurio. Covers order
-  capture from Stripe, print file handoff to MCAE, quality inspection, branded packaging,
-  carrier dispatch via Zásilkovna (Czech Republic) and DHL (EU and international), and
-  customer-facing tracking updates.
-allowed-tools:
-  - Read
-  - Write
-  - Grep
-metadata:
-  paperclip:
-    tags:
-      - operations
-      - fulfillment
-      - shipping
+description: "Write and operate Figurio's fulfillment SOPs for order release, packaging, shipping, tracking, exceptions, and support handoff."
 ---
 
-# Fulfillment SOP
+# Figurio Fulfillment SOP
 
-## When to Use
+Use this skill when documenting or executing the end-to-end fulfillment process for Figurio: from paid order release through packaging, shipment, tracking updates, exception handling, and support follow-up.
 
-Use this skill whenever processing or auditing an order from payment through delivery. It is the
-authoritative procedure for the Head of Operations and any fulfillment staff handling Figurio orders.
+## Core Rule
 
-## Overview — Fulfillment Pipeline
+Fulfillment is a controlled operational sequence. Every order should have one owner, one current state, one next action, and one record that support and operations can trust.
 
-```
-Stripe payment confirmed
-  → Order captured in OMS
-    → Print file prepared & sent to MCAE
-      → MCAE prints & ships to Figurio
-        → Quality inspection
-          → Branded packaging
-            → Carrier handoff (Zásilkovna or DHL)
-              → Tracking update to customer
-```
+## Standard Fulfillment Flow
 
----
+1. Confirm the order is ready for fulfillment.
+1. Validate production details, shipping address, and packaging requirements.
+1. Send the release or handoff package to MCAE or the relevant fulfillment partner.
+1. Track production progress and flag delays before the promised date slips.
+1. Confirm the item is packed correctly and branded according to standard.
+1. Obtain shipment confirmation and carrier tracking.
+1. Update the order record and customer-facing status.
+1. Watch for delivery exceptions, damage, or lost parcel signals.
+1. Close the order only after delivery is confirmed or the issue path is resolved.
 
-## Step 1 — Order Capture from Stripe
+## Before Release
 
-- Stripe webhook fires on `payment_intent.succeeded`.
-- OMS automatically creates an order record with: customer name, delivery address, size tier
-  (Small / Medium / Large), figurine model reference, and Stripe payment ID.
-- Verify the order record is complete within 15 minutes of webhook receipt.
-- If the webhook fails, manually reconcile from the Stripe dashboard daily at 09:00.
+Check all of the following before a fulfillment handoff:
 
-**Flags to check at capture:**
-- Address outside CZ/EU → route to DHL international; flag for possible customs documentation.
-- Multiple size tiers in one order → create one MCAE job per tier; ship together.
-- Rush orders (same-day flag) → contact MCAE immediately to request priority queue slot.
+- Payment status is correct.
+- Customer address is complete and usable.
+- Product variant, size, and quantity match the order.
+- Any approval gate is complete for custom work.
+- Packaging instructions are present.
+- Shipping method matches the service promise.
+- No unresolved exception is attached to the order.
 
----
+If any item is missing, stop the release and resolve it first.
 
-## Step 2 — Print File Handoff to MCAE
+## Production Handoff
 
-- Retrieve the approved `.3mf` or `.stl` print file from the asset library using the model
-  reference on the order.
-- Confirm file version matches the last QA-approved revision before sending.
-- Send files to MCAE via the agreed secure transfer method (MCAE SFTP or email with password).
-  Never attach customer PII — send only: order reference ID, size tier, quantity, and print file.
-- MCAE must confirm receipt within 4 business hours (per vendor SLA). Log confirmation timestamp.
-- Expected MCAE turnaround: Small 3 days, Medium 4 days, Large 5 days (business days from
-  file confirmation).
+- Use a consistent handoff record with order ID, item details, shipping destination, and special instructions.
+- Keep the handoff concise, complete, and free of internal jargon the vendor does not need.
+- Include only the information required to produce, package, and ship correctly.
+- Record the time the handoff was sent and who approved release.
+- If the vendor confirms receipt, store that confirmation in the shared record.
 
----
+## Packaging SOP
 
-## Step 3 — Quality Inspection on Receipt from MCAE
+- Use branded packaging that matches Figurio's premium positioning.
+- Protect the figurine so transit damage is unlikely under the selected shipping method.
+- Confirm inserts, labeling, and any gift or note materials before packing.
+- Check that the final package matches the order variant and customer address.
+- Treat packaging defects as real customer issues, not cosmetic annoyances.
 
-Inspect every unit before packaging. Use the checklist below — reject any unit that fails a
-single criterion.
+## Shipping SOP
 
-| Check                  | Pass condition                                              |
-|------------------------|-------------------------------------------------------------|
-| Dimensional accuracy   | Height within ±1 mm of stated tier (8 / 15 / 25 cm)        |
-| Surface quality        | No visible layer lines at 30 cm; no support artefacts on front |
-| Colour accuracy        | Visually consistent with reference render; no bleed or fade |
-| Structural integrity   | No cracks, delamination, or base warping > 0.5 mm           |
-| Cleanliness            | No residual support material, dust, or surface contamination|
+- Select the shipping method that matches the promise, not just the cheapest option.
+- Attach tracking to the order record as soon as it exists.
+- Trigger customer notification only after shipment is real and traceable.
+- Keep carrier names, tracking numbers, and shipment dates in a shared system.
+- If a shipment is delayed, stolen, returned, or damaged, classify the issue immediately and assign an owner.
 
-**On rejection:** set unit aside, photograph defect, log in the reject tracker (date, order ref,
-defect type, tier). Notify MCAE same day — replacements must arrive within 3 business days at
-no charge per SLA. Update order status to "Pending Reprint" in OMS.
+## Exception Handling
 
-Reject rate above 3% in any rolling 4-week window triggers a formal quality review with MCAE
-(see `vendor-evaluation` skill).
+Use these standard paths:
 
----
+- Delayed production: notify operations, update promise status, and decide whether to wait, escalate, or re-promise.
+- Address issue: pause shipment until the address is corrected and confirmed.
+- Damage in transit: document the evidence, assess replacement or refund, and preserve the claim trail.
+- Lost parcel: verify tracking history first, then escalate through the carrier and support path.
+- Wrong item or packaging error: stop further shipments from the same batch until the cause is understood.
 
-## Step 4 — Branded Packaging
+Do not improvise customer promises during an exception. Use the approved support path and record the decision.
 
-All figurines ship in Figurio branded packaging. Match packaging to tier:
+## Support Handoff
 
-| Tier   | Box spec                      | Inner protection                        |
-|--------|-------------------------------|-----------------------------------------|
-| Small  | 120×120×120 mm white box      | Foam insert, tissue wrap                |
-| Medium | 200×200×200 mm white box      | Foam insert, tissue wrap, cardboard tray|
-| Large  | 300×300×300 mm white box      | Foam cradle, tissue wrap, cardboard lid |
+When an issue reaches support, provide:
 
-Include in every parcel:
-- Figurio thank-you card (current version from assets/packaging/)
-- Care instructions insert
-- Return address label (Figurio warehouse address)
+- Order ID
+- Current state
+- What happened
+- What has already been checked
+- Next operational step
+- Whether a refund, reshipment, or customer update is pending
 
-Do not include invoices in the parcel — invoices are sent by email via Stripe.
+Support should never need to reconstruct the order from scattered messages.
 
----
+## Service Standards
 
-## Step 5 — Carrier Dispatch
+- Be factual, timely, and specific.
+- Never mark an order complete before it is actually complete.
+- Keep customer updates aligned with the real production and shipping state.
+- Escalate anything that threatens the promised ship date or delivery experience.
+- Record the decision trail for refunds, reships, and compensation.
 
-### Czech Republic — Zásilkovna
+## Daily Operating Routine
 
-- Use Zásilkovna for all delivery addresses with CZ postal code.
-- Generate label via Zásilkovna API or Packeta portal; attach to parcel.
-- Drop parcels at the designated Zásilkovna drop-off point by 14:00 for same-day collection.
-- Zásilkovna parcel ID must be written into the OMS order record immediately after label
-  generation.
-- Customer can choose home delivery or pickup point (Z-BOX / partner point) — honour the
-  selection made at checkout.
+- Review the queue for orders at risk.
+- Check for missing addresses, unresolved approvals, delayed handoffs, or shipping exceptions.
+- Confirm that tracking exists for shipments that should already be in transit.
+- Reconcile payment, production, and shipment states.
+- Move any blocked order into an explicit exception state with an owner and next step.
 
-### EU & International — DHL
+## Output Format
 
-- Use DHL Express for EU addresses (non-CZ) and all international destinations.
-- Generate shipment via DHL MyDHL+ or API; use Figurio's account number.
-- For destinations outside the EU, generate a commercial invoice (3 copies) with:
-  - HS code: 9503.00 (toys/models — verify annually)
-  - Declared value = Stripe order amount in EUR
-  - Country of origin: CZ
-- Attach DHL waybill and customs documents to parcel exterior in clear pouch.
-- DHL tracking number must be entered into OMS immediately.
+When writing or updating a fulfillment SOP, include:
 
----
+- Purpose
+- Scope
+- Trigger
+- Preconditions
+- Step-by-step procedure
+- Exception paths
+- Owner / handoff points
+- Customer communication rule
+- Recordkeeping requirement
+- Escalation trigger
 
-## Step 6 — Customer Tracking Update
+## Do Not
 
-- Once the carrier has the parcel, update the OMS order status to "Shipped".
-- Trigger the transactional email (configured in Stripe/email platform) that sends the
-  tracking number and carrier link to the customer.
-- Expected delivery windows to communicate:
-  - CZ (Zásilkovna): 1–3 business days
-  - EU (DHL): 2–5 business days
-  - International (DHL): 5–10 business days
-
----
-
-## Escalation Paths
-
-| Issue                              | Action                                                       |
-|------------------------------------|--------------------------------------------------------------|
-| MCAE misses receipt confirmation   | Chase by phone; log; escalate if unresolved in 8 hours       |
-| Reject rate > 3% in 4-week window  | Formal quality review with MCAE (see vendor-evaluation skill)|
-| DHL customs hold                   | Contact DHL proactively; resend commercial invoice if needed |
-| Customer reports non-delivery      | Open carrier investigation; reship if unresolved in 10 days  |
-| Zásilkovna parcel lost             | File claim via Packeta portal; reship within 3 business days |
-
----
-
-## Anti-patterns
-
-- Never send customer name or address to MCAE — use order reference IDs only.
-- Never dispatch a unit that failed quality inspection, even under deadline pressure.
-- Do not generate DHL labels for CZ addresses or Zásilkovna labels for international addresses.
-- Do not skip the OMS status update steps — tracking records are the primary customer
-  service evidence trail.
+- Do not let orders move forward on assumptions.
+- Do not bury exceptions in private messages.
+- Do not close the loop without tracking or delivery evidence.
+- Do not create a separate unofficial process for high-priority orders.
+- Do not allow support, operations, and production to maintain conflicting versions of the truth.

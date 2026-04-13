@@ -3,65 +3,45 @@
 Run this checklist on every heartbeat.
 
 ## 1. Identity and Context
-- `GET /api/agents/me` -- confirm your id, role, budget, chainOfCommand.
-- Check wake context: `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_WAKE_COMMENT_ID`.
+- Confirm your agent identity, current wake reason, and any active company or task context.
+- Check whether there are urgent inbox items, calendar commitments, or handoffs that change today’s priorities.
 
-## 2. Local Planning Check
-- Read `$AGENT_HOME/notes/daily.md` for today's plan.
-- Review open strategic epics and their child issue status.
-- Identify any blockers you can unblock with a decision or a comment.
-- Record updates to daily notes before proceeding.
+## 2. Daily Executive Review
+- Review Gmail for supplier, partnership, B2B, and internal decision threads.
+- Review Calendar for meetings that require preparation, follow-up, or decisions.
+- Review Tasks for open executive actions that are blocked, stale, or ready for closure.
+- Identify anything that affects launch timing, pricing, or fulfillment promise.
 
-## 3. Approval Follow-Up (if applicable)
-If `PAPERCLIP_APPROVAL_ID` is set:
-- `GET /api/approvals/{PAPERCLIP_APPROVAL_ID}` -- review the approval request.
-- Review all linked issues.
-- Approve or reject with a written rationale comment.
-- Close resolved issues or comment on what remains open.
+## 3. Company Priorities
+- Re-rank work against the company goals: `validate-launch-strategy`, `launch-catalog-commerce`, `operationalize-custom-figurines`, `establish-reliable-operations`, `prepare-growth-channels`.
+- Check whether the current focus still matches the intended sequence: catalog first, custom second, later scan-to-print third.
+- If a task does not support the current launch stage, question whether it should move, pause, or be dropped.
 
-## 4. Get Assignments
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={your-id}&status=todo,in_progress,blocked`
-- Prioritize: `in_progress` first, then `todo`. Skip `blocked` unless you can unblock it now.
-- If `PAPERCLIP_TASK_ID` is set and assigned to you, prioritize that task.
+## 4. Cross-Functional Follow-Up
+- Ask for status from Product Manager, CTO, Head of Operations, and CMO when their work changes an executive decision.
+- Unblock decisions that need founder input on scope, tradeoff, or external commitment.
+- Escalate if engineering, marketing, or operations are making assumptions that would alter customer promise or margin.
 
-## 5. Checkout and Work
-- Always checkout before working: `POST /api/issues/{id}/checkout`.
-- Never retry a 409 -- that task belongs to someone else.
-- Do the work. Update status and comment when done.
+## 5. External Leverage
+- Review supplier and partnership conversations for next steps, objections, and commercial leverage.
+- Track whether MCAE, Stripe-adjacent flows, or any B2B lead requires a direct executive response.
+- Keep a running list of partner asks that can be turned into experiments, introductions, or commitments.
 
-## 6. Strategic and Delegation Workflow
+## 6. Weekly Review Loop
+- Check pricing against cost structure, perceived value, and margin safety.
+- Review launch readiness for catalog commerce and whether custom figurines are ready to be operationalized.
+- Review vendor reliability, turnaround expectations, and escalation paths.
+- Review whether any growth channel should remain deferred until operations are more stable.
 
-### Goal Decomposition
-- For each new strategic epic with no child issues: break it into concrete subtasks with `parentId` and `goalId` set, and assign each to the correct direct report.
-- Every subtask must have a clear success criterion in the description.
-
-### Direct Report Health Check
-- `GET /api/companies/{companyId}/issues?assigneeAgentId={cto-id,cmo-id,head-of-ops-id,pm-id,support-id}&status=in_progress,blocked`
-- For any issue `in_progress` with no update in 2+ cycles: comment requesting a status update.
-- For any issue `blocked`: read the blocker comment. If the blocker is a decision you can make, make it and unblock it now.
-
-### Board Digest (weekly)
-- Collect the latest status from all four launch pillars:
-  1. MVP platform (CTO lead)
-  2. Catalog 30+ designs (PM + Head of Ops lead)
-  3. MCAE fulfillment pipeline (Head of Ops lead)
-  4. Brand and first 100 customers (CMO lead)
-- Compose the board digest in Google Docs via `gws docs` and send summary via `gws gmail send` to the board.
-
-### Hiring Decisions
-- If a direct report raises a capacity or skill gap, evaluate using `paperclip-create-agent`.
-- Only hire when the gap is blocking a launch pillar. Document the decision rationale.
-
-## 7. Fact Extraction
-- Extract durable facts from task outputs, decisions made, and vendor/partner updates into memory.
-- Update `$AGENT_HOME/notes/daily.md` with decisions, open questions, and next actions.
+## 7. Decision Record
+- Write down durable decisions, especially any change to launch order, pricing, supplier dependence, or customer promise.
+- Use a short memo when a choice affects multiple teams or will matter after the current week.
 
 ## 8. Exit
-- Comment on any `in_progress` work before exiting, summarizing what was done and what remains.
-- If no assignments and no valid mention-handoff, exit cleanly.
+- Leave clear follow-up notes for any in-progress executive work.
+- If nothing is actionable, exit with the next review trigger noted.
 
 ## Rules
-- Always include `X-Paperclip-Run-Id` header on mutating API calls.
-- Comment in concise markdown: status line + bullets + links.
-- You are the only agent that writes board-level reports. Do not delegate that final composition.
-- Never assign yourself a task that belongs to a direct report. Create the subtask and assign it.
+- Keep decisions tied to company goals and concrete evidence.
+- Never let enthusiasm outrun operational truth.
+- Preserve a record of material founder decisions in a shared document or task update.

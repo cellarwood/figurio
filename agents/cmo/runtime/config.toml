@@ -1,0 +1,19 @@
+[plugins."paperclip-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."design-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."media-plugin@codex-my-marketplace"]
+enabled = true
+
+[plugins."office-plugin@codex-my-marketplace"]
+enabled = true
+
+[shell_environment_policy]
+inherit = "all"
+
+[shell_environment_policy.set]
+AGENT_EMAIL = "cmo@cellarwood.org"
+COMPANY_DOMAIN = "cellarwood.org"
+GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE = "/paperclip/.gws/figurio.json"

@@ -1,128 +1,189 @@
 ---
 name: brand-voice
-description: >
-  Figurio brand voice guide for a D2C 3D-printed figurine brand targeting collectors,
-  gift buyers, and internet culture fans. Covers tone calibration, copy conventions,
-  and channel-specific rules for social media, product copy, and email.
-metadata:
-  paperclip:
-    tags:
-      - marketing
-      - copywriting
-      - brand
+description: Define and enforce Figurio's premium, giftable, visually driven voice across campaign copy, product copy, social, email, and support-facing language.
 ---
 
 # Brand Voice
 
-Figurio speaks like someone who genuinely loves figurines and can't quite believe you can now get one made of yourself. The voice is warm, a little playful, and quietly proud of the craft — never hype-y, never corporate, never precious.
+Use this skill when writing or reviewing any Figurio-facing language that should sound premium, recognizable, and trustworthy.
 
-## Core Tone Attributes
+Figurio’s voice should make the product feel like a desirable gift and a visually striking object, not a generic commodity. The language should be clear enough to reduce doubt, polished enough to feel premium, and warm enough to feel personal.
 
-| Attribute | What it means in practice |
-|---|---|
-| Warm | Speak to a person, not a demographic. Acknowledge the emotion behind the purchase — a gift, a collector's pride, a laugh |
-| Playful | Humor is welcome, especially for pop-culture and meme content. Keep it light, not try-hard |
-| Collector-proud | Treat the craft with respect. The printing process is remarkable — reference it with pride, not spec-sheet energy |
-| Direct | Short sentences. Say what the thing is. No jargon, no filler |
+## Voice Goals
 
-## What Figurio Never Sounds Like
+- Make the product feel giftable.
+- Make the brand feel premium without sounding pretentious.
+- Make the process feel clear without sounding clinical.
+- Make the product feel visually distinctive.
+- Make trust easy to grasp quickly.
 
-- Corporate: "leverage our unique value proposition," "premium unboxing experience," "synergize"
-- Hype-y: "THE MOST EPIC FIGURINE YOU'VE EVER SEEN!!!" — enthusiasm is earned, not screamed
-- Precious: overwrought descriptions of art and craft that make a fun product feel inaccessible
-- Generic e-commerce: "Shop now for the best deals!" — everything we write should feel like it came from a person
+## Core Voice Traits
 
-## Tone by Audience
+### Premium
 
-Figurio has three primary audience modes. Calibrate tone to the context, not a single fixed register.
+- Use clean, precise language.
+- Favor confident simplicity over hype.
+- Avoid slang that cheapens the brand.
 
-### Gift Buyers
-Tone: warm, reassuring, just a little sentimental
+### Giftable
 
-Focus on the emotional meaning of the gift, not the print technology. The buyer wants to feel like they found something no one else would think of.
+- Speak to moments, people, and occasions.
+- Sound thoughtful and human.
+- Make it easy to imagine giving the figurine to someone else.
 
-- "A tiny version of the two of you. Printed in full color, shipped to your door."
-- "They'll keep this one. Promise."
-- "The gift that says you actually paid attention."
+### Visual
 
-Avoid: specs, technical detail, collector jargon.
+- Describe what people will see, not abstract marketing claims.
+- Use concrete sensory language when it supports the product.
+- Let the visual itself do much of the work.
 
-### Figurine Collectors
-Tone: proud, knowledgeable, peer-to-peer
+### Trustworthy
 
-Speak as a fellow collector. Reference the craft, the detail, the materials. These buyers want to feel seen as enthusiasts, not just customers.
+- Be explicit about timing, materials, approval steps, and support where relevant.
+- Avoid vague reassurance.
+- Keep promises narrow and believable.
 
-- "Full-color PolyJet printing. 0.014mm layer resolution. Your shelf deserves it."
-- "Stratasys J55. The same technology used for professional prototypes — now printing your shelf."
-- "The catalog just dropped three new designs. You know the drill."
+## Writing Rules
 
-Avoid: over-explaining what a figurine is, baby-talk enthusiasm.
+1. Say the thing plainly first.
+2. Use short sentences when the message matters.
+3. Prefer specific nouns and verbs over vague adjectives.
+4. Write for scanning, not only for reading.
+5. Keep claims easy to verify.
+6. Do not let cleverness obscure the offer.
+7. Do not use copy that sounds like every other DTC brand.
 
-### Internet Culture Fans
-Tone: punchy, in-the-know, quick
+## Tone by Situation
 
-Speed matters here. These posts live and die in 48 hours. Match the energy of the meme or moment without being cringe. If it needs explaining, it's too late.
+### Launch and campaign copy
 
-- "We made it. Obviously."
-- "The figurine you didn't know you needed until right now."
-- "Limited run. Don't be the person who missed it."
+- More vivid.
+- More energetic.
+- Still precise.
 
-Avoid: long copy, sentimental angles, anything that requires context from outside the moment.
+### Product detail copy
 
-## Channel-Specific Rules
+- More concrete.
+- More reassuring.
+- Less decorative.
 
-### Instagram / TikTok (Social)
-- Write captions in second person ("you," "your")
-- Lead with the hook — the first line must earn the next one
-- Keep captions under 150 characters for feed posts; longer is fine for carousels that need context
-- CTAs are specific: "Link in bio to order" or "DM us your idea" — not just "Shop now"
-- Hashtags: 3–5 relevant ones, appended at the end, never mid-sentence
-- TikTok captions are shorter — the video carries the message, the caption supports it
+### Email and CRM
 
-### Product Descriptions (Website)
-- Lead with the emotional or aesthetic appeal, not the dimensions
-- Mention size tier (Small / Medium / Large) and approximate height early — it affects the decision
-- One paragraph max per product. If you need more, the product isn't clearly positioned yet
-- End with a practical note: turnaround time, shipping region, or what's included
+- Friendly and direct.
+- Clear about the reason for the message.
+- Respectful of attention.
 
-Example format:
-```
-[Emotional hook — what this figurine is / why it exists]
-[What you get — size, finish, any notable detail]
-[Practical note — turnaround, shipping]
-```
+### Support-facing language
+
+- Calm.
+- Informative.
+- Never defensive.
+
+### Social captions
+
+- Short.
+- Memorable.
+- Built around the image or moment.
+
+## Phrase Direction
+
+Good Figurio language tends to sound like this:
+
+- premium, personal, and easy to share
+- made to be gifted
+- full-color figurines with presence
+- designed to stand out on a shelf, desk, or camera roll
+- a gift that feels specific to the person
+- easy to understand at a glance
+
+Language to avoid:
+
+- overhyped superlatives with no proof
+- gimmicky slang
+- generic luxury adjectives with no product meaning
+- tech-first language that hides the emotional value
+- false urgency
+- vague claims like `best`, `ultimate`, or `game-changing` unless they are directly supported
+
+## Claim Rules
+
+- Only make claims the product, operations, or support can sustain.
+- If a promise depends on fulfillment timing, say it clearly.
+- If a claim could create customer doubt later, tighten it before publishing.
+- Do not trade precision for enthusiasm.
+
+## Product Language Rules
+
+- Name the object before describing the feeling.
+- Keep materials, process, and customization language understandable.
+- Use short descriptors for size, finish, color, or display context when helpful.
+- Avoid piling on adjectives when one concrete detail is stronger.
+
+## Messaging Hierarchy
+
+When writing Figurio copy, use this order:
+
+1. What it is.
+2. Why it matters.
+3. Why it feels special.
+4. Why it can be trusted.
+5. What to do next.
+
+## Channel Guidance
+
+### Website
+
+- Lead with clarity and visual impact.
+- Make the value proposition obvious in a single pass.
+- Keep the voice consistent across hero, product detail, and trust sections.
+
+### Social
+
+- Keep lines short.
+- Favor clean hooks and direct captions.
+- Let the visual proof carry the post.
 
 ### Email
-- Subject lines: short (under 50 characters), specific, no all-caps, no emoji overload
-- Preheader: extends the subject line, doesn't repeat it
-- Body: one clear purpose per email — announce, remind, or tell a story. Never three things at once
-- CTA button: action verb + specific outcome ("See the Christmas catalog," "Start your custom figurine")
-- Sign-off: casual and human — from a name, not "The Figurio Team"
 
-### Internal Copy (Briefs, Strategy Docs)
-- State the goal first, then the approach, then what you need
-- No padding — if a sentence doesn't carry information, cut it
-- Direct is not rude — short sentences are a sign of respect for the reader's time
+- Use subject lines that sound premium and specific.
+- Avoid shouting.
+- Keep preview text useful.
 
-## Copy Patterns That Work
+### Packaging and post-purchase
 
-**For new catalog drops:**
-"[Name/category] is in the catalog. [One-line description of what it is or why it's interesting]. [Size/price anchor]. [Link]."
+- Sound appreciative and polished.
+- Encourage sharing without sounding pushy.
+- Reinforce pride of ownership and gifting value.
 
-**For custom figurine ("Prompt to Print") promotion:**
-"Describe it. We print it. [Supporting detail or social proof]. [CTA]."
+### Support and policy language
 
-**For seasonal urgency:**
-"[Holiday] orders close [date]. After that, we can't promise it arrives in time." — honest deadlines outperform fake scarcity.
+- Be direct, kind, and specific.
+- Explain next steps plainly.
+- Avoid corporate hedging.
 
-**For UGC reposts:**
-Lead with the customer's reaction or photo. Add one short line from Figurio's voice. Don't over-explain. Let the photo do the work.
+## Editing Rules
 
-## Calibrating Enthusiasm
+- Remove anything generic before adding anything clever.
+- Tighten long copy until each sentence earns its place.
+- If a sentence could belong to any brand, rewrite it.
+- If the voice feels too cold, add human specificity rather than sentimentality.
+- If the voice feels too warm, restore precision.
 
-Use high-energy copy sparingly so it lands when you need it.
+## Bad Fits
 
-- Campaign launches: yes, bring energy
-- New catalog drop: moderate energy — let the product image carry the moment
-- Weekly content: calm, conversational — not every post is an event
-- Metrics update to CEO: zero enthusiasm — just the numbers and what they mean
+- Trend-chasing language that dates quickly.
+- Overpromising copy that weakens trust.
+- Comic or ironic tone that undercuts premium perception.
+- Jargon-heavy descriptions that make the product harder to imagine.
+- Repeated use of exclamation marks or all-caps urgency.
+
+## Review Checklist
+
+- Does this sound like Figurio?
+- Is it premium without being stiff?
+- Is it giftable without being sentimental?
+- Is it visual without being vague?
+- Is it clear enough to build trust?
+- Are the claims operationally safe?
+- Would this still sound good in a customer email, landing page, or packaging insert?
+

@@ -1,119 +1,120 @@
 ---
 name: vendor-evaluation
-description: >
-  Framework for evaluating 3D printing partners for Figurio's D2C figurine business.
-  Covers MCAE pricing negotiation across Small (8cm), Medium (15cm), and Large (25cm) size
-  tiers, quality benchmarks for PolyJet output, turnaround SLAs, and alternative vendor
-  assessment criteria to maintain supply resilience.
-allowed-tools:
-  - Read
-  - Write
-  - Grep
-metadata:
-  paperclip:
-    tags:
-      - operations
-      - vendor-management
-      - printing
+description: "Evaluate MCAE and any alternate production or shipping vendors for Figurio using cost, quality, lead time, communication, and risk."
 ---
 
-# Vendor Evaluation
+# Figurio Vendor Evaluation
 
-## When to Use
+Use this skill when comparing MCAE against another production, packaging, shipping, or fulfillment vendor; when renegotiating terms; or when deciding whether a vendor is safe enough to support launch, scale, or a new product promise.
 
-Use this skill when:
-- Negotiating pricing with MCAE or reviewing contract renewals
-- A quality complaint signals a benchmark regression
-- Evaluating a new 3D printing vendor as a backup or replacement for MCAE
-- Assessing whether current SLAs are being met on a monthly/quarterly basis
+## Core Rule
 
-## MCAE — Primary Vendor
+Vendor evaluation is not a generic procurement exercise. For Figurio, the vendor must support premium figurine quality, predictable lead times, and a customer promise operations can actually keep.
 
-MCAE (mcae.cz) prints all Figurio figurines on the Stratasys J55 PolyJet printer. This is the sole
-active print partner. All negotiation and quality management targets MCAE first.
+## What Good Looks Like
 
-### Pricing Benchmarks by Size Tier
+- The vendor can meet the required quality standard without constant intervention.
+- Turnaround time is explicit, realistic, and stable under normal load.
+- Pricing leaves room for packaging, shipping, support, and margin.
+- Communication is fast enough to handle exceptions before customers are affected.
+- The vendor can absorb reasonable variance without turning every order into a manual escalation.
 
-Negotiate per-unit pricing against these reference tiers. Costs include print material and
-post-processing (support removal, surface cure); they exclude packaging and shipping.
+## Figurio Evaluation Dimensions
 
-| Tier   | Dimensions | Volume proxy | Target unit cost (CZK) | Walk-away ceiling (CZK) |
-|--------|------------|--------------|------------------------|--------------------------|
-| Small  | ~8 cm      | Low          | ≤ 290 CZK              | 360 CZK                  |
-| Medium | ~15 cm     | Medium       | ≤ 680 CZK              | 820 CZK                  |
-| Large  | ~25 cm     | High         | ≤ 1 450 CZK            | 1 750 CZK                |
+Score each vendor from `1` to `5` on these dimensions:
 
-Update these benchmarks after each signed contract. Volume discounts apply when monthly order
-counts exceed: Small ≥ 150 units, Medium ≥ 60 units, Large ≥ 20 units.
+- Print or service quality
+- Lead time reliability
+- Capacity and scalability
+- Total landed cost
+- Communication quality
+- Exception handling
+- Packaging / handoff compatibility
+- Payment and commercial terms
+- Operational transparency
+- Risk concentration
 
-### Negotiation Levers
+Use the scorecard to structure judgment, not to fake certainty. A vendor with a slightly higher score is not automatically better if it increases failure risk on the path to the customer.
 
-- **Batch scheduling** — committing to weekly fixed print batches (rather than ad-hoc) reduces
-  MCAE's setup cost; use as a trade for lower per-unit rates.
-- **Forecast sharing** — provide a rolling 6-week demand forecast to justify volume discounts.
-- **Payment terms** — standard is net-30; offering net-14 can unlock a 1–2% discount.
-- **Exclusivity clause** — avoid committing to exclusivity; Figurio needs the right to qualify
-  alternative vendors.
+## Required Inputs
 
-## Quality Benchmarks
+Before making a recommendation, gather:
 
-All finished figurines must pass the following before shipment:
+- Product or service scope
+- Required volumes and size tiers
+- Target turnaround window
+- Quality threshold or defect tolerance
+- Packaging and shipping assumptions
+- Commercial terms and payment schedule
+- Sampling, proofing, or test order results
+- Escalation contacts and response expectations
+- Any constraints from launch timing or customer promise
 
-| Criterion              | Acceptable standard                                                      |
-|------------------------|--------------------------------------------------------------------------|
-| Surface resolution     | ≤ 0.1 mm layer lines visible to naked eye at 30 cm                      |
-| Color accuracy         | ΔE ≤ 4 vs. approved digital reference (measured with colorimeter)        |
-| Structural integrity   | No delamination, no warping beyond 0.5 mm deviation on base plane        |
-| Support artifacts      | No visible support marks on front-facing surfaces                        |
-| Dimensional tolerance  | ±1 mm on stated tier height (8 cm / 15 cm / 25 cm)                      |
+If any of these are unknown, say so. Unknowns are part of the decision, not noise to ignore.
 
-Reject rates above 3% in any rolling 4-week window trigger a formal quality review with MCAE.
+## Evaluation Process
 
-## Turnaround SLAs
+1. Define the decision: approve, switch, renegotiate, pilot, or reject.
+1. List the vendor(s) and the exact scope under review.
+1. Capture the business goal: margin, reliability, capacity, quality, speed, or risk reduction.
+1. Gather hard evidence: quotes, sample results, turnaround history, issue logs, and response times.
+1. Score each vendor on the Figurio evaluation dimensions.
+1. Identify hidden costs: rework, rush fees, reshipments, packaging waste, coordination overhead, and failure recovery.
+1. Compare the vendor against the customer promise, not against an idealized benchmark.
+1. State the recommendation and the risks that remain.
 
-| Event                          | SLA                           |
-|--------------------------------|-------------------------------|
-| MCAE confirms receipt of files | Within 4 business hours       |
-| Small tier print completion    | 3 business days from file go  |
-| Medium tier print completion   | 4 business days from file go  |
-| Large tier print completion    | 5 business days from file go  |
-| Replacement for rejected units | 3 business days, no charge    |
+## Figurio-Specific Checks
 
-SLA breaches (>1 per calendar month) must be logged and raised formally. Three breaches in a
-quarter trigger escalation to contract renegotiation or vendor switch assessment.
+- MCAE or any equivalent partner must be able to support the printed output quality expected for premium figurines.
+- Lead times must include real production time, packaging time, and shipping time, not just the quoted print window.
+- The vendor must be able to flag capacity or material constraints early enough for operations to act.
+- A cheaper quote is not better if it increases reprints, customer complaints, or support burden.
+- If the vendor cannot explain defects, delays, or missing handoffs clearly, treat that as an operational risk.
+- For any shipping or packaging vendor, verify that the handoff preserves item condition and brand presentation.
 
-## Alternative Vendor Assessment
+## Red Flags
 
-Maintain at least one qualified backup vendor to reduce single-source risk. Evaluate alternatives
-annually or whenever MCAE breaches SLAs three times in a quarter.
+- Vague quoting with no clear assumptions
+- Overpromising on turnaround or capacity
+- Inability to explain quality failure causes
+- Slow or evasive communication during evaluation
+- Hidden fees, unclear incoterms, or ambiguous responsibility for damage
+- No clear escalation path when something goes wrong
+- Dependence on one person with no backup contact
+- Terms that make refunds, rework, or reshipment expensive to resolve
 
-### Qualification Criteria for Backup Vendors
+## Decision Guidance
 
-1. **Technology match** — PolyJet or equivalent full-colour, multi-material inkjet process.
-   FDM is not an acceptable substitute for figurine quality.
-2. **Geographic proximity** — Preferably CZ/SK/PL to maintain shipping cost parity.
-3. **Capacity** — Able to absorb at least 50% of Figurio's monthly volume on 2-week notice.
-4. **Pricing** — Within 15% of MCAE rates at equivalent volume tiers.
-5. **Sample run** — One approved sample batch (minimum 3 units per tier) before vendor is
-   listed as qualified backup.
+- Choose the vendor that best protects the customer promise when volume, defects, or delays happen.
+- Prefer suppliers that can be audited and managed with written records.
+- If two vendors are close, favor the one with lower coordination burden and better exception handling.
+- If a vendor requires heroics to stay reliable, do not treat it as launch-safe.
+- If the only path to acceptable margins depends on optimistic assumptions, revise the economics before approving the vendor.
 
-### Evaluation Scorecard
+## Output Format
 
-Score each candidate vendor 1–5 on each dimension:
+Provide:
 
-| Dimension              | Weight |
-|------------------------|--------|
-| Print quality          | 30%    |
-| Pricing vs. MCAE       | 25%    |
-| Turnaround speed       | 20%    |
-| Communication quality  | 15%    |
-| Geographic proximity   | 10%    |
+- Decision
+- Vendor(s) reviewed
+- Score summary
+- Key evidence
+- Main risks
+- Commercial terms
+- Recommendation
+- Open questions
+- Next action
 
-A weighted score below 3.5 disqualifies the vendor from backup status.
+## Escalate When
 
-## Anti-patterns
+- A vendor change alters customer promises, margin, or launch timing.
+- MCAE or any other supplier shows recurring misses, quality drift, or unstable communication.
+- The business is relying on a vendor without enough evidence to trust the lead time or quality claim.
+- Commercial terms require a leadership decision on price, volume commitment, or backup capacity.
 
-- Do not accept verbal pricing agreements — all rates must be in writing before placing orders.
-- Do not share Figurio customer data (names, addresses) with MCAE; send only print files and
-  order reference IDs.
-- Do not skip the sample run step when qualifying a new vendor, even under time pressure.
+## Avoid
+
+- Do not approve a vendor on vibes, friendliness, or a single successful sample.
+- Do not compare quotes without including shipping, packaging, rework, and support cost.
+- Do not hide operational uncertainty behind a generic recommendation.
+- Do not let a vendor promise outrun the actual fulfillment system.

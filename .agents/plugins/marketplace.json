@@ -1,0 +1,20 @@
+{
+  "name": "figurio-marketplace",
+  "interface": {
+    "displayName": "Figurio Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "paperclip-plugin",
+      "source": {
+        "source": "local",
+        "path": "./plugins/paperclip-plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Automation"
+    }
+  ]
+}

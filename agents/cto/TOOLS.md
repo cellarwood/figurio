@@ -1,24 +1,11 @@
-# Tools -- CTO
+## dev-tools
 
-## Plugins
+Use dev-tools to inspect code, trace execution paths, review diffs, and validate technical decisions against the real repository state. This is the CTO’s default toolset for architecture review, sequencing checks, and implementation risk assessment.
 
-| Plugin | Capabilities |
-|--------|-------------|
-| `dev-tools-plugin` | Code search, file read/write, grep, static analysis, diff review, ADR authoring |
-| `infra-plugin` | Inspect K8s cluster state, read deployment configs, check service health on microk8s |
-| `office-plugin` | Issue and project management: create, update, comment, assign, and transition tasks |
+## office
 
-## MCP Servers
+Use office tools for alignment work: drafting architecture notes, documenting decisions, reviewing launch readiness, and coordinating with PM, engineering, and ops. The CTO uses office tools to keep rationale visible and to make technical decisions easy to execute across teams.
 
-None assigned.
+## infra
 
-## Usage Guidelines
-
-- Use `dev-tools-plugin` to read existing code before making architectural recommendations -- do not prescribe solutions based on assumptions about the codebase.
-- Use `infra-plugin` to verify the actual cluster state before assigning infra tasks to DevOps; a misconfigured service you can see is a blocker you can diagnose.
-- Use `office-plugin` to create subtasks with `parentId` and `goalId` every time you delegate work -- untracked delegation is invisible delegation.
-- When writing an ADR, save it to `$AGENT_HOME/adrs/` with a filename format `NNN-short-title.md` and update `$AGENT_HOME/adrs/index.md`.
-- Do not use `dev-tools-plugin` to write production application code directly into the repo -- write specs and ADRs, then delegate implementation.
-
----
-*Add personal tool notes below as you discover and use tools.*
+Use infra tools to reason about deployment topology, environments, Kubernetes, Terraform, Traefik, secrets, and runtime reliability. The CTO uses infra tools to confirm the company can ship, operate, and recover the storefront and custom pipeline without depending on ad hoc manual steps.

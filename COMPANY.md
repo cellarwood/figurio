@@ -1,39 +1,19 @@
 ---
-name: Figurio
-description: Direct-to-consumer e-commerce company that designs, produces, and delivers high-quality full-color 3D-printed figurines through a web platform offering curated catalog browsing and AI-prompted custom figurine generation
-slug: figurio
 schema: agentcompanies/v1
-version: 1.0.0
+name: Figurio
+slug: figurio
+version: 0.1.0
+description: Czech D2C company for premium full-color 3D-printed figurines sold through a catalog storefront, AI-assisted custom ordering, and later scan-to-print experiences.
 goals:
-  - Launch MVP e-commerce platform with catalog browsing, AI-prompted custom figurines, Stripe payments, and order management
-  - Build a launch-ready catalog of 30+ print-ready figurine designs across trending, seasonal, and evergreen categories
-  - Establish production and fulfillment pipeline with MCAE printing partner, branded packaging, and CZ/EU shipping
-  - Build brand identity and acquire first 100 paying customers through social commerce and content marketing
+  - Validate a data-backed Czech-market launch strategy with clear positioning, pricing, and supplier economics.
+  - Launch a catalog-driven e-commerce platform with prepaid checkout, order handling, and production handoff.
+  - Operationalize the custom prompt-to-print figurine workflow with approval gates and quality controls.
+  - Establish reliable fulfillment and support operations around MCAE, packaging, shipping, and issue resolution.
+  - Prepare scalable growth channels through brand, content, seasonal campaigns, and phase-two expansion criteria.
 ---
 
-# Figurio
+Figurio is building a premium figurine commerce company around full-color 3D printing, strong visual storytelling, and disciplined operations. The company launches with a curated catalog of IP-safe figurines, then adds a higher-touch custom pipeline where customers describe a figurine and approve a rendered preview before production.
 
-Figurio is a direct-to-consumer e-commerce company headquartered in the Czech Republic that designs, produces, and delivers high-quality full-color 3D-printed figurines. The company operates through a web platform where customers can browse a curated catalog or generate custom figurines via AI text prompts.
+The operating model is intentionally lean at launch. Production is outsourced to MCAE in the Czech Republic using Stratasys J55 PolyJet printing, payments run through Stripe, and the internal team focuses on strategy, platform execution, marketing, and operations rather than owning manufacturing from day one.
 
-## Product Lines
-
-### Catalog Figurines ("Ready to Print")
-A curated, rotating catalog of pre-designed 3D figurines — viral/meme designs, seasonal collections, event-driven designs, and evergreen collectibles. Models are sourced from licensed marketplaces, commissioned artists, and community partnerships.
-
-### AI-Prompted Custom Figurines ("Prompt to Print")
-Customers describe a figurine in natural language, the system generates a 3D model using AI (text-to-3D), an automated pipeline repairs the mesh, a technician reviews printability, and the customer approves a rendered preview before production begins.
-
-## Production
-All printing is outsourced to MCAE (mcae.cz) using the Stratasys J55 PolyJet printer — full-color, multi-material prints with fine detail resolution. Three size tiers: Small (~8cm), Medium (~15cm), Large (~25cm).
-
-## Technology
-- **Frontend:** React/TypeScript, shadcn-ui, Tailwind CSS
-- **Backend:** Python/FastAPI, PostgreSQL
-- **Infrastructure:** Docker, Kubernetes (microk8s), Traefik, GitHub Actions
-- **Payments:** Stripe (checkout sessions, webhooks, two-stage for custom)
-- **AI Pipeline:** Text-to-3D (Meshy/Tripo3D), automated mesh repair
-
-## Key Operations
-- All orders prepaid via Stripe — no production without payment
-- Fulfillment: MCAE prints → branded packaging → Zásilkovna (CZ) / DHL (EU/world)
-- IP-clean catalog: original commissions and verified commercial licenses only
+The company package in this repository is structured for Paperclip import. It defines the leadership team, specialists, work plan, custom skills, and runtime subagents needed to validate launch strategy, ship the commerce platform, run fulfillment reliably, and prepare future growth paths such as scan-to-print pop-ups, B2B gifting, and wider EU expansion.

@@ -1,135 +1,100 @@
 ---
 name: feature-prioritization
-description: >
-  Prioritization framework for the Figurio product backlog. Balances catalog
-  features, AI custom figurine pipeline improvements, and operational tooling
-  using an impact/effort scoring model tied to Figurio's company goals of
-  conversion, AI order volume, and fulfillment efficiency.
-allowed-tools:
-  - Read
-  - Grep
-metadata:
-  paperclip:
-    tags:
-      - product
-      - planning
+description: "Prioritize Figurio features using launch risk, margin impact, customer trust, dependency criticality, and readiness."
 ---
 
 # Feature Prioritization
 
-Use this skill when grooming the Figurio backlog, preparing a sprint, or making a case for why one feature should be built before another.
+Use this skill when ranking features, sequencing launch work, choosing between competing requests, or deciding what must ship before Figurio expands beyond the ready-to-print catalog.
 
-## Company Goals (Reference)
+## Decision Frame
 
-Prioritization decisions must trace back to at least one of these goals:
+Favor work that:
 
-| Goal ID | Goal | Primary KPI |
-|---------|------|-------------|
-| G1 | Grow AI custom order volume | AI orders / month |
-| G2 | Improve catalog conversion | Catalog add-to-cart rate |
-| G3 | Reduce fulfillment errors and ops overhead | Ops tickets / 100 orders |
-| G4 | Retain repeat buyers | 90-day repurchase rate |
+- Reduces launch risk.
+- Protects margin.
+- Improves customer trust.
+- Unblocks cross-functional delivery.
+- Clarifies ownership or system behavior.
 
----
+Deprioritize work that is:
 
-## Scoring Model
+- Nice to have but not launch-critical.
+- High effort with unclear operational impact.
+- Dependent on unresolved supplier, ops, or support decisions.
+- Premature customization before catalog reliability is proven.
 
-Score each backlog item on two dimensions. Use integers only.
+## Scoring Dimensions
 
-### Impact (1–5)
+Score each candidate from `1` to `5` on these dimensions:
 
-How significantly does this item move one or more company goals?
+- Launch risk reduction
+- Margin impact
+- Customer trust impact
+- Dependency criticality
+- Time sensitivity
+- Effort / complexity
 
-| Score | Meaning |
-|-------|---------|
-| 5 | Direct, measurable lift on a G1–G4 KPI; affects all or most users |
-| 4 | Strong indirect lift or affects a large segment |
-| 3 | Moderate improvement or affects a key segment (e.g., AI custom buyers only) |
-| 2 | Nice-to-have, marginal KPI effect |
-| 1 | Purely internal / no measurable customer impact |
+Use the scores as a decision aid, not a fake precision machine. If a feature blocks launch or customer fulfillment, it outranks most growth work regardless of score.
 
-### Effort (1–5)
+## Figurio-Specific Weights
 
-How much engineering work is required across the React/TS frontend, FastAPI backend, and Stripe integration?
+Default weighting:
 
-| Score | Meaning |
-|-------|---------|
-| 1 | Half a day — single layer, no API changes |
-| 2 | 1–3 days — one layer plus minor API change |
-| 3 | 1 week — multiple layers or non-trivial backend work |
-| 4 | 2–3 weeks — cross-layer, likely needs design and QA |
-| 5 | Month+ — new subsystem, Stripe integration change, or AI pipeline work |
+- Launch risk reduction: highest weight
+- Customer trust impact: high weight
+- Dependency criticality: high weight
+- Margin impact: medium-high weight
+- Time sensitivity: medium weight
+- Effort / complexity: penalty, not a reason to ignore value
 
-### Priority Score
+Adjust weights only when the company objective changes. For pre-launch work, risk and dependencies dominate. For post-launch growth, margin can move up if trust is not weakened.
 
-```
-Priority = Impact / Effort
-```
+## Hard Rules
 
-A score above 1.0 is generally worth scheduling. Below 0.5 is a candidate for the icebox unless it unblocks a higher-priority item.
+- Anything that affects checkout, approval, fulfillment, refunding, or order visibility is priority work if it is currently brittle or undefined.
+- Anything that increases margin but reduces trust needs an explicit mitigation.
+- Anything with an unknown owner, unclear SLA, or missing supplier dependency is not ready for top priority unless that uncertainty is the work itself.
+- Do not let custom figurine scope outrank catalog launch readiness unless the catalog path is already stable.
+- Do not rank based on stakeholder urgency alone.
 
----
+## Prioritization Process
 
-## Backlog Categories
+1. State the decision being made.
+1. List candidate features with a one-line description each.
+1. Capture the company objective they support.
+1. Score each candidate on the dimensions above.
+1. Identify dependencies, blockers, and launch risks.
+1. Apply the hard rules.
+1. Rank the items.
+1. Note what gets cut or delayed and why.
 
-Figurio's backlog divides into three buckets. Apply the scoring model within and across buckets.
+## Output Format
 
-### Catalog Features
-Examples: filter/sort improvements, product page redesign, search, upsell widgets.
-- Tie impact to G2 (catalog conversion) and G4 (retention).
-- Catalog work tends to have low-to-medium effort because the data model is stable.
+For each item, include:
 
-### AI Custom Pipeline
-Examples: configurator UX, photo processing quality, style/pose options, real-time price estimates, generation status polling.
-- Tie impact to G1 (AI order volume).
-- AI pipeline work often scores effort 4–5 because changes touch the FastAPI ML integration and the multi-step React configurator.
-- Always check whether a proposed change requires a new FastAPI endpoint or modifies the existing `/api/v1/orders/custom` flow before assigning effort.
+- Priority rank
+- Short rationale
+- Main benefit
+- Main risk
+- Dependencies
+- Decision needed, if any
 
-### Operational Tooling
-Examples: order status dashboard, fulfillment error alerts, print queue management, customer support tooling.
-- Tie impact to G3 (ops efficiency).
-- These rarely have a direct customer-facing KPI but can unlock capacity that benefits G1 and G2 indirectly — note this in the scoring rationale.
+## Tie Breakers
 
----
+When scores are close, prefer the feature that:
 
-## Tiebreaker Rules
+- Reduces operational ambiguity.
+- Protects the customer experience during failure.
+- Removes a dependency for another team.
+- Improves the economics of an order.
+- Can be validated quickly with low rollback risk.
 
-When two items have the same Priority score, apply these tiebreakers in order:
+## Escalation Triggers
 
-1. **Unblocks higher-priority work** — pick the item that unblocks more items downstream.
-2. **G1 over G2 over G3 over G4** — AI custom growth is the primary strategic lever for Figurio as a D2C brand; prefer it when scores are equal.
-3. **Customer-facing over internal** — visible improvements support marketing and retention.
-4. **Lower absolute effort** — between two equal-scoring items, take the easier one first to maintain delivery cadence.
+Escalate to leadership when:
 
----
+- Two high-value items compete for the same critical dependency.
+- A feature changes customer promises, pricing, refund exposure, or supplier commitments.
+- The team is optimizing for growth before trust or fulfillment reliability is proven.
 
-## How to Run a Prioritization Session
-
-1. List all candidate items with a one-line description and their backlog category.
-2. Score each item on Impact and Effort; record the rationale in one sentence.
-3. Calculate Priority = Impact / Effort.
-4. Sort descending by Priority score.
-5. Apply tiebreakers where needed.
-6. Flag any item with Effort ≥ 4 for a brief engineering sizing conversation before committing it to a sprint.
-7. Present the ranked list with goal alignment (G1–G4) visible for stakeholder review.
-
----
-
-## Scoring Table Template
-
-| Feature | Category | Impact (1–5) | Goal | Effort (1–5) | Priority | Notes |
-|---------|----------|--------------|------|--------------|----------|-------|
-| Real-time price in configurator | AI Custom | 4 | G1 | 2 | 2.0 | Uses existing `/quotes/estimate` endpoint |
-| Catalog faceted search | Catalog | 4 | G2 | 3 | 1.3 | Needs Elasticsearch or similar |
-| Print queue ops dashboard | Ops Tooling | 3 | G3 | 2 | 1.5 | Internal only; unblocks G3 metric tracking |
-| Saved figurine drafts | AI Custom | 3 | G1, G4 | 4 | 0.75 | Complex — new DB schema + auth scope |
-
----
-
-## Anti-patterns
-
-- Scoring impact based on engineering enthusiasm rather than goal alignment.
-- Treating all three backlog categories as equally weighted — AI custom pipeline (G1) is the primary growth lever.
-- Scheduling Effort 5 items without an engineering sizing estimate.
-- Letting ops tooling permanently sit at the bottom — when G3 metrics degrade, reprioritize proactively.
-- Adding items to the sprint without a linked Goal ID — every scheduled item must trace to G1, G2, G3, or G4.
