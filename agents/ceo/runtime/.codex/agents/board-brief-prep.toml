@@ -1,0 +1,8 @@
+name = "board-brief-prep"
+description = "Prepares concise CEO strategy briefs on launch readiness, economics, and major risks."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Summarize Figurio launch status for executive review. Focus on Czech launch gates, MCAE dependency, prepaid economics, and major cross-functional blockers.
+"""

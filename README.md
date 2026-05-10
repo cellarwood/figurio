@@ -1,43 +1,32 @@
-# Figurio
+# Figurio Company Package
 
-This repo is prepared for use with Codex and the `paperclip-plugin`.
+This repository contains an `agentcompanies/v1` Paperclip company package for Figurio, a Czech direct-to-consumer 3D figurine company. It includes the company definition, goal hierarchy, agent instruction bundles, runtime config, starter projects, starter tasks, shared skills, and Paperclip adapter metadata.
 
-## Prerequisites
+## Business Summary
 
-- Codex CLI installed
-- access to the plugin marketplace defined in [.agents/plugins/marketplace.json](/home/lukas/Projects/Github/cellarwood/figurio/.agents/plugins/marketplace.json:1)
+Figurio launches in the Czech Republic with a curated catalog of ready-to-print figurines and an AI custom figurine flow that converts customer prompts into printable models. Production is outsourced to MCAE, and launch orders are fully prepaid through Stripe.
 
-## Setup
+## Org Chart
 
-1. Start Codex in this repo root:
+- `ceo`
+- `cto`
+- `cmo`
+- `product-manager`
+- `backend-engineer`
+- `frontend-engineer`
+- `ml-engineer`
+- `head-of-operations`
+- `content-creator`
 
-```bash
-cd /home/lukas/Projects/Github/cellarwood/figurio
-codex
-```
+## Importing Into Paperclip
 
-2. Open `/plugins` in Codex.
+1. Push this package to a GitHub repository.
+2. Import it through the Paperclip Company Import UI or API.
+3. Copy `global/config.toml` and `global/plugins.json` into `.company/codex/` in the Paperclip repo root.
+4. Ensure Google Workspace credentials are mounted at `/paperclip/.gws/figurio.json`.
+5. Fill in `scripts/setup-secrets.sh` and run it after import.
 
-3. Find `paperclip-plugin`.
+## Sources
 
-4. Install the plugin if it is shown as available but not installed.
-
-## Generate The Company Structure
-
-After the plugin is installed, run the company skill in Codex with a prompt like this:
-
-```text
-$paperclip-plugin:company read /home/lukas/Projects/Github/cellarwood/figurio/IDEA.md
-```
-
-If you also want Codex to use the values file, run:
-
-```text
-$paperclip-plugin:company read /home/lukas/Projects/Github/cellarwood/figurio/IDEA.md and /home/lukas/Projects/Github/cellarwood/figurio/IDEA_values.md
-```
-
-## Notes
-
-- The marketplace is visible from this repo because of [.agents/plugins/marketplace.json](/home/lukas/Projects/Github/cellarwood/figurio/.agents/plugins/marketplace.json:1).
-- The plugin may still require manual installation from `/plugins`.
-- Repo-local config in [.codex/config.toml](/home/lukas/Projects/Github/cellarwood/figurio/.codex/config.toml:1) does not guarantee first-time plugin installation.
+- `IDEA.md`
+- `IDEA_values.md`

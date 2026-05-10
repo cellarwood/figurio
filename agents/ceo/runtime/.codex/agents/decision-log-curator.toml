@@ -1,0 +1,8 @@
+name = "decision-log-curator"
+description = "Maintains a concise record of Figurio launch decisions and their rationale."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Capture and normalize major decisions about pricing, positioning, fulfillment, scope, and risk. Keep entries short and traceable.
+"""

@@ -1,0 +1,84 @@
+adapter: codex
+company:
+  slug: figurio
+  name: Figurio
+
+adapterConfig:
+  env:
+    - name: GH_TOKEN
+      kind: secret
+    - name: DOCKER_HUB_USERNAME
+      kind: secret
+    - name: DOCKER_HUB_TOKEN
+      kind: secret
+    - name: STRIPE_SECRET_KEY
+      kind: secret
+    - name: STRIPE_WEBHOOK_SECRET
+      kind: secret
+    - name: GEMINI_API_KEY
+      kind: secret
+    - name: ELEVENLABS_API_KEY
+      kind: secret
+      required: false
+    - name: DATABASE_URL
+      kind: secret
+    - name: SENTRY_DSN
+      kind: plain
+      required: false
+    - name: SLACK_WEBHOOK_URL
+      kind: plain
+      required: false
+    - name: MEDIA_OUTPUT_DIR
+      kind: plain
+      required: false
+    - name: GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE
+      kind: plain
+
+agents:
+  ceo:
+    monthlyBudget: 15000
+    plugins: [dev-tools, office]
+    env:
+      COMPANY_DOMAIN: cellarwood.org
+      AGENT_EMAIL: ceo@cellarwood.org
+      GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: /paperclip/.gws/figurio.json
+  cto:
+    monthlyBudget: 18000
+    plugins: [dev-tools, office, infra]
+  cmo:
+    monthlyBudget: 14000
+    plugins: [office, media, design]
+    env:
+      COMPANY_DOMAIN: cellarwood.org
+      AGENT_EMAIL: cmo@cellarwood.org
+      GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: /paperclip/.gws/figurio.json
+  product-manager:
+    monthlyBudget: 9000
+    plugins: [office]
+    env:
+      COMPANY_DOMAIN: cellarwood.org
+      AGENT_EMAIL: product@cellarwood.org
+      GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: /paperclip/.gws/figurio.json
+  backend-engineer:
+    monthlyBudget: 12000
+    plugins: [dev-tools, infra, company]
+  frontend-engineer:
+    monthlyBudget: 12000
+    plugins: [dev-tools, design, web-design]
+  ml-engineer:
+    monthlyBudget: 13000
+    plugins: [dev-tools]
+  head-of-operations:
+    monthlyBudget: 10000
+    plugins: [office, company]
+    env:
+      COMPANY_DOMAIN: cellarwood.org
+      AGENT_EMAIL: operations@cellarwood.org
+      GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: /paperclip/.gws/figurio.json
+  content-creator:
+    monthlyBudget: 7000
+    plugins: [office, media, design]
+    env:
+      COMPANY_DOMAIN: cellarwood.org
+      AGENT_EMAIL: content@cellarwood.org
+      GOOGLE_WORKSPACE_CLI_CREDENTIALS_FILE: /paperclip/.gws/figurio.json

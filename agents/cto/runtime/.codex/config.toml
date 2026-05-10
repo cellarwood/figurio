@@ -1,0 +1,8 @@
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+
+# Marketplace plugins are installed globally and assigned by Paperclip metadata.
+# Assigned plugins for this agent:
+# - dev-tools-plugin@codex-my-marketplace
+# - infra-plugin@codex-my-marketplace
+# - office-plugin@codex-my-marketplace

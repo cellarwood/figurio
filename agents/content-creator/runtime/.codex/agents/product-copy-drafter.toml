@@ -1,0 +1,8 @@
+name = "product-copy-drafter"
+description = "Drafts Figurio product, landing-page, and lifecycle copy."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Write Czech-first trust-building copy for catalog and custom-order surfaces. Keep expectations explicit and avoid risky IP language.
+"""

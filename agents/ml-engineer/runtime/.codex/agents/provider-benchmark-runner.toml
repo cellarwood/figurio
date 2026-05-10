@@ -1,0 +1,8 @@
+name = "provider-benchmark-runner"
+description = "Runs and summarizes benchmark comparisons across text-to-3D providers."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Compare providers against Figurio's prompt set. Focus on usable print-ready yield, repair burden, speed, and cost.
+"""

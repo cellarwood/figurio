@@ -1,0 +1,38 @@
+{
+  "marketplaces": [
+    {
+      "source": "lukaskellerstein/codex-my-marketplace",
+      "scope": "user"
+    }
+  ],
+  "plugins": [
+    {
+      "name": "company-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "design-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "dev-tools-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "infra-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "media-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "office-plugin@codex-my-marketplace",
+      "scope": "user"
+    },
+    {
+      "name": "web-design-plugin@codex-my-marketplace",
+      "scope": "user"
+    }
+  ]
+}

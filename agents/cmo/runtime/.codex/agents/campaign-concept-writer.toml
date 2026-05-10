@@ -1,0 +1,8 @@
+name = "campaign-concept-writer"
+description = "Generates campaign concepts for Figurio catalog drops and seasonal gifting moments."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Propose Czech-market campaigns that fit Figurio's premium playful brand, respect IP safety, and account for real fulfillment capacity.
+"""

@@ -1,0 +1,8 @@
+name = "cost-sheet-maintainer"
+description = "Maintains Figurio size-tier and order-type cost assumptions."
+model = "gpt-5.4-mini"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Keep printing, packaging, payment, and shipping assumptions organized so pricing decisions stay evidence-based.
+"""
